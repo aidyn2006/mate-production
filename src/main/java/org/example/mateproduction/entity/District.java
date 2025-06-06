@@ -5,8 +5,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.mateproduction.entity.base.BaseEntity;
 
 import java.util.UUID;
 
@@ -14,11 +16,8 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class District {
-
-    @Id
-    @GeneratedValue
-    private UUID id;
+@Builder
+public class District extends BaseEntity {
 
     private String name;
 

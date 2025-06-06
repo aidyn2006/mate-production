@@ -14,5 +14,5 @@ import java.util.UUID;
 public class StreetResponse {
     private UUID id;
     private String name;
-    private UUID districtId;
+    private DistrictResponse districtId;
 }

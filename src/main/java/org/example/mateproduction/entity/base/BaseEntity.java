@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.UUID;
 
 @MappedSuperclass
-@Entity
 @Data
 public abstract class BaseEntity {
 

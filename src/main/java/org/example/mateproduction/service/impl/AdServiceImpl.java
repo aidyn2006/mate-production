@@ -44,7 +44,7 @@ public class AdServiceImpl implements AdService {
 
         validateAdRequest(dto);
 
-        City city = (City) cityRepository.findById(dto.getCity().getId())
+        City city = (City) cityRepository.findById(dto.getCity())
                 .orElseThrow(() -> new NotFoundException("City not found"));
 
         int activeAdsCount = adRepository.countByUserAndStatus(user, Status.ACTIVE);
@@ -117,7 +117,7 @@ public class AdServiceImpl implements AdService {
 
         validateAdRequest(dto);
 
-        City city = (City) cityRepository.findById(dto.getCity().getId())
+        City city = (City) cityRepository.findById(dto.getCity())
                 .orElseThrow(() -> new NotFoundException("City not found"));
 
         ad.setTitle(dto.getTitle());

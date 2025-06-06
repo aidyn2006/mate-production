@@ -14,8 +14,8 @@ import java.util.UUID;
 @Builder
 public class MessageResponse {
     private UUID id;
-    private UUID senderId;
-    private UUID receiverId;
+    private UserResponse senderId;
+    private UserResponse receiverId;
     private String content;
     private Date createdAt;
 }

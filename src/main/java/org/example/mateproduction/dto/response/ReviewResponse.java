@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.mateproduction.entity.Ad;
+import org.example.mateproduction.entity.User;
 
 import java.util.UUID;
 
@@ -13,9 +15,9 @@ import java.util.UUID;
 @Builder
 public class ReviewResponse {
     private UUID id;
-    private UUID reviewerId;
-    private UUID userId;
-    private UUID adId;
+    private UserResponse reviewerId;
+    private UserResponse userId;
+    private Ad adId;
     private int rating;
     private String comment;
 }

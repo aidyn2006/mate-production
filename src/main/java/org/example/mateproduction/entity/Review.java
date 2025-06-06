@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.mateproduction.entity.base.BaseEntity;
 
 import java.util.UUID;
 
@@ -11,11 +12,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Review {
-
-    @Id
-    @GeneratedValue
-    private UUID id;
+public class Review  extends BaseEntity {
 
     @ManyToOne
     private User reviewer;

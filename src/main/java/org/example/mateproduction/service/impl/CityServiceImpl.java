@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import org.example.mateproduction.dto.request.CityRequest;
 import org.example.mateproduction.dto.response.CityResponse;
 import org.example.mateproduction.entity.City;
+import org.example.mateproduction.exception.AlreadyExistException;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.repository.CityRepository;
 import org.example.mateproduction.service.CityService;
@@ -25,12 +26,20 @@ public class CityServiceImpl implements CityService {
 
     @Transactional
     @Override
-    public CityResponse createCity(CityRequest request) {
+    public CityResponse createCity(CityRequest request)  {
+        cityRepository.findByName(request.getName())
+                .ifPresent(existingCity -> {
+                    try {
+                        throw new AlreadyExistException("City with name '" + request.getName() + "' already exists.");
+                    } catch (AlreadyExistException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
         City city = City.builder()
                 .name(request.getName())
                 .build();
 
-        city = cityRepository.save(city);
+        cityRepository.save(city);
 
         return mapToResponse(city);
     }
@@ -57,7 +66,7 @@ public class CityServiceImpl implements CityService {
 
         city.setName(request.getName());
 
-        city = cityRepository.save(city);
+        cityRepository.save(city);
 
         return mapToResponse(city);
     }
@@ -67,7 +76,7 @@ public class CityServiceImpl implements CityService {
     public void deleteCity(UUID id) throws NotFoundException {
         City city = (City) cityRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("City not found"));
-        cityRepository.delete(city);
+        cityRepository.deleteById(city.getId());
     }
 
     private CityResponse mapToResponse(City city) {

@@ -7,6 +7,7 @@ import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.mateproduction.entity.base.BaseEntity;
 
 import java.util.UUID;
 
@@ -14,11 +15,8 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Street {
+public class Street extends BaseEntity {
 
-    @Id
-    @GeneratedValue
-    private UUID id;
 
     private String name;
 

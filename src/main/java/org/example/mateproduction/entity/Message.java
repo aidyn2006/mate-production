@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.mateproduction.entity.base.BaseEntity;
 
 import java.util.Date;
 import java.util.UUID;
@@ -12,11 +13,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Message {
-
-    @Id
-    @GeneratedValue
-    private UUID id;
+public class Message extends BaseEntity {
 
     @ManyToOne
     private User sender;

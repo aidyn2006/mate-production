@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.mateproduction.entity.City;
 
 import java.util.UUID;
 
@@ -14,5 +15,5 @@ import java.util.UUID;
 public class DistrictResponse {
     private UUID id;
     private String name;
-    private UUID cityId;
+    private CityResponse city;
 }

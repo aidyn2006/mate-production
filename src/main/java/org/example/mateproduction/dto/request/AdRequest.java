@@ -22,8 +22,8 @@ public class AdRequest {
     private String description;
     private BigDecimal price;
     private String address;
-    private City city;
-    private User user;
+    private UUID city;
+    private UUID user;
     private AdType type;
     private Status status;
 

@@ -13,7 +13,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class FavoriteResponse {
-    private UUID userId;
-    private UUID adId;
+    private UserResponse userId;
+    private AdResponse adId;
     private Date createdAt;
 }
