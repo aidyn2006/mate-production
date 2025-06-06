@@ -17,6 +17,7 @@ import org.example.mateproduction.repository.AdImageRepository;
 import org.example.mateproduction.repository.AdRepository;
 import org.example.mateproduction.repository.CityRepository;
 import org.example.mateproduction.repository.UserRepository;
+import org.example.mateproduction.service.AdService;
 import org.example.mateproduction.util.AdType;
 import org.example.mateproduction.util.Status;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class AdServiceImpl {
+public class AdServiceImpl implements AdService {
 
     private final AdRepository adRepository;
     private final UserRepository userRepository;
