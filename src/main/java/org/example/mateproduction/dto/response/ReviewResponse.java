@@ -15,9 +15,9 @@ import java.util.UUID;
 @Builder
 public class ReviewResponse {
     private UUID id;
-    private UserResponse reviewerId;
-    private UserResponse userId;
-    private Ad adId;
+    private UserResponse reviewer;
+    private UserResponse user;
+    private AdResponse ad;
     private int rating;
     private String comment;
 }
