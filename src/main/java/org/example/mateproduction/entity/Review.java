@@ -12,6 +12,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "review")
 public class Review  extends BaseEntity {
 
     @ManyToOne

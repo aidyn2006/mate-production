@@ -37,6 +37,14 @@ public class AdServiceImpl implements AdService {
     private final CityRepository cityRepository;
     private final AdImageRepository adImageRepository;
 
+
+    public List<AdResponse> getAllAds() {
+        List<Ad> ads=adRepository.findAll();
+        return ads.stream()
+                .map(AdServiceImpl::mapToResponseDto)
+                .collect(Collectors.toList());    }
+
+
     @Transactional
     public AdResponse createAd(AdRequest dto, UUID userId) throws ValidationException, NotFoundException {
         User user = userRepository.findById(userId)
@@ -44,7 +52,7 @@ public class AdServiceImpl implements AdService {
 
         validateAdRequest(dto);
 
-        City city = (City) cityRepository.findById(dto.getCity())
+        City city = cityRepository.findById(dto.getCity())
                 .orElseThrow(() -> new NotFoundException("City not found"));
 
         int activeAdsCount = adRepository.countByUserAndStatus(user, Status.ACTIVE);
@@ -76,7 +84,6 @@ public class AdServiceImpl implements AdService {
         ad = adRepository.save(ad);
 
         if (dto.getImages() != null) {
-
             Ad finalAd = ad;
             List<AdImage> images = dto.getImages().stream()
                     .map(url -> {
@@ -117,7 +124,7 @@ public class AdServiceImpl implements AdService {
 
         validateAdRequest(dto);
 
-        City city = (City) cityRepository.findById(dto.getCity())
+        City city = cityRepository.findById(dto.getCity())
                 .orElseThrow(() -> new NotFoundException("City not found"));
 
         ad.setTitle(dto.getTitle());
@@ -186,7 +193,7 @@ public class AdServiceImpl implements AdService {
             throw new ValidationException("Ad type is required");
     }
 
-    private AdResponse mapToResponseDto(Ad ad) {
+    private static AdResponse mapToResponseDto(Ad ad) {
         return AdResponse.builder()
                 .id(ad.getId())
                 .title(ad.getTitle())

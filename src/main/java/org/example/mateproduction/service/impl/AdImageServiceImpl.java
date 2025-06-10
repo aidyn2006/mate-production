@@ -17,6 +17,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Deprecated
 public class AdImageServiceImpl implements AdImageService {
     private final AdImageRepository adImageRepository;
     private final AdRepository adRepository;

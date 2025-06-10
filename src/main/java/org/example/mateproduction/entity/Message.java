@@ -13,6 +13,8 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "message")
+
 public class Message extends BaseEntity {
 
     @ManyToOne
