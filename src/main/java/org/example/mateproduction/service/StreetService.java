@@ -7,12 +7,9 @@ import java.util.List;
 import java.util.UUID;
 
 public interface StreetService {
-
-    StreetResponse createStreet(StreetRequest request);
-    List<StreetResponse> getAllStreet();
-
-    StreetResponse getStreetByCity(UUID cityId);
-
-    StreetResponse updateStreet(UUID streetId,StreetRequest request);
-    void deleteStreet(UUID streetId);
+    StreetResponse create(StreetRequest request);
+    StreetResponse update(UUID id, StreetRequest request);
+    void delete(UUID id);
+    StreetResponse getById(UUID id);
+    List<StreetResponse> getAll();
 }

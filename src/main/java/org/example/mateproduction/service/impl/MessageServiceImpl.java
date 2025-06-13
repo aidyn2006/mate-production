@@ -45,16 +45,13 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public List<MessageResponse> getChatHistory(UUID senderId, UUID receiverId) {
-        List<Message> messages = messageRepository.findAll().stream()
-                .filter(msg ->
-                        (msg.getSender().getId().equals(senderId) && msg.getReceiver().getId().equals(receiverId)) ||
-                        (msg.getSender().getId().equals(receiverId) && msg.getReceiver().getId().equals(senderId))
-                )
+        List<Message> messages = messageRepository.findChatMessages(senderId, receiverId);
+        return messages.stream()
                 .sorted((m1, m2) -> m1.getCreatedAt().compareTo(m2.getCreatedAt()))
+                .map(this::mapToResponse)
                 .collect(Collectors.toList());
-
-        return messages.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
+
 
     @Override
     public void deleteMessage(UUID messageId) throws NotFoundException {
@@ -66,14 +63,10 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public void clearChat(UUID senderId, UUID receiverId) {
-        List<Message> messagesToDelete = messageRepository.findAll().stream()
-                .filter(msg ->
-                        (msg.getSender().getId().equals(senderId) && msg.getReceiver().getId().equals(receiverId)) ||
-                        (msg.getSender().getId().equals(receiverId) && msg.getReceiver().getId().equals(senderId))
-                ).collect(Collectors.toList());
-
+        List<Message> messagesToDelete = messageRepository.findChatMessages(senderId, receiverId);
         messageRepository.deleteAll(messagesToDelete);
     }
+
 
     private MessageResponse mapToResponse(Message message) {
         return MessageResponse.builder()

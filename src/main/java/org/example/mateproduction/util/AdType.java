@@ -4,4 +4,5 @@ public enum AdType {
     RENT,
     SALE,
     ROOMMATE,
-    SEEKER}
+    SEEKER
+}
