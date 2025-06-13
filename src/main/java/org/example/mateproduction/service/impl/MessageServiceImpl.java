@@ -88,7 +88,7 @@ public class MessageServiceImpl implements MessageService {
     private UserResponse mapUser(User user) {
         return UserResponse.builder()
                 .id(user.getId())
-                .fullName(user.getFullName())
+                .fullName(user.getName()+" "+user.getSurname())
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .build();

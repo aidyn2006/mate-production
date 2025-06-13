@@ -206,7 +206,7 @@ public class AdServiceImpl implements AdService {
                         .build())
                 .user(UserResponse.builder()
                         .id(ad.getUser().getId())
-                        .fullName(ad.getUser().getFullName())
+                        .fullName(ad.getUser().getName() + " " + ad.getUser().getSurname())
                         .email(ad.getUser().getEmail())
                         .phone(ad.getUser().getPhone())
                         .role(ad.getUser().getRole().name())

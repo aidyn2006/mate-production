@@ -1,23 +1,19 @@
-package org.example.mateproduction.dto.response;
+package org.example.mateproduction.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class UserResponse {
-    private UUID id;
-    private String fullName;
+public class RegisterRequest {
+    private String name;
+    private String surname;
     private String email;
-    private String username;
+    private String password;
     private String phone;
     private String role;
-    private String token;
-
 }

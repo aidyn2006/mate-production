@@ -98,7 +98,7 @@ public class ReviewServiceImpl implements ReviewService {
     private ReviewResponse mapToResponse(Review review) {
         UserResponse reviewer = UserResponse.builder()
                 .id(review.getReviewer().getId())
-                .fullName(review.getReviewer().getFullName())
+                .fullName(review.getReviewer().getName()+" "+review.getReviewer().getSurname())
                 .email(review.getReviewer().getEmail())
                 .phone(review.getReviewer().getPhone())
                 .role(review.getReviewer().getRole().name())
@@ -106,7 +106,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         UserResponse user = UserResponse.builder()
                 .id(review.getUser().getId())
-                .fullName(review.getUser().getFullName())
+                .fullName(review.getReviewer().getName()+" "+review.getReviewer().getSurname())
                 .email(review.getUser().getEmail())
                 .phone(review.getUser().getPhone())
                 .role(review.getUser().getRole().name())

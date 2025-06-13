@@ -19,7 +19,9 @@ import org.example.mateproduction.util.Role;
 @Table(name = "users")
 public class User extends BaseEntity {
 
-    private String fullName;
+    private String name;
+    private String surname;
+    private String username;
     private String email;
     private String password;
     private String phone;
