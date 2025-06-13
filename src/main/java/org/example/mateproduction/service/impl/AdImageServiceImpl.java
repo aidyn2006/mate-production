@@ -21,11 +21,13 @@ import java.util.stream.Collectors;
 public class AdImageServiceImpl implements AdImageService {
     private final AdImageRepository adImageRepository;
     private final AdRepository adRepository;
+    private final CloudinaryService cloudinaryService;
 
     @Autowired
-    public AdImageServiceImpl(AdImageRepository adImageRepository, AdRepository adRepository) {
+    public AdImageServiceImpl(AdImageRepository adImageRepository, AdRepository adRepository, CloudinaryService cloudinaryService) {
         this.adImageRepository = adImageRepository;
         this.adRepository = adRepository;
+        this.cloudinaryService = cloudinaryService;
     }
 
     @Transactional
@@ -33,10 +35,11 @@ public class AdImageServiceImpl implements AdImageService {
         Ad ad = adRepository.findById(request.getAdId())
                 .orElseThrow(() -> new NotFoundException("Ad not found"));
 
-        AdImage adImage = new AdImage();
-        adImage.setUrl(request.getUrl());
-        adImage.setAd(ad);
+        String imageUrl = cloudinaryService.upload(request.getPhoto());
 
+        AdImage adImage = new AdImage();
+        adImage.setUrl(imageUrl);
+        adImage.setAd(ad);
         adImage = adImageRepository.save(adImage);
 
         return mapToResponse(adImage);
@@ -57,7 +60,9 @@ public class AdImageServiceImpl implements AdImageService {
         Ad ad = adRepository.findById(request.getAdId())
                 .orElseThrow(() -> new NotFoundException("Ad not found"));
 
-        adImage.setUrl(request.getUrl());
+        String imageUrl = cloudinaryService.upload(request.getPhoto());
+
+        adImage.setUrl(imageUrl);
         adImage.setAd(ad);
 
         adImage = adImageRepository.save(adImage);

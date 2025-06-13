@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -12,6 +13,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class AdImageRequest {
-    private String url;
+    private MultipartFile photo;
     private UUID adId;
 }
