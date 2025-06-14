@@ -1,8 +1,8 @@
 package org.example.mateproduction.util;
 
 public enum AdType {
-    RENT,
+    DAY,
+    MONTH,
     SALE,
-    ROOMMATE,
-    SEEKER
+
 }

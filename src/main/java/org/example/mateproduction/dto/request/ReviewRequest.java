@@ -12,9 +12,8 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class ReviewRequest {
-    private UUID reviewerId;
     private UUID userId;
     private UUID adId;
-    private int rating;
+    private Integer rating;
     private String comment;
 }

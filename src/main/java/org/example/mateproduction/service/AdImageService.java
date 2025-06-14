@@ -1,7 +1,5 @@
 package org.example.mateproduction.service;
 
-import org.example.mateproduction.dto.request.AdImageRequest;
-import org.example.mateproduction.dto.response.AdImageResponse;
 import org.example.mateproduction.exception.NotFoundException;
 
 import java.util.List;

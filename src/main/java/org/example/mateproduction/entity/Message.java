@@ -2,29 +2,37 @@ package org.example.mateproduction.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.mateproduction.entity.base.BaseEntity;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.util.Date;
-import java.util.UUID;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "message")
-
+@Builder
+@Table(name = "messages")
 public class Message extends BaseEntity {
 
     @ManyToOne
-    private User sender;
+    @JoinColumn(name = "chat_id", nullable = false)
+    private Chat chat;
 
     @ManyToOne
-    private User receiver;
+    @JoinColumn(name = "sender_id", nullable = false)
+    private User sender;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
+    @Temporal(TemporalType.TIMESTAMP)
+    @CreationTimestamp
+    @Column(updatable = false)
     private Date createdAt;
+
+    private Boolean isRead;
 }

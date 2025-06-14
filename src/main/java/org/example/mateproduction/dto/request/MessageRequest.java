@@ -12,7 +12,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class MessageRequest {
-    private UUID senderId;
     private UUID receiverId;
     private String content;
 }
+

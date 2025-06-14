@@ -1,12 +1,10 @@
 package org.example.mateproduction.service.impl;
 
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.config.Jwt.JwtService;
 import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.LoginRequest;
 import org.example.mateproduction.dto.request.RegisterRequest;
-import org.example.mateproduction.dto.request.UserRequest;
 import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.entity.User;
 import org.example.mateproduction.exception.AlreadyExistException;
@@ -18,9 +16,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.beans.Transient;
-import java.util.Optional;
 
 
 @Service

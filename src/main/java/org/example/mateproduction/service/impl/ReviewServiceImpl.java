@@ -2,10 +2,10 @@ package org.example.mateproduction.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.dto.request.ReviewRequest;
-import org.example.mateproduction.dto.response.AdResponse;
+import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.dto.response.ReviewResponse;
 import org.example.mateproduction.dto.response.UserResponse;
-import org.example.mateproduction.entity.Ad;
+import org.example.mateproduction.entity.AdHouse;
 import org.example.mateproduction.entity.Review;
 import org.example.mateproduction.entity.User;
 import org.example.mateproduction.repository.AdRepository;
@@ -34,7 +34,7 @@ public class ReviewServiceImpl implements ReviewService {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Ad ad = adRepository.findById(request.getAdId())
+        AdHouse ad = adRepository.findById(request.getAdId())
                 .orElseThrow(() -> new RuntimeException("Ad not found"));
 
         Review review = new Review();
@@ -112,7 +112,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .role(review.getUser().getRole().name())
                 .build();
 
-        AdResponse ad = AdResponse.builder()
+        AdHouseResponse ad = AdHouseResponse.builder()
                 .id(review.getAdvertisement().getId())
                 .title(review.getAdvertisement().getTitle())
                 .description(review.getAdvertisement().getDescription())

@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.mateproduction.entity.base.BaseEntity;
 import org.example.mateproduction.util.AdType;
+import org.example.mateproduction.util.CityNames;
 import org.example.mateproduction.util.Status;
 
 import java.math.BigDecimal;
@@ -18,7 +19,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Table(name = "ad")
-public class Ad extends BaseEntity {
+public class AdHouse extends BaseEntity {
 
     private String title;
 
@@ -28,10 +29,11 @@ public class Ad extends BaseEntity {
     private BigDecimal price;
     private String address;
 
-    @ManyToOne
-    private City city;
+
+    private CityNames city;
 
     @ManyToOne
+    @JoinColumn(name = "user_id")
     private User user;
 
     @Enumerated(EnumType.STRING)
@@ -40,19 +42,18 @@ public class Ad extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @OneToMany(mappedBy = "ad", cascade = CascadeType.ALL)
-    private List<AdImage> images;
+    @ElementCollection
+    @CollectionTable(name = "ad_images", joinColumns = @JoinColumn(name = "ad_id"))
+    @Column(name = "image_url")
+    private List<String> images;
 
     private Integer numberOfRooms;
     private Double area;
     private Integer floor;
     private Boolean furnished;
 
-    private String roommatePreferences;
-    private Boolean isSharedRoom;
+    private String contactPhoneNumber;
 
-    private String seekerDescription;
-    private String desiredLocation;
-    private String desiredRoommatePreferences;
-    private BigDecimal maxBudget;
+    private Integer views;
+
 }

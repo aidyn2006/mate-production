@@ -1,9 +1,6 @@
 package org.example.mateproduction.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,10 +18,14 @@ import java.util.UUID;
 public class Favorite {
 
     @Id
-    private UUID userId;
+    @ManyToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private User user;
 
     @Id
-    private UUID adId;
+    @ManyToOne
+    @JoinColumn(name = "ad_id", referencedColumnName = "id")
+    private AdHouse ad;
 
     private Date createdAt;
 }

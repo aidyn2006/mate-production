@@ -12,6 +12,5 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class FavoriteRequest {
-    private UUID userId;
     private UUID adId;
 }

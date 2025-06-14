@@ -1,12 +1,12 @@
 package org.example.mateproduction.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.mateproduction.entity.Ad;
-import org.example.mateproduction.entity.User;
 
+import java.util.Date;
 import java.util.UUID;
 
 @Data
@@ -16,8 +16,11 @@ import java.util.UUID;
 public class ReviewResponse {
     private UUID id;
     private UserResponse reviewer;
-    private UserResponse user;
-    private AdResponse ad;
-    private int rating;
+    private AdHouseResponse ad;
+    private Integer rating;
     private String comment;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Almaty")
+
+    private Date createdAt;
 }

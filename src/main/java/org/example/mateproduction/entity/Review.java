@@ -6,23 +6,21 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.mateproduction.entity.base.BaseEntity;
 
-import java.util.UUID;
-
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "review")
-public class Review  extends BaseEntity {
+public class Review extends BaseEntity {
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     private User reviewer;
 
     @ManyToOne
-    private User user;
+    private AdHouse adHouse;
 
     @ManyToOne
-    private Ad advertisement;
+    private AdSeeker adSeeker;
 
     private int rating;
 
