@@ -2,6 +2,7 @@ package org.example.mateproduction.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.mateproduction.entity.contract.FavoriteId;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @IdClass(FavoriteId.class)
 @Table(name = "favorite")
+@Builder
 public class Favorite {
 
     @Id

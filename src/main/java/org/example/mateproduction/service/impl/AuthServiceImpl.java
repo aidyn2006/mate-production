@@ -1,6 +1,7 @@
 package org.example.mateproduction.service.impl;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.config.Jwt.JwtService;
 import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.LoginRequest;
@@ -8,63 +9,70 @@ import org.example.mateproduction.dto.request.RegisterRequest;
 import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.entity.User;
 import org.example.mateproduction.exception.AlreadyExistException;
+import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.AuthService;
 import org.example.mateproduction.util.Role;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-
 @Service
-
+@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
-    private final UserRepository ur;
-    private final PasswordEncoder pe;
-    private final JwtService js;
-    private final AuthenticationManager am;
 
-    @Autowired
-    public AuthServiceImpl(UserRepository ur, PasswordEncoder pe, JwtService js, AuthenticationManager am) {
-        this.ur = ur;
-        this.pe = pe;
-        this.js = js;
-        this.am = am;
-    }
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
 
     @Override
     @Transactional
-    public UserResponse register(RegisterRequest r) throws AlreadyExistException {
-        if (ur.findByEmail(r.getEmail()).isPresent())
-            throw new AlreadyExistException("User already exists");
-        var u = User.builder()
-                .email(r.getEmail())
-                .password(pe.encode(r.getPassword()))
-                .role(Role.valueOf(r.getRole()))
-                .name(r.getName())
-                .surname(r.getSurname())
-                .phone(r.getPhone())
+    public UserResponse register(RegisterRequest request) throws AlreadyExistException {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new AlreadyExistException("User with this email already exists");
+        }
+
+        User user = User.builder()
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(Role.GUEST)
+                .name(request.getName())
+                .surname(request.getSurname())
+                .username(request.getUsername())
+                .phone(request.getPhone())
+                .isVerified(false)
                 .build();
-        ur.save(u);
-        var token = js.generateToken(new JwtUserDetails(u));
-        return UserResponse.builder()
-                .id(u.getId()).fullName(u.getName()+" "+u.getSurname())
-                .email(u.getEmail()).phone(u.getPhone())
-                .username(u.getName()).role(u.getRole().name())
-                .token(token).build();
+
+        userRepository.save(user);
+
+        return buildUserResponse(user);
     }
 
     @Override
-    public UserResponse login(LoginRequest req) {
-        am.authenticate(new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
-        var u = ur.findByEmail(req.getEmail()).orElseThrow();
-        var token = js.generateToken(new JwtUserDetails(u));
+    public UserResponse login(LoginRequest request) throws NotFoundException {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new NotFoundException("User not found with this email"));
+
+        return buildUserResponse(user);
+    }
+
+    private UserResponse buildUserResponse(User user) {
         return UserResponse.builder()
-                .id(u.getId()).fullName(u.getName()+" "+u.getSurname())
-                .email(u.getEmail()).phone(u.getPhone())
-                .username(u.getName()).role(u.getRole().name())
-                .token(token).build();
+                .id(user.getId())
+                .name(user.getName())
+                .surname(user.getSurname())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .role(user.getRole())
+                .isVerified(user.getIsVerified())
+                .avatarUrl(user.getAvatarUrl())
+                .build();
     }
 }

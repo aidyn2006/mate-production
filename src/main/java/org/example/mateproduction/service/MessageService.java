@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public interface MessageService {
     MessageResponse sendMessage(MessageRequest request) throws NotFoundException;
-    List<MessageResponse> getChatHistory(UUID senderId, UUID receiverId);
+    List<MessageResponse> getChatHistory(UUID senderId, UUID receiverId) throws NotFoundException;
     void deleteMessage(UUID messageId) throws NotFoundException;
     void clearChat(UUID senderId, UUID receiverId);
 }

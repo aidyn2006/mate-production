@@ -2,7 +2,6 @@ package org.example.mateproduction.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.exception.NotFoundException;
-import org.example.mateproduction.service.AdImageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
