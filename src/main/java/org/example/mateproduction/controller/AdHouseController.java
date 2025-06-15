@@ -1,6 +1,7 @@
 package org.example.mateproduction.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.mateproduction.controller.openapi.AdHouseControllerApi;
 import org.example.mateproduction.dto.request.AdHouseRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.exception.NotFoundException;
@@ -8,16 +9,15 @@ import org.example.mateproduction.exception.ValidationException;
 import org.example.mateproduction.service.AdHouseService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/ads")
+@RequestMapping("/api/v1/ads")
 @RequiredArgsConstructor
-public class AdHouseController {
+public class AdHouseController implements AdHouseControllerApi {
 
     private final AdHouseService adHouseService;
 

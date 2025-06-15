@@ -1,6 +1,8 @@
 package org.example.mateproduction.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.mateproduction.dto.response.AdHouseResponse;
+import org.example.mateproduction.dto.response.AdSeekerResponse;
 import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -35,5 +37,15 @@ public class UserController {
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
+    }
+    
+    
+    @GetMapping("/my-ad-houses")
+    public ResponseEntity<List<AdHouseResponse>> getMyAdHouses() {
+        return ResponseEntity.ok(userService.getAllAdHouses());
+    }
+    @GetMapping("/my-ad-seeker")
+    public ResponseEntity<List<AdSeekerResponse>> getMyAdSeeker() {
+        return ResponseEntity.ok(userService.getAllAdSeekers());
     }
 }

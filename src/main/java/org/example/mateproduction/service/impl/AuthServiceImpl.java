@@ -26,6 +26,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final CloudinaryService cloudinaryService;
 
     @Override
     @Transactional
@@ -33,6 +34,8 @@ public class AuthServiceImpl implements AuthService {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new AlreadyExistException("User with this email already exists");
         }
+
+
 
         User user = User.builder()
                 .email(request.getEmail())
@@ -43,6 +46,7 @@ public class AuthServiceImpl implements AuthService {
                 .username(request.getUsername())
                 .phone(request.getPhone())
                 .isVerified(false)
+                .avatarUrl(request.getAvatar() != null ? cloudinaryService.upload(request.getAvatar()) : null)
                 .build();
 
         userRepository.save(user);

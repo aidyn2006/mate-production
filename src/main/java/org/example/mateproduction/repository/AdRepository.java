@@ -17,5 +17,9 @@ public interface AdRepository extends JpaRepository<AdHouse, UUID> {
     Optional<AdHouse> findByIdAndStatus(UUID id, Status status);
 
     List<AdHouse> findAllByStatus(Status status);
+
+    List<AdHouse> findAllByUserId(UUID userId);
+
+
 }
 

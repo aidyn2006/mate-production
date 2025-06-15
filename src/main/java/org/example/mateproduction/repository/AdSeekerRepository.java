@@ -16,4 +16,6 @@ public interface AdSeekerRepository extends JpaRepository<AdSeeker, UUID> {
     Optional<AdSeeker> findByIdAndStatus(UUID id, Status status);
 
     int countByUserAndStatus(User user, Status status);
+
+    List<AdSeeker> findAllByUserId(UUID userId);
 }
