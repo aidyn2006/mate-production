@@ -11,42 +11,42 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/reviews")
+@RequiredArgsConstructor
 public class ReviewController {
 
     private final ReviewService reviewService;
 
     @PostMapping
     public ResponseEntity<ReviewResponse> createReview(@RequestBody ReviewRequest request) {
-        ReviewResponse response = reviewService.createReview(request);
-        return ResponseEntity.ok(response);
+        ReviewResponse review = reviewService.createReview(request);
+        return ResponseEntity.ok(review);
     }
 
     @GetMapping
-    public ResponseEntity<List<ReviewResponse>> getReviews(
+    public ResponseEntity<List<ReviewResponse>> getAllReviews(
             @RequestParam(required = false) UUID reviewerId,
             @RequestParam(required = false) UUID adId
     ) {
-        List<ReviewResponse> responses = reviewService.getAllReview(reviewerId, adId);
-        return ResponseEntity.ok(responses);
+        List<ReviewResponse> reviews = reviewService.getAllReview(reviewerId, adId);
+        return ResponseEntity.ok(reviews);
     }
 
-    @PutMapping
+    @PutMapping("/{reviewerId}/{adId}")
     public ResponseEntity<ReviewResponse> updateReview(
-            @RequestParam UUID reviewerId,
-            @RequestParam UUID adId,
+            @PathVariable UUID reviewerId,
+            @PathVariable UUID adId,
             @RequestBody ReviewRequest request
     ) {
-        ReviewResponse response = reviewService.updateReview(reviewerId, adId, request);
-        return ResponseEntity.ok(response);
+        ReviewResponse updated = reviewService.updateReview(reviewerId, adId, request);
+        return ResponseEntity.ok(updated);
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{reviewId}/{reviewerId}/{adId}")
     public ResponseEntity<Void> deleteReview(
-            @RequestParam UUID reviewId,
-            @RequestParam UUID reviewerId,
-            @RequestParam UUID adId
+            @PathVariable UUID reviewId,
+            @PathVariable UUID reviewerId,
+            @PathVariable UUID adId
     ) {
         reviewService.deleteReview(reviewId, reviewerId, adId);
         return ResponseEntity.noContent().build();

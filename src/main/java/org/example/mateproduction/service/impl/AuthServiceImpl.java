@@ -63,6 +63,8 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private UserResponse buildUserResponse(User user) {
+        String token = jwtService.generateToken(new JwtUserDetails(user));
+
         return UserResponse.builder()
                 .id(user.getId())
                 .name(user.getName())
@@ -73,6 +75,8 @@ public class AuthServiceImpl implements AuthService {
                 .role(user.getRole())
                 .isVerified(user.getIsVerified())
                 .avatarUrl(user.getAvatarUrl())
+                .token(token)
                 .build();
     }
+
 }

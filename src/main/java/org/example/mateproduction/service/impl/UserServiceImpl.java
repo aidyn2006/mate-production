@@ -51,11 +51,16 @@ public class UserServiceImpl implements UserService {
     private UserResponse mapToResponse(User user) {
         return UserResponse.builder()
                 .id(user.getId())
-                .fullName(user.getName() + " " + user.getSurname())
+                .name(user.getName())
+                .surname(user.getSurname())
+                .username(user.getUsername())
                 .email(user.getEmail())
                 .phone(user.getPhone())
-                .role(user.getRole().name())
+                .role(user.getRole())
+                .isVerified(user.getIsVerified())
+                .avatarUrl(user.getAvatarUrl())
                 .build();
     }
+
 }
 

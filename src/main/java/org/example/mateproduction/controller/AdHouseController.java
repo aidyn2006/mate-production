@@ -1,57 +1,58 @@
 package org.example.mateproduction.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.dto.request.AdHouseRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.ValidationException;
 import org.example.mateproduction.service.AdHouseService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("api/v1/ads")
+@RequestMapping("/api/ads")
+@RequiredArgsConstructor
 public class AdHouseController {
 
-    private final AdHouseService adService;
-
-    public AdHouseController(AdHouseService adService) {
-        this.adService = adService;
-    }
+    private final AdHouseService adHouseService;
 
     @GetMapping
-    public ResponseEntity<List<AdHouseResponse>> getAds() {
-        List<AdHouseResponse> ads = adService.getAllAds();
+    public ResponseEntity<List<AdHouseResponse>> getAllAds() {
+        List<AdHouseResponse> ads = adHouseService.getAllAds();
         return ResponseEntity.ok(ads);
     }
 
-    @GetMapping("/{adId}")
-    public ResponseEntity<AdHouseResponse> getAdById(@PathVariable UUID adId) throws NotFoundException {
-        return ResponseEntity.ok(adService.getAdById(adId));
+    @GetMapping("/{id}")
+    public ResponseEntity<AdHouseResponse> getAdById(@PathVariable UUID id) throws NotFoundException {
+        AdHouseResponse ad = adHouseService.getAdById(id);
+        return ResponseEntity.ok(ad);
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public AdHouseResponse createAd(@RequestBody AdHouseRequest adRequest) throws ValidationException, NotFoundException {
-        return adService.createAd(adRequest);
+    public ResponseEntity<AdHouseResponse> createAd(
+            @ModelAttribute AdHouseRequest request
+    ) throws ValidationException, NotFoundException {
+        AdHouseResponse createdAd = adHouseService.createAd(request);
+        return ResponseEntity.ok(createdAd);
     }
 
-    @PutMapping("/{adId}")
+    @PutMapping("/{id}")
     public ResponseEntity<AdHouseResponse> updateAd(
-            @PathVariable UUID adId,
-            @RequestBody AdHouseRequest adRequest
-    ) throws ValidationException, NotFoundException, AccessDeniedException {
-        AdHouseResponse updatedAd = adService.updateAd(adId, adRequest);
+            @PathVariable UUID id,
+            @ModelAttribute AdHouseRequest request
+    ) throws NotFoundException, AccessDeniedException, ValidationException {
+        AdHouseResponse updatedAd = adHouseService.updateAd(id, request);
         return ResponseEntity.ok(updatedAd);
     }
 
-    @DeleteMapping("/{adId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteAd(@PathVariable UUID adId) throws NotFoundException, AccessDeniedException {
-        adService.deleteAd(adId);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAd(@PathVariable UUID id) throws AccessDeniedException, NotFoundException {
+        adHouseService.deleteAd(id);
+        return ResponseEntity.noContent().build();
     }
 }

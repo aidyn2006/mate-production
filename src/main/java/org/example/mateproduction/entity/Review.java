@@ -10,20 +10,20 @@ import org.example.mateproduction.entity.base.BaseEntity;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "review")
 public class Review extends BaseEntity {
 
     @ManyToOne(optional = false)
     private User reviewer;
 
-    @ManyToOne
-    private AdHouse adHouse;
+    @ManyToOne(optional = false)
+    private User user; // заменяет adSeeker
 
-    @ManyToOne
-    private AdSeeker adSeeker;
+    @ManyToOne(optional = false)
+    private AdHouse advertisement; // заменяет adHouse
 
     private int rating;
 
     @Column(columnDefinition = "TEXT")
     private String comment;
 }
+

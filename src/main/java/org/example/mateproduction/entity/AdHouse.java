@@ -18,7 +18,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "ad")
 public class AdHouse extends BaseEntity {
 
     private String title;

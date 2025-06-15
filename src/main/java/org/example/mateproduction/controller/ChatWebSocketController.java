@@ -17,17 +17,15 @@ public class ChatWebSocketController {
     private final SimpMessagingTemplate messagingTemplate;
 
     @MessageMapping("/chat")
-    public void sendPrivateMessage(MessageRequest message) throws NotFoundException {
-        MessageResponse savedMessage = messageService.sendMessage(message);
-
+    public void handleMessage(MessageRequest messageRequest) throws NotFoundException {
+        MessageResponse savedMessage = messageService.sendMessage(messageRequest);
         messagingTemplate.convertAndSendToUser(
-                message.getReceiverId().toString(),
+                savedMessage.getReceiverId().toString(),
                 "/queue/messages",
                 savedMessage
         );
-
         messagingTemplate.convertAndSendToUser(
-                message.getSenderId().toString(),
+                savedMessage.getSenderId().toString(),
                 "/queue/messages",
                 savedMessage
         );

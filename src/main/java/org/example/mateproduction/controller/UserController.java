@@ -3,35 +3,37 @@ package org.example.mateproduction.controller;
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.service.UserService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/user")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
 
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getCurrentUser() {
+        return ResponseEntity.ok(userService.getCurrentUser());
+    }
+
     @GetMapping("/{id}")
-    public UserResponse getById(@PathVariable UUID id) {
-        return userService.getById(id);
+    public ResponseEntity<UserResponse> getUserById(@PathVariable UUID id) {
+        return ResponseEntity.ok(userService.getById(id));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteById(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteUserById(@PathVariable UUID id) {
         userService.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping
-    public List<UserResponse> getAllUsers() {
-        return userService.getAllUsers();
-    }
-
-    @GetMapping("/me")
-    public UserResponse getCurrentUser() {
-        return userService.getCurrentUser();
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 }

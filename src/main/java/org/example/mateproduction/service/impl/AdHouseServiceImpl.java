@@ -2,6 +2,7 @@ package org.example.mateproduction.service.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.AdHouseRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.dto.response.UserResponse;
@@ -195,6 +196,20 @@ public class AdHouseServiceImpl implements AdHouseService {
     }
 
     private UUID getCurrentUserId() {
-        return UUID.fromString(SecurityContextHolder.getContext().getAuthentication().getName());
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() ||
+                authentication.getPrincipal().equals("anonymousUser")) {
+            throw new SecurityException("User is not authenticated");
+        }
+
+        var principal = authentication.getPrincipal();
+
+        if (principal instanceof JwtUserDetails userDetails) {
+            return userDetails.getUser().getId();
+        }
+
+        throw new SecurityException("Invalid user principal");
     }
+
 }

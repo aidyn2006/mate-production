@@ -12,9 +12,10 @@ import java.util.UUID;
 public interface MessageRepository extends JpaRepository<Message, UUID> {
 
     @Query("SELECT m FROM Message m WHERE " +
-            "(m.sender.id = :senderId AND m.receiver.id = :receiverId) OR " +
-            "(m.sender.id = :receiverId AND m.receiver.id = :senderId)")
+            "(m.chat.sender.id = :senderId AND m.chat.receiver.id = :receiverId) OR " +
+            "(m.chat.sender.id = :receiverId AND m.chat.receiver.id = :senderId)")
     List<Message> findChatMessages(@Param("senderId") UUID senderId,
                                    @Param("receiverId") UUID receiverId);
+
 
 }

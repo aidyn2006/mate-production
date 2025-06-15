@@ -46,9 +46,8 @@ public class MessageServiceImpl implements MessageService {
                 .or(() -> chatRepository.findBySenderAndReceiver(receiver, sender))
                 .orElseGet(() -> {
                     Chat newChat = Chat.builder()
-                            .user1(sender)
-                            .user2(receiver)
-                            .createdAt(new Date())
+                            .sender(sender)
+                            .receiver(receiver)
                             .build();
                     return chatRepository.save(newChat);
                 });
@@ -99,14 +98,17 @@ public class MessageServiceImpl implements MessageService {
                 .id(message.getId())
                 .chatId(message.getChat().getId())
                 .senderId(message.getSender().getId())
-                .receiverId(message.getChat().getSender().getId().equals(message.getSender().getId())
-                        ? message.getChat().getReceiver().getId()
-                        : message.getChat().getSender().getId())
+                .receiverId(
+                        message.getChat().getReceiver().getId().equals(message.getSender().getId())
+                                ? message.getChat().getSender().getId()
+                                : message.getChat().getReceiver().getId()
+                )
                 .content(message.getContent())
                 .createdAt(message.getCreatedAt())
                 .isRead(message.getIsRead())
                 .build();
     }
+
 
     private UUID getCurrentUserId() {
         return UUID.fromString(SecurityContextHolder.getContext().getAuthentication().getName());

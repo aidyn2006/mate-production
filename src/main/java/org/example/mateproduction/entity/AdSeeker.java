@@ -21,7 +21,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "ad_seeker")
 public class AdSeeker extends BaseEntity {
 
     private Integer age;

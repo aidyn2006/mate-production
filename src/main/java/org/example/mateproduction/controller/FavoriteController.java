@@ -11,31 +11,37 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/favorites")
+@RequestMapping("/api/favorites")
 @RequiredArgsConstructor
 public class FavoriteController {
 
     private final FavoriteService favoriteService;
 
-    @PostMapping
-    public ResponseEntity<Favorite> addFavorite(@RequestParam UUID userId, @RequestParam UUID adId) {
-        Favorite favorite = favoriteService.addFavorite(userId, adId);
+    @PostMapping("/{adId}")
+    public ResponseEntity<Favorite> addFavorite(
+            @PathVariable UUID adId) throws NotFoundException {
+        Favorite favorite = favoriteService.addFavorite(adId);
         return ResponseEntity.ok(favorite);
     }
 
-    @DeleteMapping
-    public ResponseEntity<Void> removeFavorite(@RequestParam UUID userId, @RequestParam UUID adId) throws NotFoundException {
-        favoriteService.removeFavorite(userId, adId);
+    @DeleteMapping("/{adId}")
+    public ResponseEntity<Void> removeFavorite(
+            @PathVariable UUID adId) throws NotFoundException {
+        favoriteService.removeFavorite(adId);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Favorite>> getFavoritesByUser(@PathVariable UUID userId) {
-        return ResponseEntity.ok(favoriteService.getFavoritesByUser(userId));
+    @GetMapping("/{userId}")
+    public ResponseEntity<List<Favorite>> getFavoritesByUser(
+            @PathVariable UUID userId) {
+        List<Favorite> favorites = favoriteService.getFavoritesByUser(userId);
+        return ResponseEntity.ok(favorites);
     }
 
-    @GetMapping("/exists")
-    public ResponseEntity<Boolean> isFavorite(@RequestParam UUID userId, @RequestParam UUID adId) {
-        return ResponseEntity.ok(favoriteService.isFavorite(userId, adId));
+    @GetMapping("/check/{adId}")
+    public ResponseEntity<Boolean> isFavorite(
+            @PathVariable UUID adId) throws NotFoundException {
+        boolean result = favoriteService.isFavorite(adId);
+        return ResponseEntity.ok(result);
     }
 }

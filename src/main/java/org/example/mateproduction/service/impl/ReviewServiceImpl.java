@@ -1,6 +1,7 @@
 package org.example.mateproduction.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.ReviewRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.dto.response.ReviewResponse;
@@ -12,6 +13,7 @@ import org.example.mateproduction.repository.AdRepository;
 import org.example.mateproduction.repository.ReviewRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.ReviewService;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,7 +30,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public ReviewResponse createReview(ReviewRequest request) {
-        User reviewer = userRepository.findById(request.getReviewerId())
+        User reviewer = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("Reviewer not found"));
 
         User user = userRepository.findById(request.getUserId())
@@ -87,7 +89,6 @@ public class ReviewServiceImpl implements ReviewService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new RuntimeException("Review not found"));
 
-        // Проверяем, что review принадлежит reviewerId и adId
         if (!review.getReviewer().getId().equals(reviewerId) || !review.getAdvertisement().getId().equals(adId)) {
             throw new RuntimeException("Review does not belong to given reviewer or ad");
         }
@@ -96,20 +97,31 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     private ReviewResponse mapToResponse(Review review) {
+        User reviewerEntity = review.getReviewer();
+        User userEntity = review.getUser();
+
         UserResponse reviewer = UserResponse.builder()
-                .id(review.getReviewer().getId())
-                .fullName(review.getReviewer().getName()+" "+review.getReviewer().getSurname())
-                .email(review.getReviewer().getEmail())
-                .phone(review.getReviewer().getPhone())
-                .role(review.getReviewer().getRole().name())
+                .id(reviewerEntity.getId())
+                .name(reviewerEntity.getName())
+                .surname(reviewerEntity.getSurname())
+                .username(reviewerEntity.getUsername())
+                .email(reviewerEntity.getEmail())
+                .phone(reviewerEntity.getPhone())
+                .role(reviewerEntity.getRole())
+                .isVerified(reviewerEntity.getIsVerified())
+                .avatarUrl(reviewerEntity.getAvatarUrl())
                 .build();
 
         UserResponse user = UserResponse.builder()
-                .id(review.getUser().getId())
-                .fullName(review.getReviewer().getName()+" "+review.getReviewer().getSurname())
-                .email(review.getUser().getEmail())
-                .phone(review.getUser().getPhone())
-                .role(review.getUser().getRole().name())
+                .id(userEntity.getId())
+                .name(userEntity.getName())
+                .surname(userEntity.getSurname())
+                .username(userEntity.getUsername())
+                .email(userEntity.getEmail())
+                .phone(userEntity.getPhone())
+                .role(userEntity.getRole())
+                .isVerified(userEntity.getIsVerified())
+                .avatarUrl(userEntity.getAvatarUrl())
                 .build();
 
         AdHouseResponse ad = AdHouseResponse.builder()
@@ -121,11 +133,28 @@ public class ReviewServiceImpl implements ReviewService {
         return ReviewResponse.builder()
                 .id(review.getId())
                 .reviewer(reviewer)
-                .user(user)
                 .ad(ad)
                 .rating(review.getRating())
                 .comment(review.getComment())
+                .createdAt(review.getCreatedAt())
                 .build();
+    }
+
+    private UUID getCurrentUserId() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() ||
+                authentication.getPrincipal().equals("anonymousUser")) {
+            throw new SecurityException("User is not authenticated");
+        }
+
+        var principal = authentication.getPrincipal();
+
+        if (principal instanceof JwtUserDetails userDetails) {
+            return userDetails.getUser().getId();
+        }
+
+        throw new SecurityException("Invalid user principal");
     }
 
 }

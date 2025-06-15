@@ -6,6 +6,7 @@ import org.example.mateproduction.dto.request.LoginRequest;
 import org.example.mateproduction.dto.request.RegisterRequest;
 import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.exception.AlreadyExistException;
+import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,7 +28,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<UserResponse> login(@RequestBody LoginRequest request) throws NotFoundException {
         return ResponseEntity.ok(authService.login(request));
     }
 }

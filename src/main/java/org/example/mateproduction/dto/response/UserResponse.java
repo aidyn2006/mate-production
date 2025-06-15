@@ -22,4 +22,5 @@ public class UserResponse {
     private Role role;
     private Boolean isVerified;
     private String avatarUrl;
+    private String token;
 }

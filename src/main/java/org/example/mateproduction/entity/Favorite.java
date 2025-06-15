@@ -14,19 +14,20 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@IdClass(FavoriteId.class)
-@Table(name = "favorite")
 @Builder
 public class Favorite {
 
-    @Id
+    @EmbeddedId
+    private FavoriteId id;
+
     @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @MapsId("userId")
+    @JoinColumn(name = "user_id")
     private User user;
 
-    @Id
     @ManyToOne
-    @JoinColumn(name = "ad_id", referencedColumnName = "id")
+    @MapsId("adId")
+    @JoinColumn(name = "ad_id")
     private AdHouse ad;
 
     private Date createdAt;

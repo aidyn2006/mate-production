@@ -15,7 +15,6 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "messages")
 public class Message extends BaseEntity {
 
     @ManyToOne
