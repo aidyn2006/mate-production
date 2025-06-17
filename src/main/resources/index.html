@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Чаты</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #messages {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+        }
+        #chat-list li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Выберите пользователя</h2>
+<select id="user-select">
+    <option value="">-- Выберите --</option>
+    <option value="e10be9ce-a5e9-45c1-b1ff-fa3a79be356f">Пользователь A</option>
+    <option value="96aac05e-3d39-4931-a64c-e2d78a4ba56a">Пользователь B</option>
+</select>
+<button id="login-btn">Войти</button>
+
+<div id="main" style="display: none;">
+    <h2>Ваши чаты</h2>
+    <ul id="chat-list"></ul>
+
+    <hr>
+
+    <h3 id="chat-title" style="display: none;">Чат с <span id="companion-name"></span></h3>
+    <div id="messages"></div>
+    <input type="text" id="message-input" placeholder="Введите сообщение...">
+    <button id="send-button">Отправить</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+    const users = {
+        "e10be9ce-a5e9-45c1-b1ff-fa3a79be356f": "Пользователь A",
+        "96aac05e-3d39-4931-a64c-e2d78a4ba56a": "Пользователь B"
+    };
+
+    const jwtTokens = {
+        "e10be9ce-a5e9-45c1-b1ff-fa3a79be356f": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaWR5bkBleGFtcGxlLmNvbSIsImlhdCI6MTc0OTk5NTI2MiwiZXhwIjoxNzUwMDEzMjYyfQ.eImjgaQ0pXQJZIhSGSHVA6h2GKktXw15uIrDphWLTLU",
+        "96aac05e-3d39-4931-a64c-e2d78a4ba56a": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaWR5bjEyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ5OTk1MjkyLCJleHAiOjE3NTAwMTMyOTJ9.RnwV9h2yyR9Rq90ieNfOzXmXQ1rcyvMWY43Tv9f30_4"
+    };
+
+    let stompClient = null;
+    let currentUserId = null;
+    let currentCompanionId = null;
+
+    document.getElementById("login-btn").onclick = async () => {
+        const userId = document.getElementById("user-select").value;
+        if (!userId) return alert("Выберите пользователя");
+
+        currentUserId = userId;
+        const token = jwtTokens[userId];
+
+        if (!token) return alert("JWT токен не найден для выбранного пользователя");
+
+        localStorage.setItem("userId", userId);
+        localStorage.setItem("jwtToken", token);
+
+        document.getElementById("main").style.display = "block";
+        await loadChats();
+        connectWebSocket(userId, token);
+    };
+
+    async function loadChats() {
+        const chatList = document.getElementById("chat-list");
+        chatList.innerHTML = "";
+
+        const otherUsers = Object.keys(users).filter(u => u !== currentUserId);
+        for (const companionId of otherUsers) {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="#">Чат с ${users[companionId]}</a>`;
+            li.onclick = () => openChat(companionId);
+            chatList.appendChild(li);
+        }
+    }
+
+    async function openChat(companionId) {
+        currentCompanionId = companionId;
+        document.getElementById("chat-title").style.display = "block";
+        document.getElementById("companion-name").innerText = users[companionId];
+        document.getElementById("messages").innerHTML = "";
+
+        const messages = await getChatHistory(currentUserId, companionId);
+        for (const msg of messages) {
+            appendMessage(msg.senderId === currentUserId ? 'Вы' : 'Собеседник', msg.content);
+        }
+
+        await markAsRead(companionId, currentUserId);
+    }
+
+    function appendMessage(sender, content) {
+        const div = document.createElement("div");
+        div.textContent = `${sender}: ${content}`;
+        document.getElementById("messages").appendChild(div);
+    }
+
+    async function getChatHistory(senderId, receiverId) {
+        const token = localStorage.getItem("jwtToken");
+        const res = await fetch(`http://localhost:8888/api/messages/history?senderId=${senderId}&receiverId=${receiverId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return await res.json();
+    }
+
+    async function markAsRead(senderId, receiverId) {
+        const token = localStorage.getItem("jwtToken");
+        await fetch(`http://localhost:8888/api/messages/read`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ senderId, receiverId })
+        });
+    }
+
+    function connectWebSocket(userId, token) {
+        const socket = new SockJS("http://localhost:8888/ws");
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({ Authorization: `Bearer ${token}` }, () => {
+            stompClient.subscribe(`/user/${userId}/queue/messages`, (message) => {
+                const payload = JSON.parse(message.body);
+                if (payload.senderId === currentCompanionId) {
+                    appendMessage('Собеседник', payload.content);
+                }
+            });
+        });
+    }
+
+    document.getElementById("send-button").onclick = () => {
+        const content = document.getElementById("message-input").value;
+        if (!content.trim()) return;
+
+        stompClient.send("/app/chat", {}, JSON.stringify({
+            receiverId: currentCompanionId,
+            content
+        }));
+
+        appendMessage('Вы', content);
+        document.getElementById("message-input").value = '';
+    };
+</script>
+
+</body>
+</html>

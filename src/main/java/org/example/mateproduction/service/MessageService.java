@@ -1,6 +1,7 @@
 package org.example.mateproduction.service;
 
 import org.example.mateproduction.dto.request.MessageRequest;
+import org.example.mateproduction.dto.response.ChatPreviewResponse;
 import org.example.mateproduction.dto.response.MessageResponse;
 import org.example.mateproduction.exception.NotFoundException;
 
@@ -12,4 +13,6 @@ public interface MessageService {
     List<MessageResponse> getChatHistory(UUID senderId, UUID receiverId) throws NotFoundException;
     void deleteMessage(UUID messageId) throws NotFoundException;
     void clearChat(UUID senderId, UUID receiverId);
+    List<ChatPreviewResponse> getUserChats(UUID currentUserId) throws NotFoundException;
+    void markMessagesAsRead(UUID senderId, UUID receiverId);
 }

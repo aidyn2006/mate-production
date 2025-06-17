@@ -2,7 +2,9 @@ package org.example.mateproduction.service.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.MessageRequest;
+import org.example.mateproduction.dto.response.ChatPreviewResponse;
 import org.example.mateproduction.dto.response.MessageResponse;
 import org.example.mateproduction.entity.Chat;
 import org.example.mateproduction.entity.Message;
@@ -40,7 +42,6 @@ public class MessageServiceImpl implements MessageService {
         User receiver = userRepository.findById(receiverId)
                 .orElseThrow(() -> new NotFoundException("Receiver not found"));
 
-        // Получаем или создаём чат
         Chat chat = chatRepository
                 .findBySenderAndReceiver(sender, receiver)
                 .or(() -> chatRepository.findBySenderAndReceiver(receiver, sender))
@@ -78,6 +79,66 @@ public class MessageServiceImpl implements MessageService {
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
+    @Override
+    public List<ChatPreviewResponse> getUserChats(UUID currentUserId) throws NotFoundException {
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        List<Chat> chats = chatRepository.findAllBySenderOrReceiver(currentUser, currentUser);
+
+        return chats.stream()
+                .map(chat -> {
+                    User companion = chat.getSender().getId().equals(currentUserId)
+                            ? chat.getReceiver()
+                            : chat.getSender();
+
+                    Message lastMessage = chat.getMessages().stream()
+                            .max((m1, m2) -> m1.getCreatedAt().compareTo(m2.getCreatedAt()))
+                            .orElse(null);
+
+                    boolean hasUnread = chat.getMessages().stream()
+                            .anyMatch(msg -> !msg.getSender().getId().equals(currentUserId) && !Boolean.TRUE.equals(msg.getIsRead()));
+
+                    return ChatPreviewResponse.builder()
+                            .chatId(chat.getId())
+                            .companionId(companion.getId())
+                            .companionName(companion.getName() + " " + companion.getSurname())
+                            .companionAvatarUrl(companion.getAvatarUrl())
+                            .lastMessage(lastMessage != null ? lastMessage.getContent() : "")
+                            .lastMessageTime(lastMessage != null ? lastMessage.getCreatedAt() : null)
+                            .hasUnreadMessages(hasUnread)
+                            .build();
+                })
+                .sorted((c1, c2) -> {
+                    Date time1 = c1.getLastMessageTime() != null ? c1.getLastMessageTime() : new Date(0);
+                    Date time2 = c2.getLastMessageTime() != null ? c2.getLastMessageTime() : new Date(0);
+                    return time2.compareTo(time1); // сортировка по убыванию
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void markMessagesAsRead(UUID senderId, UUID receiverId) {
+        List<Message> unreadMessages = messageRepository.findChatMessages(senderId, receiverId)
+                .stream()
+                .filter(msg -> {
+                    UUID actualReceiverId = msg.getChat().getReceiver().getId().equals(msg.getSender().getId())
+                            ? msg.getChat().getSender().getId()
+                            : msg.getChat().getReceiver().getId();
+                    return actualReceiverId.equals(receiverId) && !Boolean.TRUE.equals(msg.getIsRead());
+                })
+                .collect(Collectors.toList());
+
+        for (Message message : unreadMessages) {
+            message.setIsRead(true);
+        }
+
+        messageRepository.saveAll(unreadMessages);
+    }
+
+
+
 
     @Override
     public void deleteMessage(UUID messageId) throws NotFoundException {
@@ -111,6 +172,19 @@ public class MessageServiceImpl implements MessageService {
 
 
     private UUID getCurrentUserId() {
-        return UUID.fromString(SecurityContextHolder.getContext().getAuthentication().getName());
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() ||
+                authentication.getPrincipal().equals("anonymousUser")) {
+            throw new SecurityException("User is not authenticated");
+        }
+
+        var principal = authentication.getPrincipal();
+
+        if (principal instanceof JwtUserDetails userDetails) {
+            return userDetails.getUser().getId();
+        }
+
+        throw new SecurityException("Invalid user principal");
     }
 }

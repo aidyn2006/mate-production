@@ -9,9 +9,18 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetailsService;
+
 @Service
 public class JwtService {
+
     private final String SECRET = "TOBEHONESTIAMSOTIREDBUTCNATYASHTATANDTHISVALIDATIONSISBADICANSAYOTHERWORDS";
+
+    @Autowired
+    private UserDetailsService userDetailsService;
 
     public String generateToken(UserDetails ud) {
         return Jwts.builder()
@@ -33,4 +42,15 @@ public class JwtService {
                 !Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token)
                         .getBody().getExpiration().before(new Date());
     }
+
+    public Authentication getAuthentication(String token) {
+        String username = extractUsername(token);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        return new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                userDetails.getAuthorities()
+        );
+    }
 }
+
