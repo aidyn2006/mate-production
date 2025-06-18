@@ -48,10 +48,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteById(UUID userId) {
+    public void deleteHardById(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         userRepository.delete(user);
+    }
+
+    @Override
+    public void deleteById(UUID userId) {
+        User user=userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setIsDeleted(true);
+        userRepository.save(user);
     }
 
     public List<AdHouseResponse> getAllAdHouses() {
@@ -193,16 +202,6 @@ public class UserServiceImpl implements UserService {
         // 4. Encode and set the new password
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
-    }
-
-    @Override
-    public void verifyUser(String token) {
-
-    }
-
-    @Override
-    public void banUser(UUID userId) {
-
     }
 
 

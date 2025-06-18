@@ -13,6 +13,7 @@ import java.util.UUID;
 public interface UserService {
 
     UserResponse getById(UUID userId);
+    void deleteHardById(UUID userId);
     void deleteById(UUID userId);
     List<UserResponse> getAllUsers();
     UserResponse getCurrentUser();
@@ -21,6 +22,5 @@ public interface UserService {
 
     UserResponse updateUser(UUID userId, UserRequest request);
     void changePassword(ChangePasswordRequest request) throws NotFoundException;
-    void verifyUser(String token);
-    void banUser(UUID userId);
+
 }
