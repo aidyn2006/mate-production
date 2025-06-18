@@ -39,12 +39,11 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
     
-    
-    @GetMapping("/my-ad-houses")
+    @GetMapping("/me/ads/houses")
     public ResponseEntity<List<AdHouseResponse>> getMyAdHouses() {
         return ResponseEntity.ok(userService.getAllAdHouses());
     }
-    @GetMapping("/my-ad-seeker")
+    @GetMapping("/me/ads/seekers")
     public ResponseEntity<List<AdSeekerResponse>> getMyAdSeeker() {
         return ResponseEntity.ok(userService.getAllAdSeekers());
     }

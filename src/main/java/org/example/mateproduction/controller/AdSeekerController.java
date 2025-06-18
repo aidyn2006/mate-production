@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/seeker-ads")
+@RequestMapping("/api/v1/ads/seekers")
 @RequiredArgsConstructor
 public class AdSeekerController {
 

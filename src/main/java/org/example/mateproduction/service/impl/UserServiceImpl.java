@@ -9,6 +9,8 @@ import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.entity.AdHouse;
 import org.example.mateproduction.entity.AdSeeker;
 import org.example.mateproduction.entity.User;
+import org.example.mateproduction.exception.NotFoundException;
+import org.example.mateproduction.exception.PasswordsNotMatchException;
 import org.example.mateproduction.repository.AdRepository;
 import org.example.mateproduction.repository.AdSeekerRepository;
 import org.example.mateproduction.repository.UserRepository;
@@ -17,7 +19,9 @@ import org.example.mateproduction.service.AdSeekerService;
 import org.example.mateproduction.service.UserService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -34,6 +38,7 @@ public class UserServiceImpl implements UserService {
     private final AdRepository adRepository;
     private final AdSeekerRepository adSeekerRepository;
     private final CloudinaryService cloudinaryService;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserResponse getById(UUID userId) {
@@ -168,8 +173,26 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void changePassword(ChangePasswordRequest request) {
+    @Transactional
+    public void changePassword(ChangePasswordRequest request) throws NotFoundException{
+        // 1. Get the current user's email from the security context
+        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new NotFoundException("Current user not found in the database."));
 
+        // 2. Check if the old password is correct
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new PasswordsNotMatchException("Incorrect old password.");
+        }
+
+        // 3. Check if the new password and confirmation match
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new PasswordsNotMatchException("New passwords do not match.");
+        }
+
+        // 4. Encode and set the new password
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 
     @Override
