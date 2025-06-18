@@ -11,18 +11,15 @@ import org.example.mateproduction.entity.AdSeeker;
 import org.example.mateproduction.entity.User;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.PasswordsNotMatchException;
-import org.example.mateproduction.repository.AdRepository;
+import org.example.mateproduction.repository.AdHouseRepository;
 import org.example.mateproduction.repository.AdSeekerRepository;
 import org.example.mateproduction.repository.UserRepository;
-import org.example.mateproduction.service.AdHouseService;
-import org.example.mateproduction.service.AdSeekerService;
 import org.example.mateproduction.service.UserService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,7 +32,7 @@ public class UserServiceImpl implements UserService {
 
 
     private final UserRepository userRepository;
-    private final AdRepository adRepository;
+    private final AdHouseRepository adRepository;
     private final AdSeekerRepository adSeekerRepository;
     private final CloudinaryService cloudinaryService;
     private final PasswordEncoder passwordEncoder;
@@ -48,10 +45,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteById(UUID userId) {
+    public void deleteHardById(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         userRepository.delete(user);
+    }
+
+    @Override
+    public void deleteById(UUID userId) {
+        User user=userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setIsDeleted(true);
+        userRepository.save(user);
     }
 
     public List<AdHouseResponse> getAllAdHouses() {
@@ -193,16 +199,6 @@ public class UserServiceImpl implements UserService {
         // 4. Encode and set the new password
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
-    }
-
-    @Override
-    public void verifyUser(String token) {
-
-    }
-
-    @Override
-    public void banUser(UUID userId) {
-
     }
 
 

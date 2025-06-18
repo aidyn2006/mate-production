@@ -3,6 +3,7 @@ package org.example.mateproduction.service.impl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.config.Jwt.JwtUserDetails;
+import org.example.mateproduction.dto.request.AdSeekerFilter;
 import org.example.mateproduction.dto.request.AdSeekerRequest;
 import org.example.mateproduction.dto.response.AdSeekerResponse;
 import org.example.mateproduction.dto.response.UserResponse;
@@ -127,6 +128,27 @@ public class AdSeekerServiceImpl implements AdSeekerService {
         ad.setStatus(Status.DELETED);
         adSeekerRepository.save(ad);
     }
+
+    @Override
+    public List<AdSeekerResponse> findByFilter(AdSeekerFilter filter) {
+        List<AdSeeker> seekers = adSeekerRepository.findByFilter(
+                filter.getMinAge(),
+                filter.getMaxAge(),
+                filter.getGender(),
+                filter.getCity(),
+                filter.getDesiredLocation(),
+                filter.getMaxBudget(),
+                filter.getEarliestMoveInDate(),
+                filter.getHasFurnishedPreference(),
+                filter.getRoommatePreferences(),
+                filter.getStatus()
+        );
+
+        return seekers.stream()
+                .map(this::mapToResponseDto)
+                .toList();
+    }
+
 
     // ------------------- ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ----------------------
 

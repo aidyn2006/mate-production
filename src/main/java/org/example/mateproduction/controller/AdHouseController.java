@@ -2,6 +2,7 @@ package org.example.mateproduction.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.controller.openapi.AdHouseControllerApi;
+import org.example.mateproduction.dto.request.AdHouseFilter;
 import org.example.mateproduction.dto.request.AdHouseRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.exception.NotFoundException;
@@ -39,6 +40,11 @@ public class AdHouseController implements AdHouseControllerApi {
     ) throws ValidationException, NotFoundException {
         AdHouseResponse createdAd = adHouseService.createAd(request);
         return ResponseEntity.ok(createdAd);
+    }
+
+    @PostMapping("/filter")
+    public ResponseEntity<List<AdHouseResponse>> filterAd(@RequestBody AdHouseFilter filter){
+        return ResponseEntity.ok(adHouseService.findByFilter(filter));
     }
 
     @PutMapping("/{id}")

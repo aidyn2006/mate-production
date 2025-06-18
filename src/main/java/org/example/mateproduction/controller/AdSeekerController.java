@@ -1,7 +1,10 @@
 package org.example.mateproduction.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.mateproduction.dto.request.AdHouseFilter;
+import org.example.mateproduction.dto.request.AdSeekerFilter;
 import org.example.mateproduction.dto.request.AdSeekerRequest;
+import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.dto.response.AdSeekerResponse;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.ValidationException;
@@ -34,6 +37,10 @@ public class AdSeekerController {
     public ResponseEntity<AdSeekerResponse> createAd(@RequestBody AdSeekerRequest request)
             throws ValidationException, NotFoundException {
         return ResponseEntity.ok(adSeekerService.createAd(request));
+    }
+    @PostMapping("/filter")
+    public ResponseEntity<List<AdSeekerResponse>> filterAd(@RequestBody AdSeekerFilter filter){
+        return ResponseEntity.ok(adSeekerService.findByFilter(filter));
     }
 
     @PutMapping("/{id}")

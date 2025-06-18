@@ -1,5 +1,6 @@
 package org.example.mateproduction.service;
 
+import org.example.mateproduction.dto.request.AdHouseFilter;
 import org.example.mateproduction.dto.request.AdHouseRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.exception.NotFoundException;
@@ -20,4 +21,6 @@ public interface AdHouseService {
     void deleteAd(UUID adId) throws AccessDeniedException, NotFoundException;
 
     List<AdHouseResponse> getAllAds();
+    List<AdHouseResponse> findByFilter(AdHouseFilter filter);
+
 }

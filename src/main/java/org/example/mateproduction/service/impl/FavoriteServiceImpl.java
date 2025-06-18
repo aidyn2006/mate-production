@@ -8,7 +8,7 @@ import org.example.mateproduction.entity.Favorite;
 import org.example.mateproduction.entity.User;
 import org.example.mateproduction.entity.contract.FavoriteId;
 import org.example.mateproduction.exception.NotFoundException;
-import org.example.mateproduction.repository.AdRepository;
+import org.example.mateproduction.repository.AdHouseRepository;
 import org.example.mateproduction.repository.FavoriteRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.FavoriteService;
@@ -25,7 +25,7 @@ public class FavoriteServiceImpl implements FavoriteService {
 
     private final FavoriteRepository favoriteRepository;
     private final UserRepository userRepository;
-    private final AdRepository adRepository;
+    private final AdHouseRepository adRepository;
 
     @Override
     @Transactional

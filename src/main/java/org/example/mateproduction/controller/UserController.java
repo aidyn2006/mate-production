@@ -28,12 +28,16 @@ public class UserController {
         return ResponseEntity.ok(userService.getById(id));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/hard/{id}")
     public ResponseEntity<Void> deleteUserById(@PathVariable UUID id) {
+        userService.deleteHardById(id);
+        return ResponseEntity.noContent().build();
+    }
+    @PostMapping("/delete/{id}")
+    public ResponseEntity<Void> deleteByid(@PathVariable UUID id) {
         userService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
-
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
