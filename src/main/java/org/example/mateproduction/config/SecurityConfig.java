@@ -11,12 +11,14 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.List;
 
@@ -67,6 +69,14 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                     .requestMatchers("/api/**").permitAll()
                     .anyRequest().permitAll() // временно разреши все
             )
+//            .authorizeHttpRequests(auth -> auth
+//                    // Allow public access to all auth-related endpoints
+//                    .requestMatchers("/api/v1/auth/**").permitAll()
+//                    // You can add other public endpoints here (e.g., swagger docs)
+//                    .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+//                    // All other requests must be authenticated
+//                    .anyRequest().authenticated()
+//            )
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
