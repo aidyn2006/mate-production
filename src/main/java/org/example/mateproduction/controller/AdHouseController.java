@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/ads")
+@RequestMapping("/api/v1/ads/houses")
 @RequiredArgsConstructor
 public class AdHouseController implements AdHouseControllerApi {
 
@@ -34,7 +34,7 @@ public class AdHouseController implements AdHouseControllerApi {
     }
 
     @PostMapping
-    public ResponseEntity<AdHouseResponse> createAd(
+    public ResponseEntity<AdHouseResponse>  createAd(
             @ModelAttribute AdHouseRequest request
     ) throws ValidationException, NotFoundException {
         AdHouseResponse createdAd = adHouseService.createAd(request);
@@ -54,5 +54,10 @@ public class AdHouseController implements AdHouseControllerApi {
     public ResponseEntity<Void> deleteAd(@PathVariable UUID id) throws AccessDeniedException, NotFoundException {
         adHouseService.deleteAd(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("{id}/status")
+    public ResponseEntity<AdHouseResponse> updateAdStatus() {
+        return null;
     }
 }

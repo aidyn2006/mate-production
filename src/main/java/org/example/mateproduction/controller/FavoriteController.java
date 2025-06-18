@@ -44,4 +44,5 @@ public class FavoriteController {
         boolean result = favoriteService.isFavorite(adId);
         return ResponseEntity.ok(result);
     }
+
 }

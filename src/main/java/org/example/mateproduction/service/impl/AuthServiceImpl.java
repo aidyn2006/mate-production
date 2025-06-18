@@ -6,17 +6,24 @@ import org.example.mateproduction.config.Jwt.JwtService;
 import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.LoginRequest;
 import org.example.mateproduction.dto.request.RegisterRequest;
+import org.example.mateproduction.dto.request.ResetPasswordRequest;
 import org.example.mateproduction.dto.response.UserResponse;
+import org.example.mateproduction.entity.Token;
 import org.example.mateproduction.entity.User;
-import org.example.mateproduction.exception.AlreadyExistException;
-import org.example.mateproduction.exception.NotFoundException;
+import org.example.mateproduction.exception.*;
+import org.example.mateproduction.repository.TokenRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.AuthService;
+import org.example.mateproduction.service.EmailService;
 import org.example.mateproduction.util.Role;
+import org.example.mateproduction.util.TokenType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +34,8 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final CloudinaryService cloudinaryService;
+    private final TokenRepository tokenRepository;
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -50,6 +59,11 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         userRepository.save(user);
+
+        String token = generateAndSaveToken(user, TokenType.EMAIL_VERIFICATION);
+        String verificationLink = "http://localhost:8888/api/v1/auth/verify?token=" + token; // Customize URL
+        String emailBody = buildEmail("Verify Your Account", "Please click the link below to verify your account:", verificationLink, "Verify Account");
+        emailService.sendEmail(user.getEmail(), "Account Verification", emailBody);
 
         return buildUserResponse(user);
     }
@@ -83,4 +97,90 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    @Override
+    @Transactional
+    public void verifyAccount(String token) {
+        Token verificationToken = findAndValidateToken(token, TokenType.EMAIL_VERIFICATION);
+        User user = verificationToken.getUser();
+        user.setIsVerified(true);
+        userRepository.save(user);
+
+        verificationToken.setConfirmedAt(LocalDateTime.now());
+        tokenRepository.save(verificationToken);
+    }
+
+    @Override
+    @Transactional
+    public void forgotPassword(String email) throws NotFoundException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User with email " + email + " not found."));
+
+        if (!user.getIsVerified()){
+            throw new UnverifiedUserException("Cannot reset password for an unverified account. Please verify your account first.");
+        }
+
+        String token = generateAndSaveToken(user, TokenType.PASSWORD_RESET);
+        // This link should point to your FRONTEND application page for resetting the password
+        String resetLink = "http://localhost:8888/reset-password?token=" + token;
+        String emailBody = buildEmail("Reset Your Password", "Please click the link below to reset your password:", resetLink, "Reset Password");
+        emailService.sendEmail(user.getEmail(), "Password Reset Request", emailBody);
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new PasswordsNotMatchException("Passwords do not match.");
+        }
+
+        Token resetToken = findAndValidateToken(request.getToken(), TokenType.PASSWORD_RESET);
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        resetToken.setConfirmedAt(LocalDateTime.now());
+        tokenRepository.save(resetToken);
+    }
+
+    private String generateAndSaveToken(User user, TokenType tokenType) {
+        String tokenString = UUID.randomUUID().toString();
+        Token token = Token.builder()
+                .token(tokenString)
+                .tokenType(tokenType)
+                .user(user)
+                .expiresAt(LocalDateTime.now().plusMinutes(15)) // Token valid for 15 minutes
+                .build();
+        tokenRepository.save(token);
+        return tokenString;
+    }
+
+    private Token findAndValidateToken(String tokenString, TokenType expectedType) {
+        Token token = tokenRepository.findByToken(tokenString)
+                .orElseThrow(() -> new TokenException("Invalid token."));
+
+        if (token.getTokenType() != expectedType) {
+            throw new TokenException("Invalid token type.");
+        }
+
+        if (token.getConfirmedAt() != null) {
+            throw new TokenException("Token has already been used.");
+        }
+
+        if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new TokenException("Token has expired.");
+        }
+
+        return token;
+    }
+
+    private String buildEmail(String title, String message, String link, String buttonText) {
+        return "<div style='font-family: Arial, sans-serif; text-align: center; color: #333;'>"
+                + "<h2>" + title + "</h2>"
+                + "<p>" + message + "</p>"
+                + "<a href='" + link + "' style='background-color: #007BFF; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 20px;'>"
+                + buttonText
+                + "</a>"
+                + "<p style='margin-top: 30px; font-size: 0.8em;'>If you did not request this, please ignore this email.</p>"
+                + "</div>";
+    }
 }
