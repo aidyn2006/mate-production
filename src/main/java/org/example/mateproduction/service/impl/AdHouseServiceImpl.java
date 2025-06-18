@@ -1,8 +1,10 @@
 package org.example.mateproduction.service.impl;
 
+import jakarta.servlet.Filter;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.config.Jwt.JwtUserDetails;
+import org.example.mateproduction.dto.request.AdHouseFilter;
 import org.example.mateproduction.dto.request.AdHouseRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.dto.response.UserResponse;
@@ -10,10 +12,11 @@ import org.example.mateproduction.entity.AdHouse;
 import org.example.mateproduction.entity.User;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.ValidationException;
-import org.example.mateproduction.repository.AdRepository;
+import org.example.mateproduction.repository.AdHouseRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.AdHouseService;
 import org.example.mateproduction.util.Status;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,7 +32,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AdHouseServiceImpl implements AdHouseService {
 
-    private final AdRepository adRepository;
+    private final AdHouseRepository adRepository;
     private final UserRepository userRepository;
     private final CloudinaryService cloudinaryService;
 
@@ -39,6 +42,24 @@ public class AdHouseServiceImpl implements AdHouseService {
         return adRepository.findAllByStatus(Status.ACTIVE).stream()
                 .map(AdHouseServiceImpl::mapToResponseDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<AdHouseResponse> findByFilter(AdHouseFilter filter) {
+        return adRepository.findByFilter(
+                        filter.getMinPrice(),
+                        filter.getMaxPrice(),
+                        filter.getMinRooms(),
+                        filter.getMaxRooms(),
+                        filter.getMinArea(),
+                        filter.getMaxArea(),
+                        filter.getCity(),
+                        filter.getType(),
+                        filter.getFurnished(),
+                        filter.getStatus()
+                ).stream()
+                .map(AdHouseServiceImpl::mapToResponseDto)
+                .toList();
     }
 
     @Override

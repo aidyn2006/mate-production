@@ -1,5 +1,6 @@
 package org.example.mateproduction.service;
 
+import org.example.mateproduction.dto.request.AdSeekerFilter;
 import org.example.mateproduction.dto.request.AdSeekerRequest;
 import org.example.mateproduction.dto.response.AdSeekerResponse;
 import org.example.mateproduction.exception.NotFoundException;
@@ -20,4 +21,6 @@ public interface AdSeekerService {
     AdSeekerResponse updateAd(UUID adId, AdSeekerRequest dto) throws NotFoundException, AccessDeniedException, ValidationException;
 
     void deleteAd(UUID adId) throws NotFoundException, AccessDeniedException;
+    List<AdSeekerResponse> findByFilter(AdSeekerFilter filter);
+
 }

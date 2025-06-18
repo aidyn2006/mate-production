@@ -9,9 +9,10 @@ import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.entity.AdHouse;
 import org.example.mateproduction.entity.Review;
 import org.example.mateproduction.entity.User;
-import org.example.mateproduction.repository.AdRepository;
+import org.example.mateproduction.repository.AdHouseRepository;
 import org.example.mateproduction.repository.ReviewRepository;
 import org.example.mateproduction.repository.UserRepository;
+import org.example.mateproduction.service.AdHouseService;
 import org.example.mateproduction.service.ReviewService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
-    private final AdRepository adRepository;
+    private final AdHouseRepository adRepository;
 
     @Override
     public ReviewResponse createReview(ReviewRequest request) {
