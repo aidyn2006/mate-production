@@ -50,12 +50,11 @@ public class AdHouseController implements AdHouseControllerApi {
     @PutMapping("/{id}")
     public ResponseEntity<AdHouseResponse> updateAd(
             @PathVariable UUID id,
-            @ModelAttribute AdHouseRequest request
+            @ModelAttribute AdHouseRequest request // <--- Still uses @ModelAttribute
     ) throws NotFoundException, AccessDeniedException, ValidationException {
         AdHouseResponse updatedAd = adHouseService.updateAd(id, request);
         return ResponseEntity.ok(updatedAd);
     }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAd(@PathVariable UUID id) throws AccessDeniedException, NotFoundException {
         adHouseService.deleteAd(id);

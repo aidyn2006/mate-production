@@ -15,6 +15,7 @@ import org.example.mateproduction.repository.AdHouseRepository;
 import org.example.mateproduction.repository.AdSeekerRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.UserService;
+import org.example.mateproduction.util.Status;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -70,7 +71,9 @@ public class UserServiceImpl implements UserService {
 
         List<AdHouse> adHouses = adRepository.findAllByUserId(currentUserId);
 
+
         return adHouses.stream()
+                .filter(ad -> ad.getStatus() != Status.DELETED)
                 .map(ad -> AdHouseResponse.builder()
                         .id(ad.getId())
                         .title(ad.getTitle())
@@ -115,6 +118,7 @@ public class UserServiceImpl implements UserService {
         List<AdSeeker> adSeekers = adSeekerRepository.findAllByUserId(currentUserId);
 
         return adSeekers.stream()
+                .filter(ad -> ad.getStatus() != Status.DELETED)
                 .map(ad -> AdSeekerResponse.builder()
                         .id(ad.getId())
                         .age(ad.getAge())

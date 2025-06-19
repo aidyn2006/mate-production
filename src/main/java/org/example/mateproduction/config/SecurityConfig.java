@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.filter.CommonsRequestLoggingFilter;
 
 import java.util.List;
 
@@ -59,7 +60,7 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(request -> {
                 var config = new org.springframework.web.cors.CorsConfiguration();
-                config.setAllowedOrigins(List.of("http://localhost:63342")); // или "*" временно
+                config.setAllowedOrigins(List.of("http://localhost:63342", "http://localhost:5173")); // или "*" временно
                 config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                 config.setAllowedHeaders(List.of("*"));
                 config.setAllowCredentials(true);
@@ -90,5 +91,16 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         prov.setUserDetailsService(userDetailsService);
         prov.setPasswordEncoder(passwordEncoder());
         return prov;
+    }
+
+    @Bean
+    public CommonsRequestLoggingFilter requestLoggingFilter() {
+        CommonsRequestLoggingFilter loggingFilter = new CommonsRequestLoggingFilter();
+        loggingFilter.setIncludeClientInfo(true);
+        loggingFilter.setIncludeQueryString(true);
+        loggingFilter.setIncludePayload(true); // include body
+        loggingFilter.setIncludeHeaders(true); // optional: logs all headers
+        loggingFilter.setMaxPayloadLength(10000); // or any large value
+        return loggingFilter;
     }
 }
