@@ -17,6 +17,7 @@ import org.example.mateproduction.service.AuthService;
 import org.example.mateproduction.service.EmailService;
 import org.example.mateproduction.util.Role;
 import org.example.mateproduction.util.TokenType;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,6 +37,17 @@ public class AuthServiceImpl implements AuthService {
     private final CloudinaryService cloudinaryService;
     private final TokenRepository tokenRepository;
     private final EmailService emailService;
+    // --- [NEW] INJECTING FRONTEND URLS FROM application.properties ---
+    @Value("${app.frontend.base-url}")
+    private String frontendBaseUrl;
+
+    @Value("${app.frontend.verify-email-path}")
+    private String verifyEmailPath;
+
+    @Value("${app.frontend.reset-password-path}")
+    private String resetPasswordPath;
+    // --- [END NEW] ---
+
 
     @Override
     @Transactional
@@ -60,8 +72,14 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
 
+
         String token = generateAndSaveToken(user, TokenType.EMAIL_VERIFICATION);
-        String verificationLink = "http://localhost:8888/api/v1/auth/verify?token=" + token; // Customize URL
+
+        // --- [FIXED] CONSTRUCT THE VERIFICATION LINK TO POINT TO THE FRONTEND ---
+        // This link now correctly points to your React application's verification page.
+        String verificationLink = frontendBaseUrl + verifyEmailPath + "?token=" + token;
+        // --- [END FIXED] ---
+
         String emailBody = buildEmail("Verify Your Account", "Please click the link below to verify your account:", verificationLink, "Verify Account");
         emailService.sendEmail(user.getEmail(), "Account Verification", emailBody);
 
@@ -120,8 +138,10 @@ public class AuthServiceImpl implements AuthService {
         }
 
         String token = generateAndSaveToken(user, TokenType.PASSWORD_RESET);
-        // This link should point to your FRONTEND application page for resetting the password
-        String resetLink = "http://localhost:8888/reset-password?token=" + token;
+        // --- [FIXED] CONSTRUCT THE RESET LINK TO POINT TO THE FRONTEND ---
+        String resetLink = frontendBaseUrl + resetPasswordPath + "?token=" + token;
+        // --- [END FIXED] ---
+
         String emailBody = buildEmail("Reset Your Password", "Please click the link below to reset your password:", resetLink, "Reset Password");
         emailService.sendEmail(user.getEmail(), "Password Reset Request", emailBody);
     }
@@ -148,7 +168,7 @@ public class AuthServiceImpl implements AuthService {
                 .token(tokenString)
                 .tokenType(tokenType)
                 .user(user)
-                .expiresAt(LocalDateTime.now().plusMinutes(15)) // Token valid for 15 minutes
+                .expiresAt(LocalDateTime.now().plusMinutes(15))
                 .build();
         tokenRepository.save(token);
         return tokenString;

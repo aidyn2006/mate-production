@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.nio.file.AccessDeniedException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -135,11 +136,16 @@ public class AdHouseServiceImpl implements AdHouseService {
         ad.setFurnished(dto.getFurnished());
         ad.setContactPhoneNumber(dto.getContactPhoneNumber());
 
+        // This logic is now safe because uploadImages returns a mutable list
         if (dto.getImages() != null && !dto.getImages().isEmpty()) {
+            // First, you might want to delete old images from Cloudinary if they are being replaced
+            // (This is an enhancement, not part of the bug fix)
+            // cloudinaryService.deleteImages(ad.getImages());
+
             ad.setImages(uploadImages(dto.getImages()));
         }
 
-        ad = adRepository.save(ad);
+        ad = adRepository.save(ad); // This line will now succeed
         return mapToResponseDto(ad);
     }
 
@@ -177,9 +183,13 @@ public class AdHouseServiceImpl implements AdHouseService {
     }
 
     private List<String> uploadImages(List<MultipartFile> images) {
+        if (images == null || images.isEmpty()) {
+            return new ArrayList<>(); // Return an empty mutable list
+        }
+        // CORRECTED: Collect to a new ArrayList, which is mutable
         return images.stream()
                 .map(cloudinaryService::upload)
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
 
