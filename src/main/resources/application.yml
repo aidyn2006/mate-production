@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    username: postgres
+    password: ali1230123
+
+  mail:
+    username: suhansun13@gmail.com
+    password: tmei mwud dcix kmpc
+    host: smtp.gmail.com
+    port: 587
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+cloudinary:
+  cloud_name: dcawzx4kp
+  api_key: 963419412157174
+  api_secret: of8ffqL1wIZlmczO6RGM28qiktY
