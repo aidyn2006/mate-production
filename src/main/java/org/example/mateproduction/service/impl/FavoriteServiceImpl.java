@@ -3,6 +3,9 @@ package org.example.mateproduction.service.impl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.config.Jwt.JwtUserDetails;
+import org.example.mateproduction.dto.response.AdHouseResponse;
+import org.example.mateproduction.dto.response.FavoriteResponse;
+import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.entity.AdHouse;
 import org.example.mateproduction.entity.Favorite;
 import org.example.mateproduction.entity.User;
@@ -42,7 +45,7 @@ public class FavoriteServiceImpl implements FavoriteService {
         }
 
         Favorite favorite = Favorite.builder()
-                .id(favoriteId) // <-- добавляем ID
+                .id(favoriteId)
                 .user(user)
                 .ad(ad)
                 .createdAt(new Date())
@@ -101,4 +104,65 @@ public class FavoriteServiceImpl implements FavoriteService {
 
         throw new SecurityException("Invalid user principal");
     }
+
+    private FavoriteResponse mapToResponseDto(Favorite favorite) {
+        User user = favorite.getUser();
+        UserResponse userResponse = UserResponse.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .surname(user.getSurname())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .role(user.getRole())
+                .isVerified(user.getIsVerified())
+                .avatarUrl(user.getAvatarUrl())
+                .token(null)
+                .isDeleted(user.getIsDeleted())
+                .build();
+
+        AdHouse ad = favorite.getAd();
+        User adUser = ad.getUser();
+        UserResponse adUserResponse = UserResponse.builder()
+                .id(adUser.getId())
+                .name(adUser.getName())
+                .surname(adUser.getSurname())
+                .username(adUser.getUsername())
+                .email(adUser.getEmail())
+                .phone(adUser.getPhone())
+                .role(adUser.getRole())
+                .isVerified(adUser.getIsVerified())
+                .avatarUrl(adUser.getAvatarUrl())
+                .token(null)
+                .isDeleted(adUser.getIsDeleted())
+                .build();
+
+        AdHouseResponse adHouseResponse = AdHouseResponse.builder()
+                .id(ad.getId())
+                .title(ad.getTitle())
+                .description(ad.getDescription())
+                .price(ad.getPrice())
+                .address(ad.getAddress())
+                .city(ad.getCity())
+                .user(adUserResponse)
+                .type(ad.getType())
+                .status(ad.getStatus())
+                .images(ad.getImages())
+                .numberOfRooms(ad.getNumberOfRooms())
+                .area(ad.getArea())
+                .floor(ad.getFloor())
+                .furnished(ad.getFurnished())
+                .contactPhoneNumber(ad.getContactPhoneNumber())
+                .views(ad.getViews())
+                .createdAt(ad.getCreatedAt())
+                .updatedAt(ad.getUpdatedAt())
+                .build();
+
+        return FavoriteResponse.builder()
+                .user(userResponse)
+                .ad(adHouseResponse)
+                .createdAt(favorite.getCreatedAt())
+                .build();
+    }
+
 }

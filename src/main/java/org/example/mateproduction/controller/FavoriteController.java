@@ -18,8 +18,7 @@ public class FavoriteController {
     private final FavoriteService favoriteService;
 
     @PostMapping("/{adId}")
-    public ResponseEntity<Favorite> addFavorite(
-            @PathVariable UUID adId) throws NotFoundException {
+    public ResponseEntity<Favorite> addFavorite(@PathVariable UUID adId) throws NotFoundException {
         Favorite favorite = favoriteService.addFavorite(adId);
         return ResponseEntity.ok(favorite);
     }
