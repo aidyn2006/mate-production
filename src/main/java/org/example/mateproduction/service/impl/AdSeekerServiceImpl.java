@@ -14,7 +14,7 @@ import org.example.mateproduction.exception.ValidationException;
 import org.example.mateproduction.repository.AdSeekerRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.AdSeekerService;
-import org.example.mateproduction.specification.AdSeekerSpecification;
+import org.example.mateproduction.helpers.AdSeekerSpecification;
 import org.example.mateproduction.util.Status;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,9 +27,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.nio.file.AccessDeniedException;
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

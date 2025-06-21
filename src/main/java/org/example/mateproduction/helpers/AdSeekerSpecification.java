@@ -1,4 +1,4 @@
-package org.example.mateproduction.specification;
+package org.example.mateproduction.helpers;
 
 import org.example.mateproduction.dto.request.AdSeekerFilter;
 import org.example.mateproduction.entity.AdSeeker;

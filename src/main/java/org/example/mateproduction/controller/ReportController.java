@@ -28,7 +28,7 @@ import java.util.UUID;
 public class ReportController {
 
     private final ReportService reportService;
-    private final UserService userService; // You would need a service to get your User entity
+    private final UserService userService;
 
     @PostMapping
     public ResponseEntity<ReportResponse> createReport(
@@ -36,7 +36,6 @@ public class ReportController {
             @AuthenticationPrincipal UserDetails userDetails) {
 
         if (userDetails == null) {
-            // This case should ideally be handled by Spring Security config
             log.warn("Attempt to create a report without authentication.");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }

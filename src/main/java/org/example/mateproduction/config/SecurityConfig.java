@@ -58,14 +58,23 @@ public class SecurityConfig {
 public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     return http
             .csrf(csrf -> csrf.disable())
+//            .cors(cors -> cors.configurationSource(request -> {
+//                var config = new org.springframework.web.cors.CorsConfiguration();
+//                config.setAllowedOrigins(List.of("*")); //"http://localhost:63342", "http://localhost:5173" или "*" временно
+//                config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+//                config.setAllowedHeaders(List.of("*"));
+//                config.setAllowCredentials(true);
+//                return config;
+//            }))
             .cors(cors -> cors.configurationSource(request -> {
-                var config = new org.springframework.web.cors.CorsConfiguration();
-                config.setAllowedOrigins(List.of("http://localhost:63342", "http://localhost:5173")); // или "*" временно
+                var config = new CorsConfiguration();
+                config.setAllowedOriginPatterns(List.of("*")); // ✅ заменили на allowedOriginPatterns
                 config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                 config.setAllowedHeaders(List.of("*"));
-                config.setAllowCredentials(true);
+                config.setAllowCredentials(true); // ✅ теперь всё будет работать
                 return config;
             }))
+
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/api/**").permitAll()
                     .anyRequest().permitAll() // временно разреши все

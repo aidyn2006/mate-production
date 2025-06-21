@@ -1,161 +1,687 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Чаты</title>
+    <title>REST Chat</title>
     <style>
+        /* CSS стили остаются без изменений */
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #e5ddd5;
+            margin: 0;
+            padding: 0;
         }
-        #messages {
+
+        .chat-container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 700px; /* Adjusted for better appearance */
+        }
+
+        .header {
+            background-color: #075e54;
+            color: white;
+            padding: 18px;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+
+        .header button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .form-section {
+            padding: 15px;
+            background: #f1f1f1;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .form-section label {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .form-section input {
+            width: 100%;
+            padding: 8px 12px;
+            margin-bottom: 12px;
+            border-radius: 6px;
             border: 1px solid #ccc;
-            padding: 10px;
-            height: 300px;
-            overflow-y: scroll;
-            margin-bottom: 10px;
+            font-size: 14px;
+            box-sizing: border-box; /* Ensures padding doesn't increase width */
         }
-        #chat-list li {
+
+        .form-section button {
+            width: 100%;
+            padding: 10px 15px;
+            background-color: #25d366;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-bottom: 5px; /* Added margin for multiple buttons */
+        }
+
+        .form-section button:hover {
+            background-color: #1DA851;
+        }
+
+        .chat-box {
+            flex: 1;
+            padding: 20px 15px;
+            height: 400px; /* This height will be overridden by flex:1 if container has min-height */
+            overflow-y: auto;
+            background: #ece5dd;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 10px 15px;
+            border-radius: 8px; /* Slightly more square for modern look */
             margin-bottom: 10px;
+            font-size: 14px;
+            line-height: 1.4;
+            position: relative;
+        }
+
+        .message .timestamp {
+            font-size: 10px;
+            color: #888;
+            margin-top: 5px;
+            text-align: right;
+            display: block;
+        }
+
+        .sent {
+            background-color: #dcf8c6;
+            margin-left: auto;
+            border-top-right-radius: 0; /* Pointy corner for sent messages */
+        }
+
+        .received {
+            background-color: white;
+            margin-right: auto;
+            border-top-left-radius: 0; /* Pointy corner for received messages */
+        }
+
+        .input-area {
+            display: flex;
+            padding: 15px;
+            background-color: #f7f7f7;
+            border-top: 1px solid #ddd;
+            align-items: center;
+        }
+
+        .input-area input[type="text"] {
+            flex: 1;
+            padding: 10px 15px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            margin-right: 10px;
+            box-sizing: border-box;
+        }
+
+        .input-area button {
+            padding: 10px 20px;
+            background-color: #25d366;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .input-area button:hover {
+            background-color: #1DA851;
+        }
+
+        .chat-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex: 1; /* Allow chat list to take available space */
+            overflow-y: auto;
+        }
+
+        .chat-list li {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+
+        .chat-list li:hover {
+            background-color: #f0f0f0;
+        }
+
+        .chat-list .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #ccc; /* Placeholder */
+            margin-right: 15px;
+            flex-shrink: 0;
+            object-fit: cover; /* Ensure image covers the area */
+        }
+
+        .chat-list .chat-info {
+            flex-grow: 1;
+        }
+
+        .chat-list .chat-name {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-list .last-message {
+            font-size: 14px;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: calc(100% - 70px); /* Adjust based on timestamp width */
+        }
+
+        .chat-list .last-message-time {
+            font-size: 12px;
+            color: #999;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+
+        .chat-list .unread-indicator {
+            background-color: #25d366;
+            color: white;
+            font-size: 12px;
+            padding: 3px 7px;
+            border-radius: 10px;
+            margin-left: 10px;
+            flex-shrink: 0;
+        }
+
+        #chatView {
+            display: none;
+            flex-direction: column; /* Ensure chat view uses flex column */
+            flex: 1; /* Take remaining height */
+        }
+
+        #chatListContainer {
+            flex: 1; /* Allow chat list to grow */
+            display: flex;
+            flex-direction: column;
+            padding-top: 10px; /* Space between form and list */
+        }
+
+        #newChatForm {
+            display: none; /* Hidden by default */
+            padding: 15px;
+            background: #f1f1f1;
+            border-bottom: 1px solid #ddd;
+        }
+
+        ::placeholder {
+            color: #999;
         }
     </style>
 </head>
 <body>
+<div class="chat-container">
+    <div class="header">
+        <button onclick="goBack()" style="display:none" id="backBtn">← Назад</button>
+        <span id="headerTitle">Ваши чаты</span>
+        <button onclick="showNewChatForm()" id="newChatBtn" style="display:none;">+</button>
+    </div>
 
-<h2>Выберите пользователя</h2>
-<select id="user-select">
-    <option value="">-- Выберите --</option>
-    <option value="e10be9ce-a5e9-45c1-b1ff-fa3a79be356f">Пользователь A</option>
-    <option value="96aac05e-3d39-4931-a64c-e2d78a4ba56a">Пользователь B</option>
-</select>
-<button id="login-btn">Войти</button>
+    <div class="form-section" id="userForm">
+        <label>JWT Token:</label>
+        <input type="text" id="tokenInput" placeholder="Вставьте JWT токен">
 
-<div id="main" style="display: none;">
-    <h2>Ваши чаты</h2>
-    <ul id="chat-list"></ul>
+        <label>Ваш (sender) ID:</label>
+        <input type="text" id="senderId" placeholder="UUID отправителя">
+        <button onclick="loadChats()">Загрузить чаты</button>
+    </div>
 
-    <hr>
+    <div id="newChatForm">
+        <label>ID нового собеседника:</label>
+        <input type="text" id="newCompanionId" placeholder="UUID нового собеседника">
+        <button onclick="startNewChat()">Начать новый чат</button>
+        <button onclick="hideNewChatForm()">Отмена</button>
+    </div>
 
-    <h3 id="chat-title" style="display: none;">Чат с <span id="companion-name"></span></h3>
-    <div id="messages"></div>
-    <input type="text" id="message-input" placeholder="Введите сообщение...">
-    <button id="send-button">Отправить</button>
+    <div id="chatListContainer" style="display:none;">
+        <ul class="chat-list" id="chatsUl"></ul>
+    </div>
+
+    <div id="chatView">
+        <div class="chat-box" id="messages"></div>
+        <div class="input-area">
+            <input type="text" id="messageInput" placeholder="Введите сообщение...">
+            <button onclick="sendMessage()">➤</button>
+        </div>
+    </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
 <script>
-    const users = {
-        "e10be9ce-a5e9-45c1-b1ff-fa3a79be356f": "Пользователь A",
-        "96aac05e-3d39-4931-a64c-e2d78a4ba56a": "Пользователь B"
-    };
+    const API_URL = 'http://localhost:8888/api/messages';
+    const WEBSOCKET_URL = 'http://localhost:8888/ws'; // Ваш WebSocket endpoint
+    let stompClient = null; // Экземпляр STOMP клиента
+    let currentReceiverId = null;
+    let currentReceiverName = "Чат";
+    // messagePollingInterval больше не нужен для реального времени, можно удалить или оставить закомментированным
 
-    const jwtTokens = {
-        "e10be9ce-a5e9-45c1-b1ff-fa3a79be356f": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaWR5bkBleGFtcGxlLmNvbSIsImlhdCI6MTc0OTk5NTI2MiwiZXhwIjoxNzUwMDEzMjYyfQ.eImjgaQ0pXQJZIhSGSHVA6h2GKktXw15uIrDphWLTLU",
-        "96aac05e-3d39-4931-a64c-e2d78a4ba56a": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaWR5bjEyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ5OTk1MjkyLCJleHAiOjE3NTAwMTMyOTJ9.RnwV9h2yyR9Rq90ieNfOzXmXQ1rcyvMWY43Tv9f30_4"
-    };
-
-    let stompClient = null;
-    let currentUserId = null;
-    let currentCompanionId = null;
-
-    document.getElementById("login-btn").onclick = async () => {
-        const userId = document.getElementById("user-select").value;
-        if (!userId) return alert("Выберите пользователя");
-
-        currentUserId = userId;
-        const token = jwtTokens[userId];
-
-        if (!token) return alert("JWT токен не найден для выбранного пользователя");
-
-        localStorage.setItem("userId", userId);
-        localStorage.setItem("jwtToken", token);
-
-        document.getElementById("main").style.display = "block";
-        await loadChats();
-        connectWebSocket(userId, token);
-    };
-
-    async function loadChats() {
-        const chatList = document.getElementById("chat-list");
-        chatList.innerHTML = "";
-
-        const otherUsers = Object.keys(users).filter(u => u !== currentUserId);
-        for (const companionId of otherUsers) {
-            const li = document.createElement("li");
-            li.innerHTML = `<a href="#">Чат с ${users[companionId]}</a>`;
-            li.onclick = () => openChat(companionId);
-            chatList.appendChild(li);
-        }
+    function getToken() {
+        return document.getElementById("tokenInput").value.trim();
     }
 
-    async function openChat(companionId) {
-        currentCompanionId = companionId;
-        document.getElementById("chat-title").style.display = "block";
-        document.getElementById("companion-name").innerText = users[companionId];
-        document.getElementById("messages").innerHTML = "";
+    function getSenderId() {
+        return document.getElementById("senderId").value.trim();
+    }
 
-        const messages = await getChatHistory(currentUserId, companionId);
-        for (const msg of messages) {
-            appendMessage(msg.senderId === currentUserId ? 'Вы' : 'Собеседник', msg.content);
+    // --- WebSocket Connection & Subscriptions ---
+    function connectToWebSocket(userId) {
+        if (stompClient && stompClient.connected) {
+            console.log("STOMP клиент уже подключен.");
+            return;
         }
 
-        await markAsRead(companionId, currentUserId);
-    }
-
-    function appendMessage(sender, content) {
-        const div = document.createElement("div");
-        div.textContent = `${sender}: ${content}`;
-        document.getElementById("messages").appendChild(div);
-    }
-
-    async function getChatHistory(senderId, receiverId) {
-        const token = localStorage.getItem("jwtToken");
-        const res = await fetch(`http://localhost:8888/api/messages/history?senderId=${senderId}&receiverId=${receiverId}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        return await res.json();
-    }
-
-    async function markAsRead(senderId, receiverId) {
-        const token = localStorage.getItem("jwtToken");
-        await fetch(`http://localhost:8888/api/messages/read`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({ senderId, receiverId })
-        });
-    }
-
-    function connectWebSocket(userId, token) {
-        const socket = new SockJS("http://localhost:8888/ws");
+        const socket = new SockJS(WEBSOCKET_URL); // Используем SockJS для совместимости
         stompClient = Stomp.over(socket);
 
-        stompClient.connect({ Authorization: `Bearer ${token}` }, () => {
-            stompClient.subscribe(`/user/${userId}/queue/messages`, (message) => {
-                const payload = JSON.parse(message.body);
-                if (payload.senderId === currentCompanionId) {
-                    appendMessage('Собеседник', payload.content);
+        // Передаём JWT токен в заголовках STOMP CONNECT фрейма.
+        // Это более безопасный и правильный способ для WebSocket security.
+        const headers = {
+            'Authorization': `Bearer ${getToken()}`
+        };
+
+        stompClient.connect(headers, function (frame) {
+            console.log('Подключено к WebSocket: ' + frame);
+
+            // Подписываемся на приватную очередь текущего пользователя для получения сообщений
+            // Сюда будут приходить входящие сообщения для конкретного пользователя
+            stompClient.subscribe(`/user/${userId}/queue/messages`, function (messageOutput) {
+                const message = JSON.parse(messageOutput.body);
+                console.log("Получено сообщение через WebSocket:", message);
+
+                // Если сообщение предназначено текущему открытому чату И оно было отправлено не нами
+                if (currentReceiverId && (message.senderId === currentReceiverId || message.receiverId === currentReceiverId)) {
+                    displayNewMessage(message); // Добавляем сообщение в UI текущего чата
+                    // Отмечаем сообщение как прочитанное, если оно получено текущим пользователем
+                    if (message.receiverId === userId && message.senderId === currentReceiverId) {
+                        markMessagesAsRead(message.senderId, message.receiverId);
+                    }
+                } else {
+                    // Если чат не открыт или сообщение не для текущего чата,
+                    // просто обновляем список чатов, чтобы показать новое сообщение/непрочитанный статус
+                    loadChats();
                 }
             });
+
+            // Опционально: Подписка на уведомления о прочтении (read receipts)
+            stompClient.subscribe(`/user/${userId}/queue/readReceipts`, function (receiptOutput) {
+                const receipt = JSON.parse(receiptOutput.body);
+                console.log("Получено уведомление о прочтении:", receipt);
+                // Здесь можно обновить UI, чтобы показать, что сообщения были прочитаны
+                // Например, перегрузить историю текущего чата или найти и обновить галочки
+                if (currentReceiverId && (receipt.senderId === currentReceiverId || receipt.receiverId === currentReceiverId)) {
+                    loadMessagesHistory(); // Простой способ обновить статусы "прочитано"
+                } else {
+                    loadChats(); // Обновить список чатов для потенциального изменения статуса последнего сообщения
+                }
+            });
+
+        }, function (error) {
+            console.error('Ошибка STOMP:', error);
+            alert('Ошибка подключения к WebSocket: ' + error);
         });
     }
 
-    document.getElementById("send-button").onclick = () => {
-        const content = document.getElementById("message-input").value;
-        if (!content.trim()) return;
+    function disconnectWebSocket() {
+        if (stompClient !== null) {
+            stompClient.disconnect();
+            console.log("Отключено от WebSocket");
+        }
+    }
 
-        stompClient.send("/app/chat", {}, JSON.stringify({
-            receiverId: currentCompanionId,
-            content
-        }));
+    // --- Utility Functions ---
+    function formatTime(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    }
 
-        appendMessage('Вы', content);
-        document.getElementById("message-input").value = '';
-    };
+    function formatDateForChatPreview(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const messageDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+        if (messageDate.getTime() === today.getTime()) {
+            return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        } else if (messageDate.getTime() === (today.getTime() - 24 * 60 * 60 * 1000)) {
+            return 'Вчера';
+        } else {
+            return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+    }
+
+    function showNewChatForm() {
+        document.getElementById("chatListContainer").style.display = "none";
+        document.getElementById("newChatForm").style.display = "block";
+        document.getElementById("headerTitle").textContent = "Новый чат";
+        document.getElementById("newChatBtn").style.display = "none";
+        document.getElementById("backBtn").style.display = "inline";
+    }
+
+    function hideNewChatForm() {
+        document.getElementById("newChatForm").style.display = "none";
+        document.getElementById("chatListContainer").style.display = "flex";
+        document.getElementById("headerTitle").textContent = "Ваши чаты";
+        document.getElementById("newChatBtn").style.display = "inline";
+        document.getElementById("backBtn").style.display = "none";
+        document.getElementById("newCompanionId").value = "";
+    }
+
+    async function startNewChat() {
+        const newCompanionId = document.getElementById("newCompanionId").value.trim();
+        if (!newCompanionId) {
+            alert("Пожалуйста, введите ID нового собеседника.");
+            return;
+        }
+        hideNewChatForm();
+        // При создании нового чата, пытаемся отправить тестовое сообщение, чтобы чат появился
+        // Это также вызовет создание чата на бэкенде, если его нет
+        try {
+            await sendMessageToBackend({
+                senderId: getSenderId(),
+                receiverId: newCompanionId,
+                content: "Привет! Начинаем новый чат."
+            });
+            await openChat(newCompanionId, "Новый чат (" + newCompanionId.substring(0, 8) + "...)");
+        } catch (error) {
+            console.error("Ошибка при создании нового чата:", error);
+            alert("Не удалось начать новый чат. Проверьте ID или попробуйте позже.");
+            loadChats(); // Вернуться к списку чатов
+        }
+    }
+
+
+    // --- Core Chat Logic ---
+    async function loadChats() {
+        const userId = getSenderId();
+        const token = getToken();
+
+        if (!userId || !token) {
+            alert("Введите sender ID и токен");
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/chats/${userId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Ошибка загрузки чатов: ${response.status} - ${errorText}`);
+            }
+
+            const chats = await response.json();
+            const chatList = document.getElementById("chatsUl");
+            chatList.innerHTML = ""; // Очищаем список чатов перед заполнением
+
+            if (chats.length === 0) {
+                const li = document.createElement("li");
+                li.innerHTML = `<div style="text-align: center; color: #666; padding: 20px;">У вас пока нет чатов. Нажмите '+' чтобы начать новый.</div>`;
+                chatList.appendChild(li);
+            } else {
+                chats.forEach(chat => {
+                    const li = document.createElement("li");
+                    li.innerHTML = `
+                        <img src="${chat.companionAvatarUrl || 'https://via.placeholder.com/50'}" alt="Avatar" class="avatar">
+                        <div class="chat-info">
+                            <div class="chat-name">
+                                <span>${chat.companionName || 'Неизвестный'}</span>
+                                <span class="last-message-time">${chat.lastMessageTime ? formatDateForChatPreview(chat.lastMessageTime) : ''}</span>
+                            </div>
+                            <div class="last-message">
+                                ${chat.lastMessage || 'Нет сообщений'}
+                                ${chat.hasUnreadMessages ? '<span class="unread-indicator">●</span>' : ''}
+                            </div>
+                        </div>
+                    `;
+                    li.onclick = () => openChat(chat.companionId, chat.companionName);
+                    chatList.appendChild(li);
+                });
+            }
+
+
+            document.getElementById("userForm").style.display = "none";
+            document.getElementById("chatListContainer").style.display = "flex";
+            document.getElementById("headerTitle").textContent = "Ваши чаты";
+            document.getElementById("newChatBtn").style.display = "inline";
+
+            // Устанавливаем WebSocket-соединение после успешной загрузки чатов
+            connectToWebSocket(userId);
+
+        } catch (error) {
+            alert(error.message);
+            console.error("Error loading chats:", error);
+            // Если ошибка с токеном, можно предложить снова ввести его
+            if (error.message.includes("401") || error.message.includes("403")) {
+                document.getElementById("userForm").style.display = "block";
+                document.getElementById("chatListContainer").style.display = "none";
+                alert("Ошибка аутентификации. Проверьте ваш JWT токен.");
+            }
+        }
+    }
+
+    async function openChat(receiverId, receiverName) {
+        currentReceiverId = receiverId;
+        currentReceiverName = receiverName;
+        document.getElementById("chatListContainer").style.display = "none";
+        document.getElementById("newChatForm").style.display = "none";
+        document.getElementById("chatView").style.display = "flex";
+        document.getElementById("headerTitle").textContent = receiverName;
+        document.getElementById("backBtn").style.display = "inline";
+        document.getElementById("newChatBtn").style.display = "none";
+
+        // Загружаем начальную историю чата через REST API
+        await loadMessagesHistory();
+        // Отмечаем сообщения как прочитанные после загрузки истории
+        await markMessagesAsRead(getSenderId(), currentReceiverId);
+
+        // messagePollingInterval полностью удален, так как WebSockets обрабатывают обновления в реальном времени.
+    }
+
+    function goBack() {
+        document.getElementById("chatView").style.display = "none";
+        document.getElementById("newChatForm").style.display = "none";
+        document.getElementById("chatListContainer").style.display = "flex";
+        document.getElementById("headerTitle").textContent = "Ваши чаты";
+        document.getElementById("backBtn").style.display = "none";
+        document.getElementById("newChatBtn").style.display = "inline";
+        currentReceiverId = null;
+        currentReceiverName = "Чат";
+
+        // Перезагружаем чаты, чтобы обновить индикаторы непрочитанных сообщений и последнее сообщение
+        loadChats();
+    }
+
+    // Эта функция загружает *начальную* историю чата (через REST)
+    async function loadMessagesHistory() {
+        const senderId = getSenderId();
+        const receiverId = currentReceiverId;
+        const token = getToken();
+
+        if (!senderId || !receiverId || !token) return;
+
+        try {
+            const response = await fetch(`${API_URL}/history?senderId=${senderId}&receiverId=${receiverId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Ошибка загрузки истории сообщений: ${response.status} - ${errorText}`);
+            }
+
+            const messages = await response.json();
+            const container = document.getElementById("messages");
+            container.innerHTML = ''; // Очищаем предыдущие сообщения
+            messages.forEach(message => displayNewMessage(message)); // Добавляем сообщения истории
+            container.scrollTop = container.scrollHeight; // Прокручиваем до конца после загрузки истории
+
+        } catch (error) {
+            console.error("Error loading messages history:", error);
+            alert(`Не удалось загрузить историю чата: ${error.message}`);
+        }
+    }
+
+    // Функция для добавления одного сообщения в окно чата
+    function displayNewMessage(message) {
+        const container = document.getElementById("messages");
+        const senderId = getSenderId();
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message');
+        // Определяем класс 'sent' или 'received'
+        messageElement.classList.add(message.senderId === senderId ? 'sent' : 'received');
+
+        // Обновляем текст сообщения, чтобы включить индикаторы прочитано/непрочитано
+        const readStatus = message.senderId === senderId
+            ? (message.isRead ? '✓✓' : '✓') // ✓✓ для прочитанных, ✓ для отправленных но не прочитанных
+            : ''; // Для полученных сообщений не показываем галочки
+
+        messageElement.innerHTML = `
+            ${message.content}
+            <span class="timestamp">${formatTime(message.createdAt)} ${readStatus}</span>
+        `;
+        container.appendChild(messageElement);
+        container.scrollTop = container.scrollHeight; // Всегда прокручиваем до конца для новых сообщений
+    }
+
+    // Эта функция отправляет сообщения через WebSocket
+    function sendMessage() {
+        const content = document.getElementById("messageInput").value.trim();
+        if (!content) return; // Не отправляем пустые сообщения
+
+        const messageRequest = {
+            senderId: getSenderId(),
+            receiverId: currentReceiverId,
+            content: content
+        };
+
+        // Отправляем сообщение на WebSocket-эндпоинт, определенный в вашем контроллере
+        sendMessageToBackend(messageRequest); // Используем новую обёртку
+        document.getElementById("messageInput").value = ""; // Очищаем поле ввода сразу
+    }
+
+    // Вспомогательная функция для отправки сообщения на бэкенд через WebSocket
+    function sendMessageToBackend(messageRequest) {
+        if (!stompClient || !stompClient.connected) {
+            alert("WebSocket не подключен. Пожалуйста, перезагрузите страницу или попробуйте позже.");
+            console.error("STOMP клиент не подключен.");
+            return Promise.reject("WebSocket not connected");
+        }
+
+        if (!messageRequest.senderId || !messageRequest.receiverId || !messageRequest.content) {
+            alert("Заполните все поля для отправки сообщения.");
+            return Promise.reject("Missing message fields");
+        }
+
+        // ВСТАВКА ТОКЕНА В ТЕЛО
+        const payload = {
+            ...messageRequest,
+            token: getToken() // добавляем токен прямо в сообщение
+        };
+
+        try {
+            stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(payload));
+            console.log("Сообщение отправлено через WebSocket:", payload);
+            return Promise.resolve();
+        } catch (e) {
+            console.error("Ошибка при отправке сообщения через WebSocket:", e);
+            alert("Ошибка при отправке сообщения.");
+            return Promise.reject(e);
+        }
+    }
+
+
+
+    // Отправка запроса на отметку сообщений как прочитанных
+    async function markMessagesAsRead(senderId, receiverId) {
+        const token = getToken();
+        if (!senderId || !receiverId || !token) return;
+
+        // Отправляем запрос на отметку как прочитанных через REST
+        try {
+            const response = await fetch(`${API_URL}/read`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ senderId: senderId, receiverId: receiverId })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Ошибка при отметке сообщений как прочитанных: ${response.status} - ${errorText}`);
+            }
+            console.log("Сообщения отмечены как прочитанные.");
+        } catch (error) {
+            console.error("Error marking messages as read:", error);
+        }
+    }
+
+    // Инициализация при загрузке DOM
+    document.addEventListener('DOMContentLoaded', () => {
+        // Проверяем, есть ли уже токен и ID в полях, и пытаемся загрузить чаты.
+        // Это полезно, если пользователь закрыл/открыл вкладку, а токен остался.
+        if (getToken() && getSenderId()) {
+            loadChats();
+        } else {
+            // Если токена нет, показываем форму для ввода данных
+            document.getElementById("userForm").style.display = "block";
+            document.getElementById("chatListContainer").style.display = "none";
+        }
+    });
+
 </script>
-
 </body>
 </html>

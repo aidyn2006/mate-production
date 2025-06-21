@@ -2,10 +2,12 @@ package org.example.mateproduction.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.dto.request.MarkReadRequest;
+import org.example.mateproduction.dto.request.MessageRequest;
 import org.example.mateproduction.dto.response.ChatPreviewResponse;
 import org.example.mateproduction.dto.response.MessageResponse;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.service.MessageService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,4 +34,11 @@ public class MessageRestController {
     public void markAsRead(@RequestBody MarkReadRequest request) {
         messageService.markMessagesAsRead(request.getSenderId(), request.getReceiverId());
     }
+//    @PostMapping("/send")
+//    public ResponseEntity<MessageResponse> sendMessageRest(@RequestBody MessageRequest request)
+//            throws NotFoundException {
+//        MessageResponse resp = messageService.sendMessage(request);
+//        return ResponseEntity.ok(resp);
+//    }
+
 }

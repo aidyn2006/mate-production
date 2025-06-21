@@ -14,7 +14,8 @@ import org.example.mateproduction.config.Jwt.JwtUserDetails;
 public class UserDetailsServiceImpl implements UserDetailsService {
     private final UserRepository ur;
 
-    @Override public UserDetails loadUserByUsername(String u){
+    @Override
+    public UserDetails loadUserByUsername(String u){
         return ur.findByEmail(u)
                 .map(JwtUserDetails::new)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));

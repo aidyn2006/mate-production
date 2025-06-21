@@ -1,7 +1,6 @@
-package org.example.mateproduction.config;
+package org.example.mateproduction.helpers;
 
 import org.example.mateproduction.util.AdType;
-import org.example.mateproduction.util.CityNames;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 

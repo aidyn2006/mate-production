@@ -14,5 +14,6 @@ import java.util.UUID;
 public class MessageRequest {
     private UUID receiverId;
     private String content;
+    private String token;
 }
 
