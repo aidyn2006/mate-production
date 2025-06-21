@@ -14,7 +14,13 @@ import org.example.mateproduction.exception.ValidationException;
 import org.example.mateproduction.repository.AdSeekerRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.AdSeekerService;
+import org.example.mateproduction.specification.AdSeekerSpecification;
 import org.example.mateproduction.util.Status;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -34,11 +40,13 @@ public class AdSeekerServiceImpl implements AdSeekerService {
 
     @Override
     @Transactional
-    public List<AdSeekerResponse> getAllAds() {
-        return adSeekerRepository.findAllByStatus(Status.ACTIVE).stream()
-                .map(this::mapToResponseDto)
-                .collect(Collectors.toList());
+    public Page<AdSeekerResponse> getAllAds(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+        return adSeekerRepository.findAllByStatus(Status.ACTIVE, pageable)
+                .map(this::mapToResponseDto);
     }
+
+
 
     @Override
     @Transactional
@@ -130,24 +138,15 @@ public class AdSeekerServiceImpl implements AdSeekerService {
     }
 
     @Override
-    public List<AdSeekerResponse> findByFilter(AdSeekerFilter filter) {
-        List<AdSeeker> seekers = adSeekerRepository.findByFilter(
-                filter.getMinAge(),
-                filter.getMaxAge(),
-                filter.getGender(),
-                filter.getCity(),
-                filter.getDesiredLocation(),
-                filter.getMaxBudget(),
-                filter.getEarliestMoveInDate(),
-                filter.getHasFurnishedPreference(),
-                filter.getRoommatePreferences(),
-                filter.getStatus()
-        );
+    public Page<AdSeekerResponse> findByFilter(AdSeekerFilter filter, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Specification<AdSeeker> spec = AdSeekerSpecification.build(filter);
 
-        return seekers.stream()
-                .map(this::mapToResponseDto)
-                .toList();
+        Page<AdSeeker> seekers = adSeekerRepository.findAll(spec, pageable);
+        return seekers.map(this::mapToResponseDto);
     }
+
+
 
 
     // ------------------- ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ----------------------

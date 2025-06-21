@@ -32,28 +32,29 @@ public class FavoriteServiceImpl implements FavoriteService {
 
     @Override
     @Transactional
-    public Favorite addFavorite(UUID adId) throws NotFoundException {
-        UUID userId=getCurrentUserId();
+    public FavoriteResponse addFavorite(UUID adId) throws NotFoundException {
+        UUID userId = getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         AdHouse ad = adRepository.findById(adId)
                 .orElseThrow(() -> new NotFoundException("Ad not found"));
 
         FavoriteId favoriteId = new FavoriteId(user.getId(), ad.getId());
-        if (favoriteRepository.existsById(favoriteId)) {
-            return favoriteRepository.findById(favoriteId).get();
-        }
 
-        Favorite favorite = Favorite.builder()
-                .id(favoriteId)
-                .user(user)
-                .ad(ad)
-                .createdAt(new Date())
-                .build();
+        Favorite favorite = favoriteRepository.findById(favoriteId)
+                .orElseGet(() -> {
+                    Favorite newFavorite = Favorite.builder()
+                            .id(favoriteId)
+                            .user(user)
+                            .ad(ad)
+                            .createdAt(new Date())
+                            .build();
+                    return favoriteRepository.save(newFavorite);
+                });
 
-
-        return favoriteRepository.save(favorite);
+        return mapToResponseDto(favorite);
     }
+
 
     @Override
     @Transactional
@@ -73,9 +74,13 @@ public class FavoriteServiceImpl implements FavoriteService {
     }
 
     @Override
-    public List<Favorite> getFavoritesByUser(UUID userId) {
-        return favoriteRepository.findAllByUserId(userId);
+    public List<FavoriteResponse> getFavoritesByUser(UUID userId) {
+        List<Favorite> favorites = favoriteRepository.findAllByUserId(userId);
+        return favorites.stream()
+                .map(this::mapToResponseDto)
+                .toList();
     }
+
 
     @Override
     public boolean isFavorite(UUID adId) throws NotFoundException {

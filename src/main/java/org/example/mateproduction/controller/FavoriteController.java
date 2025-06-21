@@ -1,6 +1,7 @@
 package org.example.mateproduction.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.mateproduction.dto.response.FavoriteResponse;
 import org.example.mateproduction.entity.Favorite;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.service.FavoriteService;
@@ -18,8 +19,8 @@ public class FavoriteController {
     private final FavoriteService favoriteService;
 
     @PostMapping("/{adId}")
-    public ResponseEntity<Favorite> addFavorite(@PathVariable UUID adId) throws NotFoundException {
-        Favorite favorite = favoriteService.addFavorite(adId);
+    public ResponseEntity<FavoriteResponse> addFavorite(@PathVariable UUID adId) throws NotFoundException {
+        FavoriteResponse favorite = favoriteService.addFavorite(adId);
         return ResponseEntity.ok(favorite);
     }
 
@@ -31,9 +32,9 @@ public class FavoriteController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<List<Favorite>> getFavoritesByUser(
+    public ResponseEntity<List<FavoriteResponse>> getFavoritesByUser(
             @PathVariable UUID userId) {
-        List<Favorite> favorites = favoriteService.getFavoritesByUser(userId);
+        List<FavoriteResponse> favorites = favoriteService.getFavoritesByUser(userId);
         return ResponseEntity.ok(favorites);
     }
 
