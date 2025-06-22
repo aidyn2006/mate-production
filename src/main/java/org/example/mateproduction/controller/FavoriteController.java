@@ -1,10 +1,11 @@
 package org.example.mateproduction.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.mateproduction.dto.request.FavoriteRequest; // <-- Import the FavoriteRequest DTO
 import org.example.mateproduction.dto.response.FavoriteResponse;
-import org.example.mateproduction.entity.Favorite;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.service.FavoriteService;
+import org.springframework.http.HttpStatus; // Import HttpStatus
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,17 +19,16 @@ public class FavoriteController {
 
     private final FavoriteService favoriteService;
 
-    @PostMapping("/{adId}")
-    public ResponseEntity<FavoriteResponse> addFavorite(@PathVariable UUID adId) throws NotFoundException {
-        FavoriteResponse favorite = favoriteService.addFavorite(adId);
-        return ResponseEntity.ok(favorite);
+    @PostMapping
+    public ResponseEntity<FavoriteResponse> addFavorite(@RequestBody FavoriteRequest request) throws NotFoundException {
+        FavoriteResponse favorite = favoriteService.addFavorite(request);
+        return new ResponseEntity<>(favorite, HttpStatus.CREATED); // Return 201 Created for successful creation
     }
 
-    @DeleteMapping("/{adId}")
-    public ResponseEntity<Void> removeFavorite(
-            @PathVariable UUID adId) throws NotFoundException {
-        favoriteService.removeFavorite(adId);
-        return ResponseEntity.noContent().build();
+    @DeleteMapping
+    public ResponseEntity<Void> removeFavorite(@RequestBody FavoriteRequest request) throws NotFoundException {
+        favoriteService.removeFavorite(request);
+        return ResponseEntity.noContent().build(); // 204 No Content for successful deletion
     }
 
     @GetMapping("/{userId}")
@@ -38,11 +38,21 @@ public class FavoriteController {
         return ResponseEntity.ok(favorites);
     }
 
-    @GetMapping("/check/{adId}")
-    public ResponseEntity<Boolean> isFavorite(
-            @PathVariable UUID adId) throws NotFoundException {
-        boolean result = favoriteService.isFavorite(adId);
+    @PostMapping("/check")
+    public ResponseEntity<Boolean> isFavorite(@RequestBody FavoriteRequest request) throws NotFoundException {
+        boolean result = favoriteService.isFavorite(request);
         return ResponseEntity.ok(result);
     }
 
+    /*
+    // Alternative for isFavorite if you prefer GET and Query Params:
+    @GetMapping("/check")
+    public ResponseEntity<Boolean> isFavorite(
+            @RequestParam UUID adId,
+            @RequestParam Type type) throws NotFoundException {
+        FavoriteRequest request = FavoriteRequest.builder().adId(adId).type(type).build();
+        boolean result = favoriteService.isFavorite(request);
+        return ResponseEntity.ok(result);
+    }
+    */
 }

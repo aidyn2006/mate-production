@@ -3,22 +3,31 @@ package org.example.mateproduction.service.impl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.config.Jwt.JwtUserDetails;
+import org.example.mateproduction.dto.request.FavoriteRequest; // Import unified request
 import org.example.mateproduction.dto.response.AdHouseResponse;
+import org.example.mateproduction.dto.response.AdSeekerResponse; // New import
 import org.example.mateproduction.dto.response.FavoriteResponse;
 import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.entity.AdHouse;
-import org.example.mateproduction.entity.Favorite;
+import org.example.mateproduction.entity.AdSeeker; // New import
+import org.example.mateproduction.entity.FavoriteHouse;
+import org.example.mateproduction.entity.FavoriteSeeker; // New import
 import org.example.mateproduction.entity.User;
-import org.example.mateproduction.entity.contract.FavoriteId;
+import org.example.mateproduction.entity.contract.FavoriteHouseId; // Import specific ID
+import org.example.mateproduction.entity.contract.FavoriteSeekerId; // Import specific ID
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.repository.AdHouseRepository;
-import org.example.mateproduction.repository.FavoriteRepository;
+import org.example.mateproduction.repository.AdSeekerRepository; // New import
+import org.example.mateproduction.repository.FavoriteHouseRepository; // New import
+import org.example.mateproduction.repository.FavoriteSeekerRepository; // New import
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.FavoriteService;
+import org.example.mateproduction.util.Type;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import java.time.LocalDateTime; // Use LocalDateTime
+import java.util.ArrayList; // For combining lists
 import java.util.List;
 import java.util.UUID;
 
@@ -26,71 +35,114 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class FavoriteServiceImpl implements FavoriteService {
 
-    private final FavoriteRepository favoriteRepository;
+    private final FavoriteHouseRepository favoriteHouseRepository; // Specific repo
+    private final FavoriteSeekerRepository favoriteSeekerRepository; // Specific repo
     private final UserRepository userRepository;
-    private final AdHouseRepository adRepository;
+    private final AdHouseRepository adHouseRepository; // Renamed for clarity
+    private final AdSeekerRepository adSeekerRepository; // New repo
 
     @Override
     @Transactional
-    public FavoriteResponse addFavorite(UUID adId) throws NotFoundException {
+    public FavoriteResponse addFavorite(FavoriteRequest request) throws NotFoundException {
         UUID userId = getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        AdHouse ad = adRepository.findById(adId)
-                .orElseThrow(() -> new NotFoundException("Ad not found"));
 
-        FavoriteId favoriteId = new FavoriteId(user.getId(), ad.getId());
+        if (request.getType() == Type.HOUSE) {
+            AdHouse adHouse = adHouseRepository.findById(request.getAdId())
+                    .orElseThrow(() -> new NotFoundException("AdHouse not found"));
+            FavoriteHouseId favoriteHouseId = new FavoriteHouseId(user.getId(), adHouse.getId());
 
-        Favorite favorite = favoriteRepository.findById(favoriteId)
-                .orElseGet(() -> {
-                    Favorite newFavorite = Favorite.builder()
-                            .id(favoriteId)
-                            .user(user)
-                            .ad(ad)
-                            .createdAt(new Date())
-                            .build();
-                    return favoriteRepository.save(newFavorite);
-                });
+            FavoriteHouse favoriteHouse = favoriteHouseRepository.findById(favoriteHouseId)
+                    .orElseGet(() -> {
+                        FavoriteHouse newFavoriteHouse = FavoriteHouse.builder()
+                                .id(favoriteHouseId)
+                                .user(user)
+                                .ad(adHouse) // 'ad' in FavoriteHouse refers to AdHouse
+                                .createdAt(LocalDateTime.now())
+                                .build();
+                        return favoriteHouseRepository.save(newFavoriteHouse);
+                    });
+            return mapHouseToResponseDto(favoriteHouse);
+        } else if (request.getType() == Type.SEEKER) {
+            AdSeeker adSeeker = adSeekerRepository.findById(request.getAdId())
+                    .orElseThrow(() -> new NotFoundException("AdSeeker not found"));
+            FavoriteSeekerId favoriteSeekerId = new FavoriteSeekerId(user.getId(), adSeeker.getId());
 
-        return mapToResponseDto(favorite);
+            FavoriteSeeker favoriteSeeker = favoriteSeekerRepository.findById(favoriteSeekerId)
+                    .orElseGet(() -> {
+                        FavoriteSeeker newFavoriteSeeker = FavoriteSeeker.builder()
+                                .id(favoriteSeekerId)
+                                .user(user)
+                                .ad(adSeeker) // 'ad' in FavoriteSeeker refers to AdSeeker
+                                .createdAt(LocalDateTime.now())
+                                .build();
+                        return favoriteSeekerRepository.save(newFavoriteSeeker);
+                    });
+            return mapSeekerToResponseDto(favoriteSeeker);
+        } else {
+            throw new IllegalArgumentException("Invalid ad type specified: " + request.getType());
+        }
     }
 
 
     @Override
     @Transactional
-    public void removeFavorite(UUID adId) throws NotFoundException {
-        UUID userId=getCurrentUserId();
+    public void removeFavorite(FavoriteRequest request) throws NotFoundException {
+        UUID userId = getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        AdHouse ad = adRepository.findById(adId)
-                .orElseThrow(() -> new NotFoundException("Ad not found"));
 
-        FavoriteId favoriteId = new FavoriteId(user.getId(), ad.getId());
-        if (!favoriteRepository.existsById(favoriteId)) {
-            throw new NotFoundException("Favorite not found");
+        if (request.getType() == Type.HOUSE) {
+            FavoriteHouseId favoriteHouseId = new FavoriteHouseId(user.getId(), request.getAdId());
+            if (!favoriteHouseRepository.existsById(favoriteHouseId)) {
+                throw new NotFoundException("Favorite House Ad not found");
+            }
+            favoriteHouseRepository.deleteById(favoriteHouseId);
+        } else if (request.getType() == Type.SEEKER) {
+            FavoriteSeekerId favoriteSeekerId = new FavoriteSeekerId(user.getId(), request.getAdId());
+            if (!favoriteSeekerRepository.existsById(favoriteSeekerId)) {
+                throw new NotFoundException("Favorite Seeker Ad not found");
+            }
+            favoriteSeekerRepository.deleteById(favoriteSeekerId);
+        } else {
+            throw new IllegalArgumentException("Invalid ad type specified: " + request.getType());
         }
-
-        favoriteRepository.deleteById(favoriteId);
     }
 
     @Override
     public List<FavoriteResponse> getFavoritesByUser(UUID userId) {
-        List<Favorite> favorites = favoriteRepository.findAllByUserId(userId);
-        return favorites.stream()
-                .map(this::mapToResponseDto)
-                .toList();
+        List<FavoriteResponse> allFavorites = new ArrayList<>();
+
+        // Get favorite house ads
+        List<FavoriteHouse> favoriteHouses = favoriteHouseRepository.findAllByUserId(userId);
+        favoriteHouses.stream()
+                .map(this::mapHouseToResponseDto)
+                .forEach(allFavorites::add);
+
+        // Get favorite seeker ads
+        List<FavoriteSeeker> favoriteSeekers = favoriteSeekerRepository.findAllByUserId(userId);
+        favoriteSeekers.stream()
+                .map(this::mapSeekerToResponseDto)
+                .forEach(allFavorites::add);
+
+        return allFavorites;
     }
 
 
     @Override
-    public boolean isFavorite(UUID adId) throws NotFoundException {
-        UUID userId=getCurrentUserId();
+    public boolean isFavorite(FavoriteRequest request) throws NotFoundException {
+        UUID userId = getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        AdHouse ad = adRepository.findById(adId)
-                .orElseThrow(() -> new NotFoundException("Ad not found"));
 
-        return favoriteRepository.existsById(new FavoriteId(user.getId(), ad.getId()));
+        if (request.getType() == Type.HOUSE) {
+            return favoriteHouseRepository.existsById(new FavoriteHouseId(user.getId(), request.getAdId()));
+        } else if (request.getType() == Type.SEEKER) {
+            return favoriteSeekerRepository.existsById(new FavoriteSeekerId(user.getId(), request.getAdId()));
+        } else {
+            throw new IllegalArgumentException("Invalid ad type specified: " + request.getType());
+        }
     }
 
     private UUID getCurrentUserId() {
@@ -110,9 +162,10 @@ public class FavoriteServiceImpl implements FavoriteService {
         throw new SecurityException("Invalid user principal");
     }
 
-    private FavoriteResponse mapToResponseDto(Favorite favorite) {
-        User user = favorite.getUser();
-        UserResponse userResponse = UserResponse.builder()
+    // --- Mapping Methods ---
+
+    private UserResponse mapUserToResponseDto(User user) {
+        return UserResponse.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .surname(user.getSurname())
@@ -122,27 +175,16 @@ public class FavoriteServiceImpl implements FavoriteService {
                 .role(user.getRole())
                 .isVerified(user.getIsVerified())
                 .avatarUrl(user.getAvatarUrl())
-                .token(null)
+                .token(null) // Token should not be exposed here
                 .isDeleted(user.getIsDeleted())
                 .build();
+    }
 
-        AdHouse ad = favorite.getAd();
+    private AdHouseResponse mapAdHouseToResponseDto(AdHouse ad) {
         User adUser = ad.getUser();
-        UserResponse adUserResponse = UserResponse.builder()
-                .id(adUser.getId())
-                .name(adUser.getName())
-                .surname(adUser.getSurname())
-                .username(adUser.getUsername())
-                .email(adUser.getEmail())
-                .phone(adUser.getPhone())
-                .role(adUser.getRole())
-                .isVerified(adUser.getIsVerified())
-                .avatarUrl(adUser.getAvatarUrl())
-                .token(null)
-                .isDeleted(adUser.getIsDeleted())
-                .build();
+        UserResponse adUserResponse = mapUserToResponseDto(adUser); // Reuse user mapping
 
-        AdHouseResponse adHouseResponse = AdHouseResponse.builder()
+        return AdHouseResponse.builder()
                 .id(ad.getId())
                 .title(ad.getTitle())
                 .description(ad.getDescription())
@@ -159,15 +201,55 @@ public class FavoriteServiceImpl implements FavoriteService {
                 .furnished(ad.getFurnished())
                 .contactPhoneNumber(ad.getContactPhoneNumber())
                 .views(ad.getViews())
+                .typeOfAd(ad.getTypeOfAd())
                 .createdAt(ad.getCreatedAt())
                 .updatedAt(ad.getUpdatedAt())
                 .build();
+    }
 
-        return FavoriteResponse.builder()
-                .user(userResponse)
-                .ad(adHouseResponse)
-                .createdAt(favorite.getCreatedAt())
+    private AdSeekerResponse mapAdSeekerToResponseDto(AdSeeker ad) {
+        User adUser = ad.getUser();
+        UserResponse adUserResponse = mapUserToResponseDto(adUser); // Reuse user mapping
+
+        return AdSeekerResponse.builder()
+                .id(ad.getId())
+                .age(ad.getAge())
+                .gender(ad.getGender())
+                .user(adUserResponse)
+                .seekerDescription(ad.getSeekerDescription())
+                .city(ad.getCity())
+                .desiredLocation(ad.getDesiredLocation())
+                .maxBudget(ad.getMaxBudget())
+                .moveInDate(ad.getMoveInDate())
+                .hasFurnishedPreference(ad.getHasFurnishedPreference())
+                .roommatePreferences(ad.getRoommatePreferences())
+                .status(ad.getStatus())
+                .views(ad.getViews())
+                .typeOfAd(ad.getTypeOfAd())
+                .contactPhoneNumber(ad.getContactPhoneNumber())
+                .createdAt(ad.getCreatedAt())
+                .updatedAt(ad.getUpdatedAt())
                 .build();
     }
 
+
+    private FavoriteResponse mapHouseToResponseDto(FavoriteHouse favoriteHouse) {
+        return FavoriteResponse.builder()
+                .user(mapUserToResponseDto(favoriteHouse.getUser()))
+                .type(Type.HOUSE) // Set the type
+                .adHouse(mapAdHouseToResponseDto(favoriteHouse.getAd())) // Map AdHouse
+                .adSeeker(null) // Ensure AdSeeker is null
+                .createdAt(favoriteHouse.getCreatedAt())
+                .build();
+    }
+
+    private FavoriteResponse mapSeekerToResponseDto(FavoriteSeeker favoriteSeeker) {
+        return FavoriteResponse.builder()
+                .user(mapUserToResponseDto(favoriteSeeker.getUser()))
+                .type(Type.SEEKER) // Set the type
+                .adHouse(null) // Ensure AdHouse is null
+                .adSeeker(mapAdSeekerToResponseDto(favoriteSeeker.getAd())) // Map AdSeeker
+                .createdAt(favoriteSeeker.getCreatedAt())
+                .build();
+    }
 }

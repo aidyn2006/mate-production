@@ -16,6 +16,7 @@ import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.AdHouseService;
 import org.example.mateproduction.specification.AdHouseSpecification;
 import org.example.mateproduction.util.Status;
+import org.example.mateproduction.util.Type;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -116,6 +117,7 @@ public class AdHouseServiceImpl implements AdHouseService {
                 .numberOfRooms(dto.getNumberOfRooms())
                 .area(dto.getArea())
                 .floor(dto.getFloor())
+                .typeOfAd(Type.HOUSE)
                 .furnished(dto.getFurnished())
                 .contactPhoneNumber(dto.getContactPhoneNumber())
                 .views(0)

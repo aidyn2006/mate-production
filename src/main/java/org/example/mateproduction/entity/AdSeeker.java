@@ -9,10 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.mateproduction.entity.base.BaseEntity;
-import org.example.mateproduction.util.CityNames;
-import org.example.mateproduction.util.Gender;
-import org.example.mateproduction.util.RoommatePreference;
-import org.example.mateproduction.util.Status;
+import org.example.mateproduction.util.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -82,4 +79,8 @@ public class AdSeeker extends BaseEntity {
     @Pattern(regexp = "^\\+?[0-9.\\s()-]{7,20}$", message = "Invalid phone number format")
     @Size(max = 25, message = "Phone number is too long")
     private String contactPhoneNumber;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Type typeOfAd;
 }

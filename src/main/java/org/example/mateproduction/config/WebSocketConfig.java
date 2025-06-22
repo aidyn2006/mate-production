@@ -143,7 +143,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 }
 
-// Простая реализация Principal для STOMP
 class StompPrincipal implements Principal {
     private final String name;
 

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.example.mateproduction.util.AdType;
 import org.example.mateproduction.util.CityNames;
 import org.example.mateproduction.util.Status;
+import org.example.mateproduction.util.Type;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -41,6 +42,7 @@ public class AdHouseResponse {
     private String contactPhoneNumber;
 
     private Integer views;
+    private Type typeOfAd;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Almaty")
     private Date createdAt;
