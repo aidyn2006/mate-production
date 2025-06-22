@@ -91,4 +91,8 @@ public class AdHouse extends BaseEntity {
     @Column(nullable = false)
     private Type typeOfAd;
 
+    @Column(name = "main_image_url")
+    private String mainImageUrl;
+
+
 }

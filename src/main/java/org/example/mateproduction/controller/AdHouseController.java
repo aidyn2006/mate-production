@@ -1,5 +1,6 @@
 package org.example.mateproduction.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.controller.openapi.AdHouseControllerApi;
 import org.example.mateproduction.dto.request.AdHouseFilter;
@@ -33,10 +34,14 @@ public class AdHouseController implements AdHouseControllerApi {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AdHouseResponse> getAdById(@PathVariable UUID id) throws NotFoundException {
-        AdHouseResponse ad = adHouseService.getAdById(id);
+    public ResponseEntity<AdHouseResponse> getAdById(
+            @PathVariable UUID id,
+            HttpServletRequest request
+    ) throws NotFoundException {
+        AdHouseResponse ad = adHouseService.getAdById(id, request);
         return ResponseEntity.ok(ad);
     }
+
 
     @PostMapping
     public ResponseEntity<AdHouseResponse>  createAd(
@@ -74,4 +79,14 @@ public class AdHouseController implements AdHouseControllerApi {
     public ResponseEntity<AdHouseResponse> updateAdStatus() {
         return null;
     }
+
+
+    @PutMapping("/{id}/main-image")
+    public ResponseEntity<Void> updateMainImage(@PathVariable UUID id, @RequestParam String mainImageUrl
+    ) throws NotFoundException, AccessDeniedException, ValidationException {
+        adHouseService.updateMainImage(id, mainImageUrl);
+        return ResponseEntity.ok().build();
+    }
+
+
 }

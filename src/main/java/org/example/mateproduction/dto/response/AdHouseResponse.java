@@ -49,6 +49,8 @@ public class AdHouseResponse {
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Almaty")
     private Date updatedAt;
+    private String mainImageUrl;
+
 
 
 

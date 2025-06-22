@@ -1,6 +1,7 @@
 package org.example.mateproduction.service.impl;
 
 import jakarta.servlet.Filter;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.config.Jwt.JwtUserDetails;
@@ -41,6 +42,8 @@ public class AdHouseServiceImpl implements AdHouseService {
     private final AdHouseRepository adRepository;
     private final UserRepository userRepository;
     private final CloudinaryService cloudinaryService;
+    private final RedisService redisService;
+
 
     @Override
     @Transactional
@@ -72,14 +75,45 @@ public class AdHouseServiceImpl implements AdHouseService {
         return ads.map(AdHouseServiceImpl::mapToResponseDto);
     }
 
-
     @Override
     @Transactional
-    public AdHouseResponse getAdById(UUID adId) throws NotFoundException {
+    public void updateMainImage(UUID adId, String mainImageUrl) throws NotFoundException, AccessDeniedException, ValidationException {
+        UUID currentUserId = getCurrentUserId();
+
+        AdHouse ad = adRepository.findById(adId)
+                .orElseThrow(() -> new NotFoundException("Ad not found"));
+
+        if (!ad.getUser().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("User not authorized to update this ad");
+        }
+
+        if (ad.getImages() == null || !ad.getImages().contains(mainImageUrl)) {
+            throw new ValidationException("Main image must be one of the ad images");
+        }
+
+        ad.setMainImageUrl(mainImageUrl);
+        adRepository.save(ad);
+    }
+
+
+
+    @Transactional
+    public AdHouseResponse getAdById(UUID adId, HttpServletRequest request) throws NotFoundException {
         AdHouse ad = adRepository.findByIdAndStatus(adId, Status.ACTIVE)
                 .orElseThrow(() -> new NotFoundException("Ad is not available"));
+
+        String ip = request.getRemoteAddr();
+        String userAgent = request.getHeader("User-Agent");
+
+        if (!redisService.isViewCounted(adId, ip, userAgent)) {
+            redisService.incrementViews(adId);
+            ad.setViews(ad.getViews() + 1);
+            adRepository.save(ad);
+        }
+
         return mapToResponseDto(ad);
     }
+
 
     @Override
     @Transactional
@@ -114,7 +148,9 @@ public class AdHouseServiceImpl implements AdHouseService {
                 .build();
 
         if (dto.getImages() != null && !dto.getImages().isEmpty()) {
-            ad.setImages(uploadImages(dto.getImages()));
+            List<String> uploadedImages = uploadImages(dto.getImages());
+            ad.setImages(uploadedImages);
+            ad.setMainImageUrl(uploadedImages.get(0));
         }
 
         ad = adRepository.save(ad);
@@ -147,13 +183,10 @@ public class AdHouseServiceImpl implements AdHouseService {
         ad.setFurnished(dto.getFurnished());
         ad.setContactPhoneNumber(dto.getContactPhoneNumber());
 
-        // This logic is now safe because uploadImages returns a mutable list
         if (dto.getImages() != null && !dto.getImages().isEmpty()) {
-            // First, you might want to delete old images from Cloudinary if they are being replaced
-            // (This is an enhancement, not part of the bug fix)
-            // cloudinaryService.deleteImages(ad.getImages());
-
-            ad.setImages(uploadImages(dto.getImages()));
+            List<String> uploadedImages = uploadImages(dto.getImages());
+            ad.setImages(uploadedImages);
+            ad.setMainImageUrl(uploadedImages.get(0));
         }
 
         ad = adRepository.save(ad); // This line will now succeed
@@ -225,6 +258,7 @@ public class AdHouseServiceImpl implements AdHouseService {
                         .avatarUrl(ad.getUser().getAvatarUrl())
                         .build())
                 .type(ad.getType())
+                .mainImageUrl(ad.getMainImageUrl())
                 .status(ad.getStatus())
                 .images(ad.getImages() != null ? ad.getImages() : Collections.emptyList())
                 .numberOfRooms(ad.getNumberOfRooms())
