@@ -16,6 +16,11 @@ import org.example.mateproduction.repository.AdHouseRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.AdHouseService;
 import org.example.mateproduction.util.Status;
+import org.example.mateproduction.util.Type;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -39,29 +44,34 @@ public class AdHouseServiceImpl implements AdHouseService {
 
     @Override
     @Transactional
-    public List<AdHouseResponse> getAllAds() {
-        return adRepository.findAllByStatus(Status.ACTIVE).stream()
-                .map(AdHouseServiceImpl::mapToResponseDto)
-                .collect(Collectors.toList());
+    public Page<AdHouseResponse> getAllAds(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<AdHouse> adsPage = adRepository.findAllByStatus(Status.ACTIVE, pageable);
+        return adsPage.map(AdHouseServiceImpl::mapToResponseDto);
     }
 
+
     @Override
-    public List<AdHouseResponse> findByFilter(AdHouseFilter filter) {
-        return adRepository.findByFilter(
-                        filter.getMinPrice(),
-                        filter.getMaxPrice(),
-                        filter.getMinRooms(),
-                        filter.getMaxRooms(),
-                        filter.getMinArea(),
-                        filter.getMaxArea(),
-                        filter.getCity(),
-                        filter.getType(),
-                        filter.getFurnished(),
-                        filter.getStatus()
-                ).stream()
-                .map(AdHouseServiceImpl::mapToResponseDto)
-                .toList();
+    public Page<AdHouseResponse> findByFilter(AdHouseFilter filter, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<AdHouse> ads = adRepository.findByFilter(
+                filter.getMinPrice(),
+                filter.getMaxPrice(),
+                filter.getMinRooms(),
+                filter.getMaxRooms(),
+                filter.getMinArea(),
+                filter.getMaxArea(),
+                filter.getCity(),
+                filter.getType(),
+                filter.getFurnished(),
+                filter.getStatus(),
+                pageable
+        );
+
+        return ads.map(AdHouseServiceImpl::mapToResponseDto);
     }
+
 
     @Override
     @Transactional
@@ -97,6 +107,7 @@ public class AdHouseServiceImpl implements AdHouseService {
                 .numberOfRooms(dto.getNumberOfRooms())
                 .area(dto.getArea())
                 .floor(dto.getFloor())
+                .typeOfAd(Type.HOUSE)
                 .furnished(dto.getFurnished())
                 .contactPhoneNumber(dto.getContactPhoneNumber())
                 .views(0)

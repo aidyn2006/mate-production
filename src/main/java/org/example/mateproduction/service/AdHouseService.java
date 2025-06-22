@@ -5,7 +5,7 @@ import org.example.mateproduction.dto.request.AdHouseRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.ValidationException;
-
+import org.springframework.data.domain.Page;
 import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.UUID;
@@ -20,7 +20,7 @@ public interface AdHouseService {
 
     void deleteAd(UUID adId) throws AccessDeniedException, NotFoundException;
 
-    List<AdHouseResponse> getAllAds();
-    List<AdHouseResponse> findByFilter(AdHouseFilter filter);
+    Page<AdHouseResponse> getAllAds(int page, int size);
+    Page<AdHouseResponse> findByFilter(AdHouseFilter filter, int page, int size);
 
 }

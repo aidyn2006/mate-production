@@ -7,9 +7,11 @@ import org.example.mateproduction.dto.request.AdHouseRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.ValidationException;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.nio.file.AccessDeniedException;
 import java.util.List;
@@ -23,8 +25,10 @@ public interface AdHouseControllerApi {
             @ApiResponse(responseCode = "500", description = "Ошибка сервиса"),
 
     })
-    ResponseEntity<List<AdHouseResponse>> getAllAds();
-
+    ResponseEntity<Page<AdHouseResponse>> getAllAds(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    );
     @Operation(summary = "Получить обявление по айдишке")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Успешно получено"),

@@ -1,41 +1,50 @@
 package org.example.mateproduction.entity;
 
 import jakarta.persistence.*;
+import lombok.*;
 import org.example.mateproduction.entity.base.BaseEntity;
 import org.example.mateproduction.util.ReportReason;
 import org.example.mateproduction.util.ReportStatus;
+import org.example.mateproduction.util.ReportableType;
 
-// New Entity: Report.java
+import java.util.UUID;
+
+@Entity
+@Data
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Table(name = "reports")
 public class Report extends BaseEntity {
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reporter_id", nullable = false)
-    private User reporter; // The user who made the report
+    private User reporter;
 
-    @ManyToOne
-    @JoinColumn(name = "reported_user_id")
-    private User reportedUser; // The user being reported (optional)
-
-    @ManyToOne
-    @JoinColumn(name = "reported_ad_house_id")
-    private AdHouse reportedAdHouse; // The house ad being reported (optional)
-
-    @ManyToOne
-    @JoinColumn(name = "reported_ad_seeker_id")
-    private AdSeeker reportedAdSeeker; // The seeker ad being reported (optional)
+    @Column(name = "reported_entity_id", nullable = false)
+    private UUID reportedEntityId;
 
     @Enumerated(EnumType.STRING)
-    private ReportReason reason; // e.g., SPAM, INAPPROPRIATE_CONTENT, SCAM
+    @Column(name = "reported_entity_type", nullable = false)
+    private ReportableType reportedEntityType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReportReason reason;
 
     @Column(columnDefinition = "TEXT")
-    private String description; // User's custom description of the issue
+    private String description;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
-    private ReportStatus status; // e.g., PENDING, REVIEWED, RESOLVED
+    @Column(nullable = false)
+    private ReportStatus status = ReportStatus.PENDING;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resolved_by_admin_id")
-    private User resolvedBy; // The admin who handled the report
+    private User resolvedBy;
 
-    private String resolutionNotes; // Admin's notes on the action taken
+    @Column(columnDefinition = "TEXT")
+    private String resolutionNotes;
 }

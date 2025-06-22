@@ -9,6 +9,7 @@ import org.example.mateproduction.dto.response.AdSeekerResponse;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.ValidationException;
 import org.example.mateproduction.service.AdSeekerService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,9 +25,13 @@ public class AdSeekerController {
     private final AdSeekerService adSeekerService;
 
     @GetMapping
-    public ResponseEntity<List<AdSeekerResponse>> getAllAds() {
-        return ResponseEntity.ok(adSeekerService.getAllAds());
+    public ResponseEntity<Page<AdSeekerResponse>> getAllAds(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(adSeekerService.getAllAds(page, size));
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<AdSeekerResponse> getAdById(@PathVariable UUID id) throws NotFoundException {
@@ -39,9 +44,15 @@ public class AdSeekerController {
         return ResponseEntity.ok(adSeekerService.createAd(request));
     }
     @PostMapping("/filter")
-    public ResponseEntity<List<AdSeekerResponse>> filterAd(@RequestBody AdSeekerFilter filter){
-        return ResponseEntity.ok(adSeekerService.findByFilter(filter));
+    public ResponseEntity<Page<AdSeekerResponse>> filterAd(
+            @RequestBody AdSeekerFilter filter,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(adSeekerService.findByFilter(filter, page, size));
     }
+
+
 
     @PutMapping("/{id}")
     public ResponseEntity<AdSeekerResponse> updateAd(@PathVariable UUID id, @RequestBody AdSeekerRequest request)

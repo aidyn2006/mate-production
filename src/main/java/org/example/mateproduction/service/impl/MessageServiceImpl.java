@@ -32,11 +32,12 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     @Transactional
-    public MessageResponse sendMessage(MessageRequest request) throws NotFoundException {
-        UUID senderId =getCurrentUserId();
+    public MessageResponse sendMessage(MessageRequest request,String email) throws NotFoundException {
+        User user=userRepository.findByEmail(email).orElseThrow(()->new NotFoundException("User not found"));
+//        UUID senderId =getCurrentUserId();
         UUID receiverId = request.getReceiverId();
 
-        User sender = userRepository.findById(senderId)
+        User sender = userRepository.findById(user.getId())
                 .orElseThrow(() -> new NotFoundException("Sender not found"));
 
         User receiver = userRepository.findById(receiverId)

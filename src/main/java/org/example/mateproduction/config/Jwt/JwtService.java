@@ -43,14 +43,34 @@ public class JwtService {
                         .getBody().getExpiration().before(new Date());
     }
 
-    public Authentication getAuthentication(String token) {
-        String username = extractUsername(token);
+    // src/main/java/org/example/mateproduction/config/Jwt/JwtService.java
+// (Likely already correct, but double-check this part)
+
+    public UsernamePasswordAuthenticationToken getAuthentication(String token) {
+        String username = extractUsername(token); // Assumes this extracts correctly
+        if (username == null) {
+            throw new IllegalArgumentException("Username not found in token");
+        }
+
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        return new UsernamePasswordAuthenticationToken(
-                userDetails,
-                null,
-                userDetails.getAuthorities()
-        );
+        if (userDetails == null) {
+            throw new IllegalArgumentException("User details not found for username: " + username);
+        }
+
+        if (isTokenValid(token, userDetails)) {
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                    userDetails, // The principal (UserDetail object)
+                    null,        // Credentials (often null for JWT)
+                    userDetails.getAuthorities() // User's authorities
+            );
+            // NO NEED TO CALL .setAuthenticated(true) here explicitly, constructor does it if authorities are non-null.
+            // However, if your UserDetails has no authorities, or authorities are empty, it might be unauthenticated by default.
+            // Ensure userDetails.getAuthorities() returns at least an empty list, not null.
+
+            return authentication;
+        } else {
+            throw new IllegalArgumentException("Invalid JWT token for user: " + username);
+        }
     }
 }
 

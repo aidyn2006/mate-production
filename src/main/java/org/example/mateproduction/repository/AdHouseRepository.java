@@ -5,6 +5,8 @@ import org.example.mateproduction.entity.User;
 import org.example.mateproduction.util.AdType;
 import org.example.mateproduction.util.CityNames;
 import org.example.mateproduction.util.Status;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -22,7 +24,7 @@ public interface AdHouseRepository extends JpaRepository<AdHouse, UUID>, JpaSpec
     Integer countByUserAndStatus(User user, Status status);
     Optional<AdHouse> findByIdAndStatus(UUID id, Status status);
 
-    List<AdHouse> findAllByStatus(Status status);
+    Page<AdHouse> findAllByStatus(Status status, Pageable pageable);
 
     List<AdHouse> findAllByUserId(UUID userId);
 
@@ -39,7 +41,7 @@ public interface AdHouseRepository extends JpaRepository<AdHouse, UUID>, JpaSpec
       AND (:furnished IS NULL OR a.furnished = :furnished)
       AND (:status IS NULL OR a.status = :status)
 """)
-    List<AdHouse> findByFilter(
+    Page<AdHouse> findByFilter(
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,
             @Param("minRooms") Integer minRooms,
@@ -49,8 +51,10 @@ public interface AdHouseRepository extends JpaRepository<AdHouse, UUID>, JpaSpec
             @Param("city") CityNames city,
             @Param("type") AdType type,
             @Param("furnished") Boolean furnished,
-            @Param("status") Status status
+            @Param("status") Status status,
+            Pageable pageable
     );
+
 
 }
 

@@ -8,6 +8,7 @@ import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.ValidationException;
 import org.example.mateproduction.service.AdHouseService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,9 +24,12 @@ public class AdHouseController implements AdHouseControllerApi {
     private final AdHouseService adHouseService;
 
     @GetMapping
-    public ResponseEntity<List<AdHouseResponse>> getAllAds() {
-        List<AdHouseResponse> ads = adHouseService.getAllAds();
-        return ResponseEntity.ok(ads);
+    public ResponseEntity<Page<AdHouseResponse>> getAllAds(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<AdHouseResponse> result = adHouseService.getAllAds(page, size);
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{id}")
@@ -43,9 +47,14 @@ public class AdHouseController implements AdHouseControllerApi {
     }
 
     @PostMapping("/filter")
-    public ResponseEntity<List<AdHouseResponse>> filterAd(@RequestBody AdHouseFilter filter){
-        return ResponseEntity.ok(adHouseService.findByFilter(filter));
+    public ResponseEntity<Page<AdHouseResponse>> filterAd(
+            @RequestBody AdHouseFilter filter,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(adHouseService.findByFilter(filter, page, size));
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<AdHouseResponse> updateAd(

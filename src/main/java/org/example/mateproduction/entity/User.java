@@ -30,5 +30,5 @@ public class User extends BaseEntity {
     private Boolean isVerified = false;
     private String avatarUrl;
 
-    private Boolean isDeleted;
+    private Boolean isDeleted =false;
 }

@@ -10,6 +10,7 @@ import org.example.mateproduction.entity.base.BaseEntity;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "review")
 public class Review extends BaseEntity {
 
     @ManyToOne(optional = false)
