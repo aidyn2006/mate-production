@@ -16,6 +16,7 @@ import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.AdSeekerService;
 import org.example.mateproduction.helpers.AdSeekerSpecification;
 import org.example.mateproduction.util.Status;
+import org.example.mateproduction.util.Type;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -82,6 +83,7 @@ public class AdSeekerServiceImpl implements AdSeekerService {
                 .preferredRoommateGender(dto.getPreferredRoommateGender())
                 .contactPhoneNumber(dto.getContactPhoneNumber())
                 .status(Status.ACTIVE)
+                .typeOfAd(Type.SEEKER)
                 .views(0)
                 .build();
 

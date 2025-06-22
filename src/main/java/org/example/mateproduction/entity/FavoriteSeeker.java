@@ -5,20 +5,20 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.mateproduction.entity.contract.FavoriteHouseId; // Use specific FavoriteHouseId
+import org.example.mateproduction.entity.contract.FavoriteSeekerId; // Use specific FavoriteSeekerId
 
 import java.time.LocalDateTime; // Use LocalDateTime
+
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "favorite_house_ads") // Good, explicit table name
-public class FavoriteHouse {
-
+@Table(name = "favorite_seeker_ads") // Add explicit table name
+public class FavoriteSeeker {
     @EmbeddedId
-    private FavoriteHouseId id; // Use FavoriteHouseId
+    private FavoriteSeekerId id; // Use FavoriteSeekerId
 
     @ManyToOne
     @MapsId("userId")
@@ -26,9 +26,9 @@ public class FavoriteHouse {
     private User user;
 
     @ManyToOne
-    @MapsId("adHouseId") // Maps to adHouseId in FavoriteHouseId
-    @JoinColumn(name = "ad_house_id") // Explicit join column name
-    private AdHouse ad; // Renamed from 'ad' for consistency or keep 'adHouse' if you prefer
+    @MapsId("adSeekerId") // Maps to adSeekerId in FavoriteSeekerId
+    @JoinColumn(name = "ad_seeker_id") // Explicit join column name
+    private AdSeeker ad; // Renamed from 'ad' for consistency or keep 'adSeeker' if you prefer
 
     @Column(name = "created_at") // Explicit column name
     private LocalDateTime createdAt; // Use LocalDateTime

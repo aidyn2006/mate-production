@@ -10,6 +10,7 @@ import org.example.mateproduction.entity.base.BaseEntity;
 import org.example.mateproduction.util.AdType;
 import org.example.mateproduction.util.CityNames;
 import org.example.mateproduction.util.Status;
+import org.example.mateproduction.util.Type;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -85,4 +86,9 @@ public class AdHouse extends BaseEntity {
 
     @Builder.Default
     private Integer views = 0;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Type typeOfAd;
+
 }

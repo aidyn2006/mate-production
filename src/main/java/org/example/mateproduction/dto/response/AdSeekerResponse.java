@@ -5,10 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.mateproduction.util.CityNames;
-import org.example.mateproduction.util.Gender;
-import org.example.mateproduction.util.RoommatePreference;
-import org.example.mateproduction.util.Status;
+import org.example.mateproduction.util.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -49,6 +46,7 @@ public class AdSeekerResponse {
     private Status status;
 
     private Integer views;
+    private Type typeOfAd;
 
     private String contactPhoneNumber;
 
