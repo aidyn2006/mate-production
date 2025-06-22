@@ -10,6 +10,9 @@ import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.ValidationException;
 import org.example.mateproduction.service.AdSeekerService;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,6 +35,14 @@ public class AdSeekerController {
         return ResponseEntity.ok(adSeekerService.getAllAds(page, size));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<Page<AdSeekerResponse>> searchSeekers(
+            @ModelAttribute AdSeekerFilter filter, // Add @ModelAttribute here
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<AdSeekerResponse> results = adSeekerService.searchAds(filter, pageable);
+        return ResponseEntity.ok(results);
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<AdSeekerResponse> getAdById(@PathVariable UUID id) throws NotFoundException {
@@ -43,16 +54,15 @@ public class AdSeekerController {
             throws ValidationException, NotFoundException {
         return ResponseEntity.ok(adSeekerService.createAd(request));
     }
-    @PostMapping("/filter")
-    public ResponseEntity<Page<AdSeekerResponse>> filterAd(
-            @RequestBody AdSeekerFilter filter,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        return ResponseEntity.ok(adSeekerService.findByFilter(filter, page, size));
-    }
 
-
+//    @PostMapping("/filter")
+//    public ResponseEntity<Page<AdSeekerResponse>> filterAd(
+//            @RequestBody AdSeekerFilter filter,
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "10") int size
+//    ) {
+//        return ResponseEntity.ok(adSeekerService.findByFilter(filter, page, size));
+//    }
 
     @PutMapping("/{id}")
     public ResponseEntity<AdSeekerResponse> updateAd(@PathVariable UUID id, @RequestBody AdSeekerRequest request)

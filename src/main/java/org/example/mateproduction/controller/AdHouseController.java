@@ -9,6 +9,9 @@ import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.ValidationException;
 import org.example.mateproduction.service.AdHouseService;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,14 +26,14 @@ public class AdHouseController implements AdHouseControllerApi {
 
     private final AdHouseService adHouseService;
 
-    @GetMapping
-    public ResponseEntity<Page<AdHouseResponse>> getAllAds(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        Page<AdHouseResponse> result = adHouseService.getAllAds(page, size);
-        return ResponseEntity.ok(result);
-    }
+//    @GetMapping
+//    public ResponseEntity<Page<AdHouseResponse>> getAllAds(
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "10") int size
+//    ) {
+//        Page<AdHouseResponse> result = adHouseService.getAllAds(page, size);
+//        return ResponseEntity.ok(result);
+//    }
 
     @GetMapping("/{id}")
     public ResponseEntity<AdHouseResponse> getAdById(@PathVariable UUID id) throws NotFoundException {
@@ -46,14 +49,24 @@ public class AdHouseController implements AdHouseControllerApi {
         return ResponseEntity.ok(createdAd);
     }
 
-    @PostMapping("/filter")
-    public ResponseEntity<Page<AdHouseResponse>> filterAd(
-            @RequestBody AdHouseFilter filter,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        return ResponseEntity.ok(adHouseService.findByFilter(filter, page, size));
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<AdHouseResponse>> searchHouses(
+            AdHouseFilter filter,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        System.out.println("ZHOPA: " + filter);
+        Page<AdHouseResponse> results = adHouseService.searchAds(filter, pageable);
+        return ResponseEntity.ok(results);
     }
+
+//    @PostMapping("/filter")
+//    public ResponseEntity<Page<AdHouseResponse>> filterAd(
+//            @RequestBody AdHouseFilter filter,
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "10") int size
+//    ) {
+//        return ResponseEntity.ok(adHouseService.findByFilter(filter, page, size));
+//    }
 
 
     @PutMapping("/{id}")

@@ -18,6 +18,8 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class AdSeekerFilter {
+    private String searchQuery;
+
     private Integer minAge;
     private Integer maxAge;
 

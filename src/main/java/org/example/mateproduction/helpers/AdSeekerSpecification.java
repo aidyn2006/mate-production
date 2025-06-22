@@ -1,55 +1,79 @@
 package org.example.mateproduction.helpers;
 
+import jakarta.persistence.criteria.Predicate;
 import org.example.mateproduction.dto.request.AdSeekerFilter;
 import org.example.mateproduction.entity.AdSeeker;
+import org.example.mateproduction.util.Status;
 import org.springframework.data.jpa.domain.Specification;
-
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.CriteriaQuery;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class AdSeekerSpecification {
 
-    public static Specification<AdSeeker> build(AdSeekerFilter filter) {
-        return (Root<AdSeeker> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+    public static Specification<AdSeeker> findByCriteria(AdSeekerFilter filter) {
+        return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            if (filter.getMinAge() != null)
-                predicates.add(cb.greaterThanOrEqualTo(root.get("age"), filter.getMinAge()));
-
-            if (filter.getMaxAge() != null)
-                predicates.add(cb.lessThanOrEqualTo(root.get("age"), filter.getMaxAge()));
-
-            if (filter.getGender() != null)
-                predicates.add(cb.equal(root.get("gender"), filter.getGender()));
-
-            if (filter.getCity() != null)
-                predicates.add(cb.equal(root.get("city"), filter.getCity()));
-
-            if (filter.getDesiredLocation() != null)
-                predicates.add(cb.like(
-                        cb.lower(root.get("desiredLocation")),
-                        "%" + filter.getDesiredLocation().toLowerCase() + "%"
+            // --- Text Search in seekerDescription and desiredLocation ---
+            if (StringUtils.hasText(filter.getSearchQuery())) {
+                String likePattern = "%" + filter.getSearchQuery().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("seekerDescription")), likePattern),
+                        cb.like(cb.lower(root.get("desiredLocation")), likePattern)
                 ));
+            }
 
-            if (filter.getMaxBudget() != null)
+            // --- Age Range ---
+            if (filter.getMinAge() != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("age"), filter.getMinAge()));
+            }
+            if (filter.getMaxAge() != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("age"), filter.getMaxAge()));
+            }
+
+            // --- Gender ---
+            if (filter.getGender() != null) {
+                predicates.add(cb.equal(root.get("gender"), filter.getGender()));
+            }
+
+            // --- City ---
+            if (filter.getCity() != null) {
+                predicates.add(cb.equal(root.get("city"), filter.getCity()));
+            }
+
+            // --- Desired Location (exact match for more precision) ---
+            if (StringUtils.hasText(filter.getDesiredLocation())) {
+                String likePattern = "%" + filter.getDesiredLocation().toLowerCase() + "%";
+                predicates.add(cb.like(cb.lower(root.get("desiredLocation")), likePattern));
+            }
+
+            // --- Max Budget ---
+            if (filter.getMaxBudget() != null) {
                 predicates.add(cb.lessThanOrEqualTo(root.get("maxBudget"), filter.getMaxBudget()));
+            }
 
-            if (filter.getEarliestMoveInDate() != null)
+            // --- Move-in Date (must be on or after this date) ---
+            if (filter.getEarliestMoveInDate() != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("moveInDate"), filter.getEarliestMoveInDate()));
+            }
 
-            if (filter.getHasFurnishedPreference() != null)
+            // --- Furnished Preference ---
+            if (filter.getHasFurnishedPreference() != null) {
                 predicates.add(cb.equal(root.get("hasFurnishedPreference"), filter.getHasFurnishedPreference()));
+            }
 
-            if (filter.getStatus() != null)
-                predicates.add(cb.equal(root.get("status"), filter.getStatus()));
-
+            // --- Preferred Roommate Preferences (check overlap) ---
             if (filter.getRoommatePreferences() != null && !filter.getRoommatePreferences().isEmpty()) {
-                predicates.add(root.get("preferredRoommateGender").in(filter.getRoommatePreferences()));
+                predicates.add(root.join("roommatePreferences").in(filter.getRoommatePreferences()));
+            }
+
+            // --- Status: Always filter by ACTIVE unless explicitly overridden ---
+            if (filter.getStatus() != null) {
+                predicates.add(cb.equal(root.get("status"), filter.getStatus()));
+            } else {
+                predicates.add(cb.equal(root.get("status"), Status.ACTIVE));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

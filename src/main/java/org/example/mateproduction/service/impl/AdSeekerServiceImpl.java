@@ -4,9 +4,12 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.AdSeekerFilter;
+import org.example.mateproduction.dto.request.AdSeekerFilter;
 import org.example.mateproduction.dto.request.AdSeekerRequest;
 import org.example.mateproduction.dto.response.AdSeekerResponse;
+import org.example.mateproduction.dto.response.AdSeekerResponse;
 import org.example.mateproduction.dto.response.UserResponse;
+import org.example.mateproduction.entity.AdSeeker;
 import org.example.mateproduction.entity.AdSeeker;
 import org.example.mateproduction.entity.User;
 import org.example.mateproduction.exception.NotFoundException;
@@ -15,6 +18,7 @@ import org.example.mateproduction.repository.AdSeekerRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.AdSeekerService;
 import org.example.mateproduction.helpers.AdSeekerSpecification;
+
 import org.example.mateproduction.util.Status;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,10 +45,20 @@ public class AdSeekerServiceImpl implements AdSeekerService {
     public Page<AdSeekerResponse> getAllAds(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
         return adSeekerRepository.findAllByStatus(Status.ACTIVE, pageable)
-                .map(this::mapToResponseDto);
+                .map(AdSeekerServiceImpl::mapToResponseDto);
     }
 
+    @Override
+    public Page<AdSeekerResponse> searchAds(AdSeekerFilter filter, Pageable pageable) {
+        // Create the dynamic specification based on the filter DTO
+        Specification<AdSeeker> spec = AdSeekerSpecification.findByCriteria(filter);
 
+        // The repository's findAll method now does everything: filtering, pagination, and sorting!
+        Page<AdSeeker> adSeekerPage = adSeekerRepository.findAll(spec, pageable);
+
+        // Map the result page to our response DTO
+        return adSeekerPage.map(AdSeekerServiceImpl::mapToResponseDto); // Assuming you have a static mapper
+    }
 
     @Override
     @Transactional
@@ -138,10 +152,10 @@ public class AdSeekerServiceImpl implements AdSeekerService {
     @Override
     public Page<AdSeekerResponse> findByFilter(AdSeekerFilter filter, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Specification<AdSeeker> spec = AdSeekerSpecification.build(filter);
+        Specification<AdSeeker> spec = AdSeekerSpecification.findByCriteria(filter);
 
         Page<AdSeeker> seekers = adSeekerRepository.findAll(spec, pageable);
-        return seekers.map(this::mapToResponseDto);
+        return seekers.map(AdSeekerServiceImpl::mapToResponseDto);
     }
 
 
@@ -175,7 +189,7 @@ public class AdSeekerServiceImpl implements AdSeekerService {
             throw new ValidationException("Phone number must be valid Kazakhstan format like +77071234567");
     }
 
-    private AdSeekerResponse mapToResponseDto(AdSeeker ad) {
+    private static AdSeekerResponse mapToResponseDto(AdSeeker ad) {
         return AdSeekerResponse.builder()
                 .id(ad.getId())
                 .age(ad.getAge())
@@ -197,7 +211,7 @@ public class AdSeekerServiceImpl implements AdSeekerService {
                 .maxBudget(ad.getMaxBudget())
                 .moveInDate(ad.getMoveInDate())
                 .hasFurnishedPreference(ad.getHasFurnishedPreference())
-                .roommatePreferences(ad.getRoommatePreferences() != null ? ad.getRoommatePreferences() : Collections.emptyList())
+                .roommatePreferences(ad.getRoommatePreferences())
                 .preferredRoommateGender(ad.getPreferredRoommateGender())
                 .status(ad.getStatus())
                 .views(ad.getViews())
@@ -206,6 +220,7 @@ public class AdSeekerServiceImpl implements AdSeekerService {
                 .updatedAt(ad.getUpdatedAt())
                 .build();
     }
+
 
     private UUID getCurrentUserId() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();

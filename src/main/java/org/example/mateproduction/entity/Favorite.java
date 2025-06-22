@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import org.example.mateproduction.entity.contract.FavoriteId;
 
 import java.util.Date;
-import java.util.UUID;
 
 @Entity
 @Data

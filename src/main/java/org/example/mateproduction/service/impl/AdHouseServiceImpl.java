@@ -1,6 +1,5 @@
 package org.example.mateproduction.service.impl;
 
-import jakarta.servlet.Filter;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.config.Jwt.JwtUserDetails;
@@ -15,6 +14,7 @@ import org.example.mateproduction.exception.ValidationException;
 import org.example.mateproduction.repository.AdHouseRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.AdHouseService;
+import org.example.mateproduction.specification.AdHouseSpecification;
 import org.example.mateproduction.util.Status;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -37,24 +37,22 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AdHouseServiceImpl implements AdHouseService {
 
-    private final AdHouseRepository adRepository;
+    private final AdHouseRepository adHouseRepository;
     private final UserRepository userRepository;
     private final CloudinaryService cloudinaryService;
 
-    @Override
     @Transactional
     public Page<AdHouseResponse> getAllAds(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<AdHouse> adsPage = adRepository.findAllByStatus(Status.ACTIVE, pageable);
+        Page<AdHouse> adsPage = adHouseRepository.findAllByStatus(Status.ACTIVE, pageable);
         return adsPage.map(AdHouseServiceImpl::mapToResponseDto);
     }
 
 
-    @Override
     public Page<AdHouseResponse> findByFilter(AdHouseFilter filter, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
-        Page<AdHouse> ads = adRepository.findByFilter(
+        Page<AdHouse> ads = adHouseRepository.findByFilter(
                 filter.getMinPrice(),
                 filter.getMaxPrice(),
                 filter.getMinRooms(),
@@ -71,11 +69,23 @@ public class AdHouseServiceImpl implements AdHouseService {
         return ads.map(AdHouseServiceImpl::mapToResponseDto);
     }
 
+    @Override
+    public Page<AdHouseResponse> searchAds(AdHouseFilter filter, Pageable pageable) {
+        // Create the dynamic specification based on the filter DTO
+        Specification<AdHouse> spec = AdHouseSpecification.findByCriteria(filter);
+
+        // The repository's findAll method now does everything: filtering, pagination, and sorting!
+        Page<AdHouse> adHousePage = adHouseRepository.findAll(spec, pageable);
+
+        // Map the result page to our response DTO
+        return adHousePage.map(AdHouseServiceImpl::mapToResponseDto); // Assuming you have a static mapper
+    }
+
 
     @Override
     @Transactional
     public AdHouseResponse getAdById(UUID adId) throws NotFoundException {
-        AdHouse ad = adRepository.findByIdAndStatus(adId, Status.ACTIVE)
+        AdHouse ad = adHouseRepository.findByIdAndStatus(adId, Status.ACTIVE)
                 .orElseThrow(() -> new NotFoundException("Ad is not available"));
         return mapToResponseDto(ad);
     }
@@ -89,7 +99,7 @@ public class AdHouseServiceImpl implements AdHouseService {
 
         validateAdRequest(dto);
 
-        int activeAdsCount = adRepository.countByUserAndStatus(user, Status.ACTIVE);
+        int activeAdsCount = adHouseRepository.countByUserAndStatus(user, Status.ACTIVE);
         if (activeAdsCount >= 10) {
             throw new ValidationException("User reached active ads limit");
         }
@@ -115,7 +125,7 @@ public class AdHouseServiceImpl implements AdHouseService {
             ad.setImages(uploadImages(dto.getImages()));
         }
 
-        ad = adRepository.save(ad);
+        ad = adHouseRepository.save(ad);
         return mapToResponseDto(ad);
     }
 
@@ -124,7 +134,7 @@ public class AdHouseServiceImpl implements AdHouseService {
     public AdHouseResponse updateAd(UUID adId, AdHouseRequest dto) throws NotFoundException, AccessDeniedException, ValidationException {
         UUID currentUserId = getCurrentUserId();
 
-        AdHouse ad = adRepository.findById(adId)
+        AdHouse ad = adHouseRepository.findById(adId)
                 .orElseThrow(() -> new NotFoundException("Ad not found"));
 
         if (!ad.getUser().getId().equals(currentUserId)) {
@@ -154,7 +164,7 @@ public class AdHouseServiceImpl implements AdHouseService {
             ad.setImages(uploadImages(dto.getImages()));
         }
 
-        ad = adRepository.save(ad); // This line will now succeed
+        ad = adHouseRepository.save(ad); // This line will now succeed
         return mapToResponseDto(ad);
     }
 
@@ -163,7 +173,7 @@ public class AdHouseServiceImpl implements AdHouseService {
     public void deleteAd(UUID adId) throws AccessDeniedException, NotFoundException {
         UUID currentUserId = getCurrentUserId();
 
-        AdHouse ad = adRepository.findById(adId)
+        AdHouse ad = adHouseRepository.findById(adId)
                 .orElseThrow(() -> new NotFoundException("Ad not found"));
 
         if (!ad.getUser().getId().equals(currentUserId)) {
@@ -171,7 +181,7 @@ public class AdHouseServiceImpl implements AdHouseService {
         }
 
         ad.setStatus(Status.DELETED);
-        adRepository.save(ad);
+        adHouseRepository.save(ad);
     }
 
     // --------------------- ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ -----------------------
