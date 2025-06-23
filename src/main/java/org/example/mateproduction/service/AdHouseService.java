@@ -22,14 +22,11 @@ public interface AdHouseService {
 
     void deleteAd(UUID adId) throws AccessDeniedException, NotFoundException;
 
-<<<<<<< HEAD
     Page<AdHouseResponse> getAllAds(int page, int size);
     Page<AdHouseResponse> findByFilter(AdHouseFilter filter, int page, int size);
     void updateMainImage(UUID adId, String mainImageUrl) throws NotFoundException, AccessDeniedException, ValidationException;
 
 
-=======
     Page<AdHouseResponse> searchAds(AdHouseFilter filter, Pageable pageable);
->>>>>>> 32350c647ad863a9eb19c59e5be942fc327063cd
 
 }

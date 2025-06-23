@@ -3,11 +3,8 @@ package org.example.mateproduction.controller.openapi;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-<<<<<<< HEAD
 import jakarta.servlet.http.HttpServletRequest;
-=======
 import org.example.mateproduction.dto.request.AdHouseFilter;
->>>>>>> 32350c647ad863a9eb19c59e5be942fc327063cd
 import org.example.mateproduction.dto.request.AdHouseRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.exception.NotFoundException;

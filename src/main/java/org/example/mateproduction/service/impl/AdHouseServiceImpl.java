@@ -1,10 +1,7 @@
 package org.example.mateproduction.service.impl;
 
-<<<<<<< HEAD
 import jakarta.servlet.Filter;
 import jakarta.servlet.http.HttpServletRequest;
-=======
->>>>>>> 32350c647ad863a9eb19c59e5be942fc327063cd
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.config.Jwt.JwtUserDetails;
@@ -77,13 +74,12 @@ public class AdHouseServiceImpl implements AdHouseService {
         return ads.map(AdHouseServiceImpl::mapToResponseDto);
     }
 
-<<<<<<< HEAD
     @Override
     @Transactional
     public void updateMainImage(UUID adId, String mainImageUrl) throws NotFoundException, AccessDeniedException, ValidationException {
         UUID currentUserId = getCurrentUserId();
 
-        AdHouse ad = adRepository.findById(adId)
+        AdHouse ad = adHouseRepository.findById(adId)
                 .orElseThrow(() -> new NotFoundException("Ad not found"));
 
         if (!ad.getUser().getId().equals(currentUserId)) {
@@ -95,15 +91,9 @@ public class AdHouseServiceImpl implements AdHouseService {
         }
 
         ad.setMainImageUrl(mainImageUrl);
-        adRepository.save(ad);
+        adHouseRepository.save(ad);
     }
 
-
-
-    @Transactional
-    public AdHouseResponse getAdById(UUID adId, HttpServletRequest request) throws NotFoundException {
-        AdHouse ad = adRepository.findByIdAndStatus(adId, Status.ACTIVE)
-=======
     @Override
     public Page<AdHouseResponse> searchAds(AdHouseFilter filter, Pageable pageable) {
         // Create the dynamic specification based on the filter DTO
@@ -117,11 +107,9 @@ public class AdHouseServiceImpl implements AdHouseService {
     }
 
 
-    @Override
     @Transactional
-    public AdHouseResponse getAdById(UUID adId) throws NotFoundException {
+    public AdHouseResponse getAdById(UUID adId, HttpServletRequest request) throws NotFoundException {
         AdHouse ad = adHouseRepository.findByIdAndStatus(adId, Status.ACTIVE)
->>>>>>> 32350c647ad863a9eb19c59e5be942fc327063cd
                 .orElseThrow(() -> new NotFoundException("Ad is not available"));
 
         String ip = request.getRemoteAddr();
@@ -130,7 +118,7 @@ public class AdHouseServiceImpl implements AdHouseService {
         if (!redisService.isViewCounted(adId, ip, userAgent)) {
             redisService.incrementViews(adId);
             ad.setViews(ad.getViews() + 1);
-            adRepository.save(ad);
+            adHouseRepository.save(ad);
         }
 
         return mapToResponseDto(ad);
