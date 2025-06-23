@@ -1,5 +1,6 @@
 package org.example.mateproduction.service;
 
+import org.example.mateproduction.dto.request.AdHouseFilter;
 import org.example.mateproduction.dto.request.AdHouseRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.dto.response.AdminReasonResponse;
@@ -17,4 +18,5 @@ public interface AdminHouseAdService {
     AdminReasonResponse rejectAd(UUID adId, String reason);
     AdHouseResponse updateAd(UUID adId, AdHouseRequest dto) throws NotFoundException, AccessDeniedException, ValidationException;
     void changeAdStatus(UUID adId, Status newStatus, String reason);
+    Page<AdHouseResponse> findByFilter(AdHouseFilter filter, int page, int size);
 }
