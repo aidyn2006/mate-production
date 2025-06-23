@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @Component
 public class AdHouseFilter {
+    private String searchQuery;
     private BigDecimal minPrice;
     private BigDecimal maxPrice;
     private Integer minRooms;
