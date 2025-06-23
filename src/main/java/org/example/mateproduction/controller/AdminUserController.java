@@ -1,36 +1,69 @@
 package org.example.mateproduction.controller;
 
+import lombok.RequiredArgsConstructor;
+import org.example.mateproduction.dto.request.UserRequest;
+import org.example.mateproduction.dto.response.AdHouseResponse;
+import org.example.mateproduction.dto.response.AdSeekerResponse;
+import org.example.mateproduction.dto.response.UserResponse;
+import org.example.mateproduction.exception.NotFoundException;
+import org.example.mateproduction.service.AdminUserService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/admin/users")
+@RequiredArgsConstructor
 public class AdminUserController {
-    /*
-    Base Path: /api/v1/admin/users
 
-Purpose: The central hub for managing every user on the platform.
+    private final AdminUserService adminUserService;
 
-Methods:
+    // Получить всех пользователей (включая удалённых или нет)
+    @GetMapping
+    public ResponseEntity<List<UserResponse>> getAllUsers(@RequestParam(defaultValue = "false") boolean includeDeleted) {
+        return ResponseEntity.ok(adminUserService.getAllUsers(includeDeleted));
+    }
 
-GET /
-    Action: Gets a paginated and searchable list of all users.
-    Request Params: ?page=...&size=...&email=...&username=...&status=... (BANNED, VERIFIED, etc.)
-    Response Model: Page<AdminUserSummaryResponse>
-GET /{userId}
-    Action: Fetches the complete, unfiltered details of a single user, including their listings, reports they've made, and reports against them.
-    Response Model: AdminUserDetailResponse
-POST /{userId}/ban
-    Action: Bans a user, making them unable to log in or use the platform.
-    Request Model: BanRequest
-    Response Model: SuccessMessageResponse
-POST /{userId}/unban
-    Action: Lifts a ban on a user.
-    Response Model: SuccessMessageResponse
-POST /{userId}/verify
-    Action: Manually marks a user's account as verified.
-    Response Model: SuccessMessageResponse
-PUT /{userId}/role
-    Action: Changes a user's role (e.g., promote to ADMIN). Use with extreme caution.
-    Request Model: UpdateUserRoleRequest
-    Response Model: AdminUserDetailResponse
-DELETE /{userId}
-    Action: Performs a hard delete of a user and all their associated content (for GDPR compliance or severe violations).
-    Response Model: ResponseEntity<Void>
-     */
+    // Получить одного пользователя по ID
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserResponse> getUserById(@PathVariable UUID userId) throws NotFoundException {
+        return ResponseEntity.ok(adminUserService.getUserById(userId));
+    }
+
+    // Обновить пользователя
+    @PutMapping("/{userId}")
+    public ResponseEntity<UserResponse> updateUser(
+            @PathVariable UUID userId,
+            @ModelAttribute UserRequest request
+    ) {
+        return ResponseEntity.ok(adminUserService.updateUser(userId, request));
+    }
+
+    // Мягкое удаление пользователя
+    @DeleteMapping("/{userId}/soft")
+    public ResponseEntity<Void> softDeleteUser(@PathVariable UUID userId) {
+        adminUserService.deleteUserSoft(userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Жёсткое удаление пользователя
+    @DeleteMapping("/{userId}/hard")
+    public ResponseEntity<Void> hardDeleteUser(@PathVariable UUID userId) {
+        adminUserService.deleteUserHard(userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Получить все объявления о сдаче дома пользователя
+    @GetMapping("/{userId}/house-ads")
+    public ResponseEntity<List<AdHouseResponse>> getUserHouseAds(@PathVariable UUID userId) {
+        return ResponseEntity.ok(adminUserService.getUserHouseAds(userId));
+    }
+
+    // Получить все объявления-соискатели пользователя
+    @GetMapping("/{userId}/seeker-ads")
+    public ResponseEntity<List<AdSeekerResponse>> getUserSeekerAds(@PathVariable UUID userId) {
+        return ResponseEntity.ok(adminUserService.getUserSeekerAds(userId));
+    }
 }

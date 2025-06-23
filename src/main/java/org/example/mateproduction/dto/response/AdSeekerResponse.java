@@ -55,4 +55,7 @@ public class AdSeekerResponse {
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Almaty")
     private Date updatedAt;
+
+    private String moderationComment;
+
 }

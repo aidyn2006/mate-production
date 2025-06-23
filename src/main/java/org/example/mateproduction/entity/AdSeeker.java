@@ -83,4 +83,7 @@ public class AdSeeker extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Type typeOfAd;
+
+    @Column(name = "moderation_comment", nullable = true)
+    private String moderationComment;
 }

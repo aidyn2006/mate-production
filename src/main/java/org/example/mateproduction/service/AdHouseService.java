@@ -7,6 +7,8 @@ import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.ValidationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.UUID;
@@ -25,5 +27,6 @@ public interface AdHouseService {
     void updateMainImage(UUID adId, String mainImageUrl) throws NotFoundException, AccessDeniedException, ValidationException;
 
 
+    Page<AdHouseResponse> searchAds(AdHouseFilter filter, Pageable pageable);
 
 }

@@ -37,7 +37,6 @@ public class AuthServiceImpl implements AuthService {
     private final CloudinaryService cloudinaryService;
     private final TokenRepository tokenRepository;
     private final EmailService emailService;
-    // --- [NEW] INJECTING FRONTEND URLS FROM application.properties ---
     @Value("${app.frontend.base-url}")
     private String frontendBaseUrl;
 
@@ -46,7 +45,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Value("${app.frontend.reset-password-path}")
     private String resetPasswordPath;
-    // --- [END NEW] ---
 
 
     @Override
