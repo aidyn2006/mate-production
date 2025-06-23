@@ -137,7 +137,7 @@ public class AdHouseServiceImpl implements AdHouseService {
                 .city(dto.getCity())
                 .user(user)
                 .type(dto.getType())
-                .status(Status.ACTIVE)
+                .status(Status.MODERATION)
                 .numberOfRooms(dto.getNumberOfRooms())
                 .area(dto.getArea())
                 .floor(dto.getFloor())
@@ -182,6 +182,7 @@ public class AdHouseServiceImpl implements AdHouseService {
         ad.setFloor(dto.getFloor());
         ad.setFurnished(dto.getFurnished());
         ad.setContactPhoneNumber(dto.getContactPhoneNumber());
+        ad.setStatus(Status.MODERATION);
 
         if (dto.getImages() != null && !dto.getImages().isEmpty()) {
             List<String> uploadedImages = uploadImages(dto.getImages());

@@ -51,6 +51,8 @@ public class AdHouseResponse {
     private Date updatedAt;
     private String mainImageUrl;
 
+    private String moderationComment;
+
 
 
 

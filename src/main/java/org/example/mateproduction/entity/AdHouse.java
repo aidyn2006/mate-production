@@ -94,5 +94,8 @@ public class AdHouse extends BaseEntity {
     @Column(name = "main_image_url")
     private String mainImageUrl;
 
+    @Column(name = "moderation_comment", nullable = true)
+    private String moderationComment;
+
 
 }
