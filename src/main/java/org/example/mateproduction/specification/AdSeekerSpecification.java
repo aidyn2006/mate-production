@@ -1,4 +1,4 @@
-package org.example.mateproduction.helpers;
+package org.example.mateproduction.specification;
 
 import jakarta.persistence.criteria.Predicate;
 import org.example.mateproduction.dto.request.AdSeekerFilter;

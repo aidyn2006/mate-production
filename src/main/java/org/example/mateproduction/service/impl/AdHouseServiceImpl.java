@@ -1,6 +1,5 @@
 package org.example.mateproduction.service.impl;
 
-import jakarta.servlet.Filter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -57,19 +56,7 @@ public class AdHouseServiceImpl implements AdHouseService {
     public Page<AdHouseResponse> findByFilter(AdHouseFilter filter, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
-        Page<AdHouse> ads = adHouseRepository.findByFilter(
-                filter.getMinPrice(),
-                filter.getMaxPrice(),
-                filter.getMinRooms(),
-                filter.getMaxRooms(),
-                filter.getMinArea(),
-                filter.getMaxArea(),
-                filter.getCity(),
-                filter.getType(),
-                filter.getFurnished(),
-                filter.getStatus(),
-                pageable
-        );
+        Page<AdHouse> ads = adHouseRepository.findByFilter(filter.getMinPrice(), filter.getMaxPrice(), filter.getMinRooms(), filter.getMaxRooms(), filter.getMinArea(), filter.getMaxArea(), filter.getCity(), filter.getType(), filter.getFurnished(), filter.getStatus(), pageable);
 
         return ads.map(AdHouseServiceImpl::mapToResponseDto);
     }
@@ -79,8 +66,7 @@ public class AdHouseServiceImpl implements AdHouseService {
     public void updateMainImage(UUID adId, String mainImageUrl) throws NotFoundException, AccessDeniedException, ValidationException {
         UUID currentUserId = getCurrentUserId();
 
-        AdHouse ad = adHouseRepository.findById(adId)
-                .orElseThrow(() -> new NotFoundException("Ad not found"));
+        AdHouse ad = adHouseRepository.findById(adId).orElseThrow(() -> new NotFoundException("Ad not found"));
 
         if (!ad.getUser().getId().equals(currentUserId)) {
             throw new AccessDeniedException("User not authorized to update this ad");
@@ -109,8 +95,7 @@ public class AdHouseServiceImpl implements AdHouseService {
 
     @Transactional
     public AdHouseResponse getAdById(UUID adId, HttpServletRequest request) throws NotFoundException {
-        AdHouse ad = adHouseRepository.findByIdAndStatus(adId, Status.ACTIVE)
-                .orElseThrow(() -> new NotFoundException("Ad is not available"));
+        AdHouse ad = adHouseRepository.findByIdAndStatus(adId, Status.ACTIVE).orElseThrow(() -> new NotFoundException("Ad is not available"));
 
         String ip = request.getRemoteAddr();
         String userAgent = request.getHeader("User-Agent");
@@ -129,8 +114,7 @@ public class AdHouseServiceImpl implements AdHouseService {
     @Transactional
     public AdHouseResponse createAd(AdHouseRequest dto) throws ValidationException, NotFoundException {
         UUID currentUserId = getCurrentUserId();
-        User user = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found"));
 
         validateAdRequest(dto);
 
@@ -139,23 +123,7 @@ public class AdHouseServiceImpl implements AdHouseService {
             throw new ValidationException("User reached active ads limit");
         }
 
-        AdHouse ad = AdHouse.builder()
-                .title(dto.getTitle())
-                .description(dto.getDescription())
-                .price(dto.getPrice())
-                .address(dto.getAddress())
-                .city(dto.getCity())
-                .user(user)
-                .type(dto.getType())
-                .status(Status.MODERATION)
-                .numberOfRooms(dto.getNumberOfRooms())
-                .area(dto.getArea())
-                .floor(dto.getFloor())
-                .typeOfAd(Type.HOUSE)
-                .furnished(dto.getFurnished())
-                .contactPhoneNumber(dto.getContactPhoneNumber())
-                .views(0)
-                .build();
+        AdHouse ad = AdHouse.builder().title(dto.getTitle()).description(dto.getDescription()).price(dto.getPrice()).address(dto.getAddress()).city(dto.getCity()).user(user).type(dto.getType()).status(Status.MODERATION).numberOfRooms(dto.getNumberOfRooms()).area(dto.getArea()).floor(dto.getFloor()).typeOfAd(Type.HOUSE).furnished(dto.getFurnished()).contactPhoneNumber(dto.getContactPhoneNumber()).views(0).build();
 
         if (dto.getImages() != null && !dto.getImages().isEmpty()) {
             List<String> uploadedImages = uploadImages(dto.getImages());
@@ -172,8 +140,7 @@ public class AdHouseServiceImpl implements AdHouseService {
     public AdHouseResponse updateAd(UUID adId, AdHouseRequest dto) throws NotFoundException, AccessDeniedException, ValidationException {
         UUID currentUserId = getCurrentUserId();
 
-        AdHouse ad = adHouseRepository.findById(adId)
-                .orElseThrow(() -> new NotFoundException("Ad not found"));
+        AdHouse ad = adHouseRepository.findById(adId).orElseThrow(() -> new NotFoundException("Ad not found"));
 
         if (!ad.getUser().getId().equals(currentUserId)) {
             throw new AccessDeniedException("User not authorized to update this ad");
@@ -209,8 +176,7 @@ public class AdHouseServiceImpl implements AdHouseService {
     public void deleteAd(UUID adId) throws AccessDeniedException, NotFoundException {
         UUID currentUserId = getCurrentUserId();
 
-        AdHouse ad = adHouseRepository.findById(adId)
-                .orElseThrow(() -> new NotFoundException("Ad not found"));
+        AdHouse ad = adHouseRepository.findById(adId).orElseThrow(() -> new NotFoundException("Ad not found"));
 
         if (!ad.getUser().getId().equals(currentUserId)) {
             throw new AccessDeniedException("User not authorized to delete this ad");
@@ -223,16 +189,13 @@ public class AdHouseServiceImpl implements AdHouseService {
     // --------------------- ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ -----------------------
 
     private void validateAdRequest(AdHouseRequest dto) throws ValidationException {
-        if (dto.getTitle() == null || dto.getTitle().isBlank())
-            throw new ValidationException("Title is required");
+        if (dto.getTitle() == null || dto.getTitle().isBlank()) throw new ValidationException("Title is required");
         if (dto.getDescription() == null || dto.getDescription().isBlank())
             throw new ValidationException("Description is required");
         if (dto.getPrice() == null || dto.getPrice().compareTo(BigDecimal.ZERO) <= 0)
             throw new ValidationException("Price must be greater than zero");
-        if (dto.getCity() == null)
-            throw new ValidationException("City is required");
-        if (dto.getType() == null)
-            throw new ValidationException("Ad type is required");
+        if (dto.getCity() == null) throw new ValidationException("City is required");
+        if (dto.getType() == null) throw new ValidationException("Ad type is required");
         if (dto.getContactPhoneNumber() == null || dto.getContactPhoneNumber().isBlank())
             throw new ValidationException("Contact phone number is required");
     }
@@ -242,51 +205,18 @@ public class AdHouseServiceImpl implements AdHouseService {
             return new ArrayList<>(); // Return an empty mutable list
         }
         // CORRECTED: Collect to a new ArrayList, which is mutable
-        return images.stream()
-                .map(cloudinaryService::upload)
-                .collect(Collectors.toCollection(ArrayList::new));
+        return images.stream().map(cloudinaryService::upload).collect(Collectors.toCollection(ArrayList::new));
     }
 
 
-
     private static AdHouseResponse mapToResponseDto(AdHouse ad) {
-        return AdHouseResponse.builder()
-                .id(ad.getId())
-                .title(ad.getTitle())
-                .description(ad.getDescription())
-                .price(ad.getPrice())
-                .address(ad.getAddress())
-                .city(ad.getCity())
-                .user(UserResponse.builder()
-                        .id(ad.getUser().getId())
-                        .name(ad.getUser().getName())
-                        .surname(ad.getUser().getSurname())
-                        .username(ad.getUser().getUsername())
-                        .email(ad.getUser().getEmail())
-                        .phone(ad.getUser().getPhone())
-                        .role(ad.getUser().getRole())
-                        .isVerified(ad.getUser().getIsVerified())
-                        .avatarUrl(ad.getUser().getAvatarUrl())
-                        .build())
-                .type(ad.getType())
-                .mainImageUrl(ad.getMainImageUrl())
-                .status(ad.getStatus())
-                .images(ad.getImages() != null ? ad.getImages() : Collections.emptyList())
-                .numberOfRooms(ad.getNumberOfRooms())
-                .area(ad.getArea())
-                .floor(ad.getFloor())
-                .furnished(ad.getFurnished())
-                .contactPhoneNumber(ad.getContactPhoneNumber())
-                .createdAt(ad.getCreatedAt())
-                .updatedAt(ad.getUpdatedAt())
-                .build();
+        return AdHouseResponse.builder().id(ad.getId()).title(ad.getTitle()).description(ad.getDescription()).price(ad.getPrice()).address(ad.getAddress()).city(ad.getCity()).user(UserResponse.builder().id(ad.getUser().getId()).name(ad.getUser().getName()).surname(ad.getUser().getSurname()).username(ad.getUser().getUsername()).email(ad.getUser().getEmail()).phone(ad.getUser().getPhone()).role(ad.getUser().getRole()).isVerified(ad.getUser().getIsVerified()).avatarUrl(ad.getUser().getAvatarUrl()).build()).type(ad.getType()).mainImageUrl(ad.getMainImageUrl()).status(ad.getStatus()).images(ad.getImages() != null ? ad.getImages() : Collections.emptyList()).numberOfRooms(ad.getNumberOfRooms()).area(ad.getArea()).floor(ad.getFloor()).furnished(ad.getFurnished()).contactPhoneNumber(ad.getContactPhoneNumber()).createdAt(ad.getCreatedAt()).updatedAt(ad.getUpdatedAt()).build();
     }
 
     private UUID getCurrentUserId() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated() ||
-                authentication.getPrincipal().equals("anonymousUser")) {
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
             throw new SecurityException("User is not authenticated");
         }
 

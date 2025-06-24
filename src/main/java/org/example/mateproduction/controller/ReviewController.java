@@ -24,30 +24,19 @@ public class ReviewController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ReviewResponse>> getAllReviews(
-            @RequestParam(required = false) UUID reviewerId,
-            @RequestParam(required = false) UUID adId
-    ) {
+    public ResponseEntity<List<ReviewResponse>> getAllReviews(@RequestParam(required = false) UUID reviewerId, @RequestParam(required = false) UUID adId) {
         List<ReviewResponse> reviews = reviewService.getAllReview(reviewerId, adId);
         return ResponseEntity.ok(reviews);
     }
 
     @PutMapping("/{reviewerId}/{adId}")
-    public ResponseEntity<ReviewResponse> updateReview(
-            @PathVariable UUID reviewerId,
-            @PathVariable UUID adId,
-            @RequestBody ReviewRequest request
-    ) {
+    public ResponseEntity<ReviewResponse> updateReview(@PathVariable UUID reviewerId, @PathVariable UUID adId, @RequestBody ReviewRequest request) {
         ReviewResponse updated = reviewService.updateReview(reviewerId, adId, request);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{reviewId}/{reviewerId}/{adId}")
-    public ResponseEntity<Void> deleteReview(
-            @PathVariable UUID reviewId,
-            @PathVariable UUID reviewerId,
-            @PathVariable UUID adId
-    ) {
+    public ResponseEntity<Void> deleteReview(@PathVariable UUID reviewId, @PathVariable UUID reviewerId, @PathVariable UUID adId) {
         reviewService.deleteReview(reviewId, reviewerId, adId);
         return ResponseEntity.noContent().build();
     }

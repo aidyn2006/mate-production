@@ -6,18 +6,25 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.mateproduction.dto.request.CreateReportRequest;
 import org.example.mateproduction.dto.request.UpdateReportStatusRequest;
 import org.example.mateproduction.dto.response.ReportResponse;
+import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.entity.Report;
 import org.example.mateproduction.entity.User;
+import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.ReportAlreadyExistsException;
 import org.example.mateproduction.exception.ResourceNotFoundException;
+import org.example.mateproduction.exception.UnauthorizedException;
 import org.example.mateproduction.repository.AdHouseRepository;
 import org.example.mateproduction.repository.AdSeekerRepository;
 import org.example.mateproduction.repository.ReportRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.ReportService;
+import org.example.mateproduction.service.UserService;
 import org.example.mateproduction.util.ReportableType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,21 +40,30 @@ public class ReportServiceImpl implements ReportService {
     private final UserRepository userRepository;
     private final AdHouseRepository adHouseRepository; // Assuming you have this
     private final AdSeekerRepository adSeekerRepository; // Assuming you have this
+    private final UserService userService;
+
 
     @Override
     @Transactional
-    public ReportResponse createReport(CreateReportRequest request, UUID reporterId) {
+    public ReportResponse createReport(CreateReportRequest request, UserDetails userDetails) throws UnauthorizedException {
+        if (userDetails == null) {
+            log.warn("Attempt to create a report without authentication.");
+            throw new UnauthorizedException("User is not authenticated");
+        }
+        UUID reporterId = userService.getCurrentUser().getId();
+        if (reporterId == null) {
+            log.warn("Could not find current user from security context.");
+            throw new UnauthorizedException("User is not authenticated");
+        }
+
         log.info("Attempting to create report by user {} for entity {} of type {}",
                 reporterId, request.getReportedEntityId(), request.getReportedEntityType());
-
-        // 1. Validate that the reporter (user) exists
         User reporter = userRepository.findById(reporterId)
                 .orElseThrow(() -> {
                     log.error("User not found with id: {}", reporterId);
                     return new ResourceNotFoundException("Reporter with ID " + reporterId + " not found.");
                 });
 
-        // 2. Validate that the reported entity exists
         validateReportableEntityExists(request.getReportedEntityId(), request.getReportedEntityType());
 
         // 3. Prevent duplicate reports
@@ -75,40 +91,7 @@ public class ReportServiceImpl implements ReportService {
         return toDto(savedReport);
     }
 
-    @Override
-    public Page<ReportResponse> getAllReports(Pageable pageable) {
-        log.info("Fetching all reports for page request: {}", pageable);
-        // Use the toDto mapper for each element in the page
-        return reportRepository.findAll(pageable).map(this::toDto);
-    }
 
-    @Override
-    public ReportResponse getReportById(UUID reportId) {
-        log.info("Fetching report with ID: {}", reportId);
-        return reportRepository.findById(reportId)
-                .map(this::toDto)
-                .orElseThrow(() -> new ResourceNotFoundException("Report with ID " + reportId + " not found."));
-    }
-
-    @Override
-    @Transactional
-    public ReportResponse updateReportStatus(UUID reportId, UpdateReportStatusRequest request, UUID adminId) {
-        log.info("Admin {} updating status of report {} to {}", adminId, reportId, request.getStatus());
-
-        Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new ResourceNotFoundException("Report with ID " + reportId + " not found."));
-
-        User admin = userRepository.findById(adminId)
-                .orElseThrow(() -> new ResourceNotFoundException("Admin with ID " + adminId + " not found."));
-
-        report.setStatus(request.getStatus());
-        report.setResolutionNotes(request.getResolutionNotes());
-        report.setResolvedBy(admin);
-
-        Report updatedReport = reportRepository.save(report);
-        log.info("Successfully updated status for report {}", updatedReport.getId());
-        return toDto(updatedReport);
-    }
 
     private void validateReportableEntityExists(UUID entityId, ReportableType type) {
         boolean exists;

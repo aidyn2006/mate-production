@@ -1,10 +1,8 @@
 package org.example.mateproduction.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.mateproduction.dto.request.AdHouseFilter;
 import org.example.mateproduction.dto.request.AdSeekerFilter;
 import org.example.mateproduction.dto.request.AdSeekerRequest;
-import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.dto.response.AdSeekerResponse;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.ValidationException;
@@ -17,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -28,18 +25,13 @@ public class AdSeekerController {
     private final AdSeekerService adSeekerService;
 
     @GetMapping
-    public ResponseEntity<Page<AdSeekerResponse>> getAllAds(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
+    public ResponseEntity<Page<AdSeekerResponse>> getAllAds(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(adSeekerService.getAllAds(page, size));
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Page<AdSeekerResponse>> searchSeekers(
-            @ModelAttribute AdSeekerFilter filter, // Add @ModelAttribute here
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
-    ) {
+    public ResponseEntity<Page<AdSeekerResponse>> searchSeekers(@ModelAttribute AdSeekerFilter filter, // Add @ModelAttribute here
+                                                                @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<AdSeekerResponse> results = adSeekerService.searchAds(filter, pageable);
         return ResponseEntity.ok(results);
     }
@@ -50,8 +42,7 @@ public class AdSeekerController {
     }
 
     @PostMapping
-    public ResponseEntity<AdSeekerResponse> createAd(@RequestBody AdSeekerRequest request)
-            throws ValidationException, NotFoundException {
+    public ResponseEntity<AdSeekerResponse> createAd(@RequestBody AdSeekerRequest request) throws ValidationException, NotFoundException {
         return ResponseEntity.ok(adSeekerService.createAd(request));
     }
 
@@ -65,14 +56,12 @@ public class AdSeekerController {
 //    }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AdSeekerResponse> updateAd(@PathVariable UUID id, @RequestBody AdSeekerRequest request)
-            throws NotFoundException, AccessDeniedException, ValidationException {
+    public ResponseEntity<AdSeekerResponse> updateAd(@PathVariable UUID id, @RequestBody AdSeekerRequest request) throws NotFoundException, AccessDeniedException, ValidationException {
         return ResponseEntity.ok(adSeekerService.updateAd(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAd(@PathVariable UUID id)
-            throws NotFoundException, AccessDeniedException {
+    public ResponseEntity<Void> deleteAd(@PathVariable UUID id) throws NotFoundException, AccessDeniedException {
         adSeekerService.deleteAd(id);
         return ResponseEntity.noContent().build();
     }

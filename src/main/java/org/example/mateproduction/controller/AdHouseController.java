@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -37,29 +36,21 @@ public class AdHouseController implements AdHouseControllerApi {
 //    }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AdHouseResponse> getAdById(
-            @PathVariable UUID id,
-            HttpServletRequest request
-    ) throws NotFoundException {
+    public ResponseEntity<AdHouseResponse> getAdById(@PathVariable UUID id, HttpServletRequest request) throws NotFoundException {
         AdHouseResponse ad = adHouseService.getAdById(id, request);
         return ResponseEntity.ok(ad);
     }
 
 
     @PostMapping
-    public ResponseEntity<AdHouseResponse>  createAd(
-            @ModelAttribute AdHouseRequest request
-    ) throws ValidationException, NotFoundException {
+    public ResponseEntity<AdHouseResponse> createAd(@ModelAttribute AdHouseRequest request) throws ValidationException, NotFoundException {
         AdHouseResponse createdAd = adHouseService.createAd(request);
         return ResponseEntity.ok(createdAd);
     }
 
 
     @GetMapping("/search")
-    public ResponseEntity<Page<AdHouseResponse>> searchHouses(
-            AdHouseFilter filter,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        System.out.println("ZHOPA: " + filter);
+    public ResponseEntity<Page<AdHouseResponse>> searchHouses(AdHouseFilter filter, @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<AdHouseResponse> results = adHouseService.searchAds(filter, pageable);
         return ResponseEntity.ok(results);
     }
@@ -75,13 +66,11 @@ public class AdHouseController implements AdHouseControllerApi {
 
 
     @PutMapping("/{id}")
-    public ResponseEntity<AdHouseResponse> updateAd(
-            @PathVariable UUID id,
-            @ModelAttribute AdHouseRequest request // <--- Still uses @ModelAttribute
-    ) throws NotFoundException, AccessDeniedException, ValidationException {
+    public ResponseEntity<AdHouseResponse> updateAd(@PathVariable UUID id, @ModelAttribute AdHouseRequest request) throws NotFoundException, AccessDeniedException, ValidationException {
         AdHouseResponse updatedAd = adHouseService.updateAd(id, request);
         return ResponseEntity.ok(updatedAd);
     }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAd(@PathVariable UUID id) throws AccessDeniedException, NotFoundException {
         adHouseService.deleteAd(id);
@@ -95,8 +84,7 @@ public class AdHouseController implements AdHouseControllerApi {
 
 
     @PutMapping("/{id}/main-image")
-    public ResponseEntity<Void> updateMainImage(@PathVariable UUID id, @RequestParam String mainImageUrl
-    ) throws NotFoundException, AccessDeniedException, ValidationException {
+    public ResponseEntity<Void> updateMainImage(@PathVariable UUID id, @RequestParam String mainImageUrl) throws NotFoundException, AccessDeniedException, ValidationException {
         adHouseService.updateMainImage(id, mainImageUrl);
         return ResponseEntity.ok().build();
     }

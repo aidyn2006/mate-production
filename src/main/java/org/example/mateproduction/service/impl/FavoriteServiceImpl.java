@@ -3,31 +3,23 @@ package org.example.mateproduction.service.impl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.config.Jwt.JwtUserDetails;
-import org.example.mateproduction.dto.request.FavoriteRequest; // Import unified request
+import org.example.mateproduction.dto.request.FavoriteRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
-import org.example.mateproduction.dto.response.AdSeekerResponse; // New import
+import org.example.mateproduction.dto.response.AdSeekerResponse;
 import org.example.mateproduction.dto.response.FavoriteResponse;
 import org.example.mateproduction.dto.response.UserResponse;
-import org.example.mateproduction.entity.AdHouse;
-import org.example.mateproduction.entity.AdSeeker; // New import
-import org.example.mateproduction.entity.FavoriteHouse;
-import org.example.mateproduction.entity.FavoriteSeeker; // New import
-import org.example.mateproduction.entity.User;
-import org.example.mateproduction.entity.contract.FavoriteHouseId; // Import specific ID
-import org.example.mateproduction.entity.contract.FavoriteSeekerId; // Import specific ID
+import org.example.mateproduction.entity.*;
+import org.example.mateproduction.entity.contract.FavoriteHouseId;
+import org.example.mateproduction.entity.contract.FavoriteSeekerId;
 import org.example.mateproduction.exception.NotFoundException;
-import org.example.mateproduction.repository.AdHouseRepository;
-import org.example.mateproduction.repository.AdSeekerRepository; // New import
-import org.example.mateproduction.repository.FavoriteHouseRepository; // New import
-import org.example.mateproduction.repository.FavoriteSeekerRepository; // New import
-import org.example.mateproduction.repository.UserRepository;
+import org.example.mateproduction.repository.*;
 import org.example.mateproduction.service.FavoriteService;
 import org.example.mateproduction.util.Type;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime; // Use LocalDateTime
-import java.util.ArrayList; // For combining lists
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,40 +37,27 @@ public class FavoriteServiceImpl implements FavoriteService {
     @Transactional
     public FavoriteResponse addFavorite(FavoriteRequest request) throws NotFoundException {
         UUID userId = getCurrentUserId();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
 
         if (request.getType() == Type.HOUSE) {
-            AdHouse adHouse = adHouseRepository.findById(request.getAdId())
-                    .orElseThrow(() -> new NotFoundException("AdHouse not found"));
+            AdHouse adHouse = adHouseRepository.findById(request.getAdId()).orElseThrow(() -> new NotFoundException("AdHouse not found"));
             FavoriteHouseId favoriteHouseId = new FavoriteHouseId(user.getId(), adHouse.getId());
 
-            FavoriteHouse favoriteHouse = favoriteHouseRepository.findById(favoriteHouseId)
-                    .orElseGet(() -> {
-                        FavoriteHouse newFavoriteHouse = FavoriteHouse.builder()
-                                .id(favoriteHouseId)
-                                .user(user)
-                                .ad(adHouse) // 'ad' in FavoriteHouse refers to AdHouse
-                                .createdAt(LocalDateTime.now())
-                                .build();
-                        return favoriteHouseRepository.save(newFavoriteHouse);
-                    });
+            FavoriteHouse favoriteHouse = favoriteHouseRepository.findById(favoriteHouseId).orElseGet(() -> {
+                FavoriteHouse newFavoriteHouse = FavoriteHouse.builder().id(favoriteHouseId).user(user).ad(adHouse) // 'ad' in FavoriteHouse refers to AdHouse
+                        .createdAt(LocalDateTime.now()).build();
+                return favoriteHouseRepository.save(newFavoriteHouse);
+            });
             return mapHouseToResponseDto(favoriteHouse);
         } else if (request.getType() == Type.SEEKER) {
-            AdSeeker adSeeker = adSeekerRepository.findById(request.getAdId())
-                    .orElseThrow(() -> new NotFoundException("AdSeeker not found"));
+            AdSeeker adSeeker = adSeekerRepository.findById(request.getAdId()).orElseThrow(() -> new NotFoundException("AdSeeker not found"));
             FavoriteSeekerId favoriteSeekerId = new FavoriteSeekerId(user.getId(), adSeeker.getId());
 
-            FavoriteSeeker favoriteSeeker = favoriteSeekerRepository.findById(favoriteSeekerId)
-                    .orElseGet(() -> {
-                        FavoriteSeeker newFavoriteSeeker = FavoriteSeeker.builder()
-                                .id(favoriteSeekerId)
-                                .user(user)
-                                .ad(adSeeker) // 'ad' in FavoriteSeeker refers to AdSeeker
-                                .createdAt(LocalDateTime.now())
-                                .build();
-                        return favoriteSeekerRepository.save(newFavoriteSeeker);
-                    });
+            FavoriteSeeker favoriteSeeker = favoriteSeekerRepository.findById(favoriteSeekerId).orElseGet(() -> {
+                FavoriteSeeker newFavoriteSeeker = FavoriteSeeker.builder().id(favoriteSeekerId).user(user).ad(adSeeker) // 'ad' in FavoriteSeeker refers to AdSeeker
+                        .createdAt(LocalDateTime.now()).build();
+                return favoriteSeekerRepository.save(newFavoriteSeeker);
+            });
             return mapSeekerToResponseDto(favoriteSeeker);
         } else {
             throw new IllegalArgumentException("Invalid ad type specified: " + request.getType());
@@ -90,8 +69,7 @@ public class FavoriteServiceImpl implements FavoriteService {
     @Transactional
     public void removeFavorite(FavoriteRequest request) throws NotFoundException {
         UUID userId = getCurrentUserId();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
 
         if (request.getType() == Type.HOUSE) {
             FavoriteHouseId favoriteHouseId = new FavoriteHouseId(user.getId(), request.getAdId());
@@ -116,15 +94,11 @@ public class FavoriteServiceImpl implements FavoriteService {
 
         // Get favorite house ads
         List<FavoriteHouse> favoriteHouses = favoriteHouseRepository.findAllByUserId(userId);
-        favoriteHouses.stream()
-                .map(this::mapHouseToResponseDto)
-                .forEach(allFavorites::add);
+        favoriteHouses.stream().map(this::mapHouseToResponseDto).forEach(allFavorites::add);
 
         // Get favorite seeker ads
         List<FavoriteSeeker> favoriteSeekers = favoriteSeekerRepository.findAllByUserId(userId);
-        favoriteSeekers.stream()
-                .map(this::mapSeekerToResponseDto)
-                .forEach(allFavorites::add);
+        favoriteSeekers.stream().map(this::mapSeekerToResponseDto).forEach(allFavorites::add);
 
         return allFavorites;
     }
@@ -133,8 +107,7 @@ public class FavoriteServiceImpl implements FavoriteService {
     @Override
     public boolean isFavorite(FavoriteRequest request) throws NotFoundException {
         UUID userId = getCurrentUserId();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
 
         if (request.getType() == Type.HOUSE) {
             return favoriteHouseRepository.existsById(new FavoriteHouseId(user.getId(), request.getAdId()));
@@ -148,8 +121,7 @@ public class FavoriteServiceImpl implements FavoriteService {
     private UUID getCurrentUserId() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated() ||
-                authentication.getPrincipal().equals("anonymousUser")) {
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
             throw new SecurityException("User is not authenticated");
         }
 
@@ -165,91 +137,36 @@ public class FavoriteServiceImpl implements FavoriteService {
     // --- Mapping Methods ---
 
     private UserResponse mapUserToResponseDto(User user) {
-        return UserResponse.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .surname(user.getSurname())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .role(user.getRole())
-                .isVerified(user.getIsVerified())
-                .avatarUrl(user.getAvatarUrl())
-                .token(null) // Token should not be exposed here
-                .isDeleted(user.getIsDeleted())
-                .build();
+        return UserResponse.builder().id(user.getId()).name(user.getName()).surname(user.getSurname()).username(user.getUsername()).email(user.getEmail()).phone(user.getPhone()).role(user.getRole()).isVerified(user.getIsVerified()).avatarUrl(user.getAvatarUrl()).token(null) // Token should not be exposed here
+                .isDeleted(user.getIsDeleted()).build();
     }
 
     private AdHouseResponse mapAdHouseToResponseDto(AdHouse ad) {
         User adUser = ad.getUser();
         UserResponse adUserResponse = mapUserToResponseDto(adUser); // Reuse user mapping
 
-        return AdHouseResponse.builder()
-                .id(ad.getId())
-                .title(ad.getTitle())
-                .description(ad.getDescription())
-                .price(ad.getPrice())
-                .address(ad.getAddress())
-                .city(ad.getCity())
-                .user(adUserResponse)
-                .type(ad.getType())
-                .status(ad.getStatus())
-                .images(ad.getImages())
-                .numberOfRooms(ad.getNumberOfRooms())
-                .area(ad.getArea())
-                .floor(ad.getFloor())
-                .furnished(ad.getFurnished())
-                .contactPhoneNumber(ad.getContactPhoneNumber())
-                .views(ad.getViews())
-                .typeOfAd(ad.getTypeOfAd())
-                .createdAt(ad.getCreatedAt())
-                .updatedAt(ad.getUpdatedAt())
-                .build();
+        return AdHouseResponse.builder().id(ad.getId()).title(ad.getTitle()).description(ad.getDescription()).price(ad.getPrice()).address(ad.getAddress()).city(ad.getCity()).user(adUserResponse).type(ad.getType()).status(ad.getStatus()).images(ad.getImages()).numberOfRooms(ad.getNumberOfRooms()).area(ad.getArea()).floor(ad.getFloor()).furnished(ad.getFurnished()).contactPhoneNumber(ad.getContactPhoneNumber()).views(ad.getViews()).typeOfAd(ad.getTypeOfAd()).createdAt(ad.getCreatedAt()).updatedAt(ad.getUpdatedAt()).build();
     }
 
     private AdSeekerResponse mapAdSeekerToResponseDto(AdSeeker ad) {
         User adUser = ad.getUser();
         UserResponse adUserResponse = mapUserToResponseDto(adUser); // Reuse user mapping
 
-        return AdSeekerResponse.builder()
-                .id(ad.getId())
-                .age(ad.getAge())
-                .gender(ad.getGender())
-                .user(adUserResponse)
-                .seekerDescription(ad.getSeekerDescription())
-                .city(ad.getCity())
-                .desiredLocation(ad.getDesiredLocation())
-                .maxBudget(ad.getMaxBudget())
-                .moveInDate(ad.getMoveInDate())
-                .hasFurnishedPreference(ad.getHasFurnishedPreference())
-                .roommatePreferences(ad.getRoommatePreferences())
-                .status(ad.getStatus())
-                .views(ad.getViews())
-                .typeOfAd(ad.getTypeOfAd())
-                .contactPhoneNumber(ad.getContactPhoneNumber())
-                .createdAt(ad.getCreatedAt())
-                .updatedAt(ad.getUpdatedAt())
-                .build();
+        return AdSeekerResponse.builder().id(ad.getId()).age(ad.getAge()).gender(ad.getGender()).user(adUserResponse).seekerDescription(ad.getSeekerDescription()).city(ad.getCity()).desiredLocation(ad.getDesiredLocation()).maxBudget(ad.getMaxBudget()).moveInDate(ad.getMoveInDate()).hasFurnishedPreference(ad.getHasFurnishedPreference()).roommatePreferences(ad.getRoommatePreferences()).status(ad.getStatus()).views(ad.getViews()).typeOfAd(ad.getTypeOfAd()).contactPhoneNumber(ad.getContactPhoneNumber()).createdAt(ad.getCreatedAt()).updatedAt(ad.getUpdatedAt()).build();
     }
 
 
     private FavoriteResponse mapHouseToResponseDto(FavoriteHouse favoriteHouse) {
-        return FavoriteResponse.builder()
-                .user(mapUserToResponseDto(favoriteHouse.getUser()))
-                .type(Type.HOUSE) // Set the type
+        return FavoriteResponse.builder().user(mapUserToResponseDto(favoriteHouse.getUser())).type(Type.HOUSE) // Set the type
                 .adHouse(mapAdHouseToResponseDto(favoriteHouse.getAd())) // Map AdHouse
                 .adSeeker(null) // Ensure AdSeeker is null
-                .createdAt(favoriteHouse.getCreatedAt())
-                .build();
+                .createdAt(favoriteHouse.getCreatedAt()).build();
     }
 
     private FavoriteResponse mapSeekerToResponseDto(FavoriteSeeker favoriteSeeker) {
-        return FavoriteResponse.builder()
-                .user(mapUserToResponseDto(favoriteSeeker.getUser()))
-                .type(Type.SEEKER) // Set the type
+        return FavoriteResponse.builder().user(mapUserToResponseDto(favoriteSeeker.getUser())).type(Type.SEEKER) // Set the type
                 .adHouse(null) // Ensure AdHouse is null
                 .adSeeker(mapAdSeekerToResponseDto(favoriteSeeker.getAd())) // Map AdSeeker
-                .createdAt(favoriteSeeker.getCreatedAt())
-                .build();
+                .createdAt(favoriteSeeker.getCreatedAt()).build();
     }
 }

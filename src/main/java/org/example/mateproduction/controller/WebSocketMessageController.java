@@ -1,7 +1,6 @@
 // src/main/java/org/example/mateproduction/controller/WebSocketMessageController.java
 package org.example.mateproduction.controller;
 
-import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.config.Jwt.JwtService;
 import org.example.mateproduction.dto.request.MarkReadRequest;
 import org.example.mateproduction.dto.request.MessageRequest;
@@ -15,12 +14,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Controller;
-import org.springframework.security.core.annotation.AuthenticationPrincipal; // Импорт
-import java.security.Principal; // Импорт
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.Date;
-import java.util.UUID;
+import java.security.Principal;
 
 @Controller
 public class WebSocketMessageController {
@@ -31,10 +27,7 @@ public class WebSocketMessageController {
     private final UserDetailsService userService; // Добавляем для получения UserDetails
 
     @Autowired
-    public WebSocketMessageController(MessageService messageService,
-                                      SimpMessagingTemplate messagingTemplate,
-                                      JwtService jwtService,
-                                      UserDetailsService userService) {
+    public WebSocketMessageController(MessageService messageService, SimpMessagingTemplate messagingTemplate, JwtService jwtService, UserDetailsService userService) {
         this.messageService = messageService;
         this.messagingTemplate = messagingTemplate;
         this.jwtService = jwtService;
@@ -42,8 +35,7 @@ public class WebSocketMessageController {
     }
 
     @MessageMapping("/chat.sendMessage")
-    public void sendMessage(@RequestBody MessageRequest messageRequest,
-                            SimpMessageHeaderAccessor headerAccessor) throws NotFoundException {
+    public void sendMessage(@RequestBody MessageRequest messageRequest, SimpMessageHeaderAccessor headerAccessor) throws NotFoundException {
 
         // Способ 1: Используем Principal если он установлен
         Principal principal = headerAccessor.getUser();
@@ -77,25 +69,16 @@ public class WebSocketMessageController {
         }
 
         // Сохраняем сообщение
-        MessageResponse savedMessage = messageService.sendMessage(messageRequest,authenticatedEmail);
+        MessageResponse savedMessage = messageService.sendMessage(messageRequest, authenticatedEmail);
 
         // Отправляем сообщение получателям
-        messagingTemplate.convertAndSendToUser(
-                savedMessage.getSenderId().toString(),
-                "/queue/messages",
-                savedMessage
-        );
+        messagingTemplate.convertAndSendToUser(savedMessage.getSenderId().toString(), "/queue/messages", savedMessage);
 
-        messagingTemplate.convertAndSendToUser(
-                savedMessage.getReceiverId().toString(),
-                "/queue/messages",
-                savedMessage
-        );
+        messagingTemplate.convertAndSendToUser(savedMessage.getReceiverId().toString(), "/queue/messages", savedMessage);
     }
 
     @MessageMapping("/chat.markRead")
-    public void markRead(@RequestBody MarkReadRequest request,
-                         SimpMessageHeaderAccessor headerAccessor) {
+    public void markRead(@RequestBody MarkReadRequest request, SimpMessageHeaderAccessor headerAccessor) {
 
         Principal principal = headerAccessor.getUser();
         if (principal == null) {
@@ -125,11 +108,6 @@ public class WebSocketMessageController {
         // Обработка запроса на отметку как прочитанное
 //        messageService.markAsRead(request);
 
-        // Отправляем уведомление о прочтении
-        messagingTemplate.convertAndSendToUser(
-                request.getSenderId().toString(),
-                "/queue/readReceipts",
-                request
-        );
+        messagingTemplate.convertAndSendToUser(request.getSenderId().toString(), "/queue/readReceipts", request);
     }
 }

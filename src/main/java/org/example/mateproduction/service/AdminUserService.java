@@ -1,10 +1,14 @@
 package org.example.mateproduction.service;
 
+import org.example.mateproduction.dto.request.UpdateReportStatusRequest;
 import org.example.mateproduction.dto.request.UserRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.dto.response.AdSeekerResponse;
+import org.example.mateproduction.dto.response.ReportResponse;
 import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.exception.NotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,4 +27,10 @@ public interface AdminUserService {
     List<AdHouseResponse> getUserHouseAds(UUID userId);
 
     List<AdSeekerResponse> getUserSeekerAds(UUID userId);
+
+    Page<ReportResponse> getAllReports(Pageable pageable);
+
+    ReportResponse getReportById(UUID reportId);
+
+    ReportResponse updateReportStatus(UUID reportId, UpdateReportStatusRequest request);
 }

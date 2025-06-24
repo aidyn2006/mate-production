@@ -1,13 +1,19 @@
 package org.example.mateproduction.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.mateproduction.dto.request.UpdateReportStatusRequest;
 import org.example.mateproduction.dto.request.UserRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.dto.response.AdSeekerResponse;
+import org.example.mateproduction.dto.response.ReportResponse;
 import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.service.AdminUserService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -65,5 +71,26 @@ public class AdminUserController {
     @GetMapping("/{userId}/seeker-ads")
     public ResponseEntity<List<AdSeekerResponse>> getUserSeekerAds(@PathVariable UUID userId) {
         return ResponseEntity.ok(adminUserService.getUserSeekerAds(userId));
+    }
+
+    @GetMapping("/reports")
+    public ResponseEntity<Page<ReportResponse>> getAllReports(Pageable pageable) {
+        Page<ReportResponse> reports = adminUserService.getAllReports(pageable);
+        return ResponseEntity.ok(reports);
+    }
+
+    @GetMapping("/{reportId}")
+    public ResponseEntity<ReportResponse> getReportById(@PathVariable UUID reportId) {
+        ReportResponse report = adminUserService.getReportById(reportId);
+        return ResponseEntity.ok(report);
+    }
+
+    @PatchMapping("/{reportId}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ReportResponse> updateReportStatus(
+            @PathVariable UUID reportId,
+            @Valid @RequestBody UpdateReportStatusRequest request) {
+        ReportResponse updatedReport = adminUserService.updateReportStatus(reportId, request);
+        return ResponseEntity.ok(updatedReport);
     }
 }

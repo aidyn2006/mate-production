@@ -1,11 +1,11 @@
 package org.example.mateproduction.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.mateproduction.dto.request.FavoriteRequest; // <-- Import the FavoriteRequest DTO
+import org.example.mateproduction.dto.request.FavoriteRequest;
 import org.example.mateproduction.dto.response.FavoriteResponse;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.service.FavoriteService;
-import org.springframework.http.HttpStatus; // Import HttpStatus
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,8 +32,7 @@ public class FavoriteController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<List<FavoriteResponse>> getFavoritesByUser(
-            @PathVariable UUID userId) {
+    public ResponseEntity<List<FavoriteResponse>> getFavoritesByUser(@PathVariable UUID userId) {
         List<FavoriteResponse> favorites = favoriteService.getFavoritesByUser(userId);
         return ResponseEntity.ok(favorites);
     }

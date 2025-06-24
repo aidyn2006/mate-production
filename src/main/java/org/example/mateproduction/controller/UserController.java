@@ -33,20 +33,23 @@ public class UserController {
         userService.deleteHardById(id);
         return ResponseEntity.noContent().build();
     }
+
     @PostMapping("/delete/{id}")
     public ResponseEntity<Void> deleteByid(@PathVariable UUID id) {
         userService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
+
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
-    
+
     @GetMapping("/me/ads/houses")
     public ResponseEntity<List<AdHouseResponse>> getMyAdHouses() {
         return ResponseEntity.ok(userService.getAllAdHouses());
     }
+
     @GetMapping("/me/ads/seekers")
     public ResponseEntity<List<AdSeekerResponse>> getMyAdSeeker() {
         return ResponseEntity.ok(userService.getAllAdSeekers());

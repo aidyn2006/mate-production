@@ -25,10 +25,7 @@ public class AdminSeekerAdController {
 
     // Получить все объявления на модерации
     @GetMapping("/moderation")
-    public ResponseEntity<Page<AdSeekerResponse>> getAllUnderModeration(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
+    public ResponseEntity<Page<AdSeekerResponse>> getAllUnderModeration(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(adminSeekerAdService.getAllModerateAds(page, size));
     }
 
@@ -41,30 +38,20 @@ public class AdminSeekerAdController {
 
     // Отклонить объявление с причиной
     @PostMapping("/{adId}/reject")
-    public ResponseEntity<AdminReasonResponse> rejectAd(
-            @PathVariable UUID adId,
-            @RequestParam String reason
-    ) {
+    public ResponseEntity<AdminReasonResponse> rejectAd(@PathVariable UUID adId, @RequestParam String reason) {
         return ResponseEntity.ok(adminSeekerAdService.rejectAd(adId, reason));
     }
 
     // Изменить статус (ACTIVE, REJECTED, MODERATION)
     @PutMapping("/{adId}/status")
-    public ResponseEntity<Void> changeStatus(
-            @PathVariable UUID adId,
-            @RequestParam Status newStatus,
-            @RequestParam(required = false) String reason
-    ) {
+    public ResponseEntity<Void> changeStatus(@PathVariable UUID adId, @RequestParam Status newStatus, @RequestParam(required = false) String reason) {
         adminSeekerAdService.changeAdStatus(adId, newStatus, reason);
         return ResponseEntity.noContent().build();
     }
 
     // Обновить объявление
     @PutMapping("/{adId}")
-    public ResponseEntity<AdSeekerResponse> updateAd(
-            @PathVariable UUID adId,
-            @Valid @RequestBody AdSeekerRequest request
-    ) throws NotFoundException, AccessDeniedException, ValidationException {
+    public ResponseEntity<AdSeekerResponse> updateAd(@PathVariable UUID adId, @Valid @RequestBody AdSeekerRequest request) throws NotFoundException, AccessDeniedException, ValidationException {
         return ResponseEntity.ok(adminSeekerAdService.updateAd(adId, request));
     }
 }

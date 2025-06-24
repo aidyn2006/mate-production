@@ -32,35 +32,21 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     @Transactional
-    public MessageResponse sendMessage(MessageRequest request,String email) throws NotFoundException {
-        User user=userRepository.findByEmail(email).orElseThrow(()->new NotFoundException("User not found"));
+    public MessageResponse sendMessage(MessageRequest request, String email) throws NotFoundException {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User not found"));
 //        UUID senderId =getCurrentUserId();
         UUID receiverId = request.getReceiverId();
 
-        User sender = userRepository.findById(user.getId())
-                .orElseThrow(() -> new NotFoundException("Sender not found"));
+        User sender = userRepository.findById(user.getId()).orElseThrow(() -> new NotFoundException("Sender not found"));
 
-        User receiver = userRepository.findById(receiverId)
-                .orElseThrow(() -> new NotFoundException("Receiver not found"));
+        User receiver = userRepository.findById(receiverId).orElseThrow(() -> new NotFoundException("Receiver not found"));
 
-        Chat chat = chatRepository
-                .findBySenderAndReceiver(sender, receiver)
-                .or(() -> chatRepository.findBySenderAndReceiver(receiver, sender))
-                .orElseGet(() -> {
-                    Chat newChat = Chat.builder()
-                            .sender(sender)
-                            .receiver(receiver)
-                            .build();
-                    return chatRepository.save(newChat);
-                });
+        Chat chat = chatRepository.findBySenderAndReceiver(sender, receiver).or(() -> chatRepository.findBySenderAndReceiver(receiver, sender)).orElseGet(() -> {
+            Chat newChat = Chat.builder().sender(sender).receiver(receiver).build();
+            return chatRepository.save(newChat);
+        });
 
-        Message message = Message.builder()
-                .chat(chat)
-                .sender(sender)
-                .content(request.getContent())
-                .createdAt(new Date())
-                .isRead(false)
-                .build();
+        Message message = Message.builder().chat(chat).sender(sender).content(request.getContent()).createdAt(new Date()).isRead(false).build();
 
         Message saved = messageRepository.save(message);
         return mapToResponse(saved);
@@ -68,68 +54,42 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public List<MessageResponse> getChatHistory(UUID senderId, UUID receiverId) throws NotFoundException {
-        User sender = userRepository.findById(senderId)
-                .orElseThrow(() -> new NotFoundException("Sender not found"));
-        User receiver = userRepository.findById(receiverId)
-                .orElseThrow(() -> new NotFoundException("Receiver not found"));
+        User sender = userRepository.findById(senderId).orElseThrow(() -> new NotFoundException("Sender not found"));
+        User receiver = userRepository.findById(receiverId).orElseThrow(() -> new NotFoundException("Receiver not found"));
 
         List<Message> messages = messageRepository.findChatMessages(sender.getId(), receiver.getId());
 
-        return messages.stream()
-                .sorted((m1, m2) -> m1.getCreatedAt().compareTo(m2.getCreatedAt()))
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        return messages.stream().sorted((m1, m2) -> m1.getCreatedAt().compareTo(m2.getCreatedAt())).map(this::mapToResponse).collect(Collectors.toList());
     }
+
     @Override
     public List<ChatPreviewResponse> getUserChats(UUID currentUserId) throws NotFoundException {
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User currentUser = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found"));
 
         List<Chat> chats = chatRepository.findAllBySenderOrReceiver(currentUser, currentUser);
 
-        return chats.stream()
-                .map(chat -> {
-                    User companion = chat.getSender().getId().equals(currentUserId)
-                            ? chat.getReceiver()
-                            : chat.getSender();
+        return chats.stream().map(chat -> {
+            User companion = chat.getSender().getId().equals(currentUserId) ? chat.getReceiver() : chat.getSender();
 
-                    Message lastMessage = chat.getMessages().stream()
-                            .max((m1, m2) -> m1.getCreatedAt().compareTo(m2.getCreatedAt()))
-                            .orElse(null);
+            Message lastMessage = chat.getMessages().stream().max((m1, m2) -> m1.getCreatedAt().compareTo(m2.getCreatedAt())).orElse(null);
 
-                    boolean hasUnread = chat.getMessages().stream()
-                            .anyMatch(msg -> !msg.getSender().getId().equals(currentUserId) && !Boolean.TRUE.equals(msg.getIsRead()));
+            boolean hasUnread = chat.getMessages().stream().anyMatch(msg -> !msg.getSender().getId().equals(currentUserId) && !Boolean.TRUE.equals(msg.getIsRead()));
 
-                    return ChatPreviewResponse.builder()
-                            .chatId(chat.getId())
-                            .companionId(companion.getId())
-                            .companionName(companion.getName() + " " + companion.getSurname())
-                            .companionAvatarUrl(companion.getAvatarUrl())
-                            .lastMessage(lastMessage != null ? lastMessage.getContent() : "")
-                            .lastMessageTime(lastMessage != null ? lastMessage.getCreatedAt() : null)
-                            .hasUnreadMessages(hasUnread)
-                            .build();
-                })
-                .sorted((c1, c2) -> {
-                    Date time1 = c1.getLastMessageTime() != null ? c1.getLastMessageTime() : new Date(0);
-                    Date time2 = c2.getLastMessageTime() != null ? c2.getLastMessageTime() : new Date(0);
-                    return time2.compareTo(time1); // сортировка по убыванию
-                })
-                .collect(Collectors.toList());
+            return ChatPreviewResponse.builder().chatId(chat.getId()).companionId(companion.getId()).companionName(companion.getName() + " " + companion.getSurname()).companionAvatarUrl(companion.getAvatarUrl()).lastMessage(lastMessage != null ? lastMessage.getContent() : "").lastMessageTime(lastMessage != null ? lastMessage.getCreatedAt() : null).hasUnreadMessages(hasUnread).build();
+        }).sorted((c1, c2) -> {
+            Date time1 = c1.getLastMessageTime() != null ? c1.getLastMessageTime() : new Date(0);
+            Date time2 = c2.getLastMessageTime() != null ? c2.getLastMessageTime() : new Date(0);
+            return time2.compareTo(time1); // сортировка по убыванию
+        }).collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public void markMessagesAsRead(UUID senderId, UUID receiverId) {
-        List<Message> unreadMessages = messageRepository.findChatMessages(senderId, receiverId)
-                .stream()
-                .filter(msg -> {
-                    UUID actualReceiverId = msg.getChat().getReceiver().getId().equals(msg.getSender().getId())
-                            ? msg.getChat().getSender().getId()
-                            : msg.getChat().getReceiver().getId();
-                    return actualReceiverId.equals(receiverId) && !Boolean.TRUE.equals(msg.getIsRead());
-                })
-                .collect(Collectors.toList());
+        List<Message> unreadMessages = messageRepository.findChatMessages(senderId, receiverId).stream().filter(msg -> {
+            UUID actualReceiverId = msg.getChat().getReceiver().getId().equals(msg.getSender().getId()) ? msg.getChat().getSender().getId() : msg.getChat().getReceiver().getId();
+            return actualReceiverId.equals(receiverId) && !Boolean.TRUE.equals(msg.getIsRead());
+        }).collect(Collectors.toList());
 
         for (Message message : unreadMessages) {
             message.setIsRead(true);
@@ -137,8 +97,6 @@ public class MessageServiceImpl implements MessageService {
 
         messageRepository.saveAll(unreadMessages);
     }
-
-
 
 
     @Override
@@ -156,27 +114,14 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private MessageResponse mapToResponse(Message message) {
-        return MessageResponse.builder()
-                .id(message.getId())
-                .chatId(message.getChat().getId())
-                .senderId(message.getSender().getId())
-                .receiverId(
-                        message.getChat().getReceiver().getId().equals(message.getSender().getId())
-                                ? message.getChat().getSender().getId()
-                                : message.getChat().getReceiver().getId()
-                )
-                .content(message.getContent())
-                .createdAt(message.getCreatedAt())
-                .isRead(message.getIsRead())
-                .build();
+        return MessageResponse.builder().id(message.getId()).chatId(message.getChat().getId()).senderId(message.getSender().getId()).receiverId(message.getChat().getReceiver().getId().equals(message.getSender().getId()) ? message.getChat().getSender().getId() : message.getChat().getReceiver().getId()).content(message.getContent()).createdAt(message.getCreatedAt()).isRead(message.getIsRead()).build();
     }
 
 
     private UUID getCurrentUserId() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated() ||
-                authentication.getPrincipal().equals("anonymousUser")) {
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
             throw new SecurityException("User is not authenticated");
         }
 

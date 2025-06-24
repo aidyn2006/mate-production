@@ -23,8 +23,7 @@ public class ChatWebSocketController {
     private final UserDetailsService userDetailsService;
 
     @MessageMapping("/chat")
-    public void handleMessage(MessageRequest messageRequest,
-                              SimpMessageHeaderAccessor headerAccessor) throws NotFoundException {
+    public void handleMessage(MessageRequest messageRequest, SimpMessageHeaderAccessor headerAccessor) throws NotFoundException {
 
         String authenticatedEmail = null;
 
@@ -54,16 +53,8 @@ public class ChatWebSocketController {
         MessageResponse savedMessage = messageService.sendMessage(messageRequest, authenticatedEmail);
 
         // 3. Отправка сообщения отправителю и получателю
-        messagingTemplate.convertAndSendToUser(
-                savedMessage.getSenderId().toString(),
-                "/queue/messages",
-                savedMessage
-        );
+        messagingTemplate.convertAndSendToUser(savedMessage.getSenderId().toString(), "/queue/messages", savedMessage);
 
-        messagingTemplate.convertAndSendToUser(
-                savedMessage.getReceiverId().toString(),
-                "/queue/messages",
-                savedMessage
-        );
+        messagingTemplate.convertAndSendToUser(savedMessage.getReceiverId().toString(), "/queue/messages", savedMessage);
     }
 }
