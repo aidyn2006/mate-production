@@ -22,7 +22,7 @@ public class FavoriteController {
     @PostMapping
     public ResponseEntity<FavoriteResponse> addFavorite(@RequestBody FavoriteRequest request) throws NotFoundException {
         FavoriteResponse favorite = favoriteService.addFavorite(request);
-        return new ResponseEntity<>(favorite, HttpStatus.CREATED); // Return 201 Created for successful creation
+        return new ResponseEntity<>(favorite, HttpStatus.CREATED);
     }
 
     @DeleteMapping
