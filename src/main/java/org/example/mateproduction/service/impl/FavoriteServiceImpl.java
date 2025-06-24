@@ -27,7 +27,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class FavoriteServiceImpl implements FavoriteService {
 
-    private final FavoriteHouseRepository favoriteHouseRepository; // Specific repo
+    private final FavoriteHouseRepository favoriteHouseRepository;
     private final FavoriteSeekerRepository favoriteSeekerRepository; // Specific repo
     private final UserRepository userRepository;
     private final AdHouseRepository adHouseRepository; // Renamed for clarity
