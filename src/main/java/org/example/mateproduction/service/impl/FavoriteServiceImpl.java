@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -132,6 +133,13 @@ public class FavoriteServiceImpl implements FavoriteService {
         }
 
         throw new SecurityException("Invalid user principal");
+    }
+
+    @Override
+    public List<UUID> getFavoritedHouseAdIds(UUID userId) {
+        return favoriteHouseRepository.findAllByUserId(userId).stream()
+                .map(favoriteHouse -> favoriteHouse.getId().getAdHouseId())
+                .collect(Collectors.toList());
     }
 
     // --- Mapping Methods ---

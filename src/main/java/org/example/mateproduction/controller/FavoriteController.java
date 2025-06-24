@@ -1,14 +1,19 @@
 package org.example.mateproduction.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.mateproduction.config.Jwt.JwtUserDetails;
+import org.example.mateproduction.dto.request.FavoriteRequest; // <-- Import the FavoriteRequest DTO
 import org.example.mateproduction.dto.request.FavoriteRequest;
 import org.example.mateproduction.dto.response.FavoriteResponse;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.service.FavoriteService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,7 +37,8 @@ public class FavoriteController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<List<FavoriteResponse>> getFavoritesByUser(@PathVariable UUID userId) {
+    public ResponseEntity<List<FavoriteResponse>> getFavoritesByUser(
+            @PathVariable UUID userId) {
         List<FavoriteResponse> favorites = favoriteService.getFavoritesByUser(userId);
         return ResponseEntity.ok(favorites);
     }
@@ -41,6 +47,21 @@ public class FavoriteController {
     public ResponseEntity<Boolean> isFavorite(@RequestBody FavoriteRequest request) throws NotFoundException {
         boolean result = favoriteService.isFavorite(request);
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<UUID>> getUserFavorites() { // Remove Principal from params
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof JwtUserDetails)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        JwtUserDetails userDetails = (JwtUserDetails) authentication.getPrincipal();
+        UUID userId = userDetails.getUser().getId();
+
+        List<UUID> favoritedIds = favoriteService.getFavoritedHouseAdIds(userId);
+        return ResponseEntity.ok(favoritedIds);
     }
 
     /*

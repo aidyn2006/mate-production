@@ -1,8 +1,10 @@
 package org.example.mateproduction.service.impl;
 
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.mateproduction.dto.request.UpdateReportStatusRequest;
+import org.example.mateproduction.dto.request.BanRequest;
 import org.example.mateproduction.dto.request.UserRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.dto.response.AdSeekerResponse;
@@ -21,11 +23,16 @@ import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.AdminUserService;
 import org.example.mateproduction.service.UserService;
 import org.example.mateproduction.util.Status;
+import org.example.mateproduction.util.UserStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZoneId;
@@ -43,34 +50,45 @@ public class AdminUserServiceImpl implements AdminUserService {
     private final AdHouseRepository adHouseRepository;
     private final AdSeekerRepository adSeekerRepository;
     private final ReportRepository reportRepository;
+    // Assuming you have a CloudinaryService for image uploads.
+    // private final CloudinaryService cloudinaryService;
     private final CloudinaryService cloudinaryService;
     private final UserService userService;
 
 
     @Override
-    public List<UserResponse> getAllUsers(boolean includeDeleted) {
-        List<User> users = includeDeleted
-                ? userRepository.findAll()
-                : userRepository.findAll().stream()
-                .filter(user -> !Boolean.TRUE.equals(user.getIsDeleted()))
-                .toList();
-
-        return users.stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public Page<UserResponse> getAllUsers(String email, String status, Pageable pageable) {
+        Specification<User> spec = (root, query, criteriaBuilder) -> {
+            Predicate predicate = criteriaBuilder.conjunction();
+            if (StringUtils.hasText(email)) {
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), "%" + email.toLowerCase() + "%"));
+            }
+            if (StringUtils.hasText(status)) {
+                try {
+                    UserStatus userStatus = UserStatus.valueOf(status.toUpperCase());
+                    predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("status"), userStatus));
+                } catch (IllegalArgumentException e) {
+                    // Optionally log a warning that the status value is invalid
+                    System.err.println("Invalid status value received: " + status);
+                }
+            }
+            return predicate;
+        };
+        Page<User> users = userRepository.findAll(spec, pageable);
+        return users.map(this::mapToResponse);
     }
 
     @Override
     public UserResponse getUserById(UUID userId) throws NotFoundException {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         return mapToResponse(user);
     }
 
     @Override
-    public UserResponse updateUser(UUID userId, UserRequest request) {
+    public UserResponse updateUser(UUID userId, UserRequest request) throws NotFoundException {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
 
         user.setName(request.getName());
         user.setSurname(request.getSurname());
@@ -78,27 +96,67 @@ public class AdminUserServiceImpl implements AdminUserService {
         user.setEmail(request.getEmail());
         user.setUsername(request.getUsername());
 
-        if (request.getAvatar() != null && !request.getAvatar().isEmpty()) {
-            user.setAvatarUrl(cloudinaryService.upload(request.getAvatar()));
-        }
+        // Assuming you have a CloudinaryService for uploads
+        // if (request.getAvatar() != null && !request.getAvatar().isEmpty()) {
+        //     user.setAvatarUrl(cloudinaryService.upload(request.getAvatar()));
+        // }
 
         userRepository.save(user);
         return mapToResponse(user);
     }
 
     @Override
-    public void deleteUserSoft(UUID userId) {
+    public void deleteUserSoft(UUID userId) throws NotFoundException {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         user.setIsDeleted(true);
+        user.setStatus(UserStatus.DELETED);
         userRepository.save(user);
     }
 
     @Override
-    public void deleteUserHard(UUID userId) {
+    public void deleteUserHard(UUID userId) throws NotFoundException {
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException("User not found with id: " + userId);
+        }
+        userRepository.deleteById(userId);
+    }
+
+    @Override
+    public void banUser(UUID userId, BanRequest banRequest) throws NotFoundException {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        userRepository.delete(user);
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+        user.setStatus(UserStatus.BANNED);
+        user.setBanReason(banRequest != null ? banRequest.getReason() : "No reason provided.");
+        userRepository.save(user);
+    }
+
+    @Override
+    public void unbanUser(UUID userId) throws NotFoundException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+
+        // Revert to VERIFIED if they were, otherwise ACTIVE.
+        if (Boolean.TRUE.equals(user.getIsVerified())) {
+            user.setStatus(UserStatus.VERIFIED);
+        } else {
+            user.setStatus(UserStatus.ACTIVE);
+        }
+        user.setBanReason(null); // Clear the ban reason
+        userRepository.save(user);
+    }
+
+    @Override
+    public void verifyUser(UUID userId) throws NotFoundException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+        user.setIsVerified(true);
+        // Only update status to VERIFIED if they are currently ACTIVE.
+        // This prevents unbanning a user just by verifying them.
+        if (user.getStatus() == UserStatus.ACTIVE) {
+            user.setStatus(UserStatus.VERIFIED);
+        }
+        userRepository.save(user);
     }
 
     @Override
@@ -155,6 +213,15 @@ public class AdminUserServiceImpl implements AdminUserService {
         return toDto(updatedReport);
     }
 
+    @Override
+    public List<ReportResponse> getUserReports(UUID userId) {
+        return reportRepository.findAllByReporterId(userId).stream()
+                .map(this::reportToResponse)
+                .collect(Collectors.toList());
+    }
+
+
+    // ------------------ Mappers ----------------------
     // ------------------ Мапперы ----------------------
     private ReportResponse toDto(Report report) {
         return ReportResponse.builder()
@@ -183,6 +250,12 @@ public class AdminUserServiceImpl implements AdminUserService {
                 .role(user.getRole())
                 .isVerified(user.getIsVerified())
                 .avatarUrl(user.getAvatarUrl())
+                .isDeleted(user.getIsDeleted())
+                .createdAt(user.getCreatedAt())
+                .status(user.getStatus()) // Mapped new field
+                .banReason(user.getBanReason()) // Mapped new field
+                .status(user.getStatus())
+                .banReason(user.getBanReason())
                 .build();
     }
 
@@ -230,6 +303,22 @@ public class AdminUserServiceImpl implements AdminUserService {
                 .contactPhoneNumber(ad.getContactPhoneNumber())
                 .createdAt(ad.getCreatedAt())
                 .updatedAt(ad.getUpdatedAt())
+                .build();
+    }
+
+    private ReportResponse reportToResponse(Report report) {
+        return ReportResponse.builder()
+                .id(report.getId())
+                .reporterId(report.getReporter().getId())
+                .reportedEntityId(report.getReportedEntityId())
+                .reportedEntityType(report.getReportedEntityType())
+                .reason(report.getReason())
+                .description(report.getDescription())
+                .status(report.getStatus())
+                .resolvedByAdminId(report.getResolvedBy() != null ? report.getResolvedBy().getId() : null)
+                .resolutionNotes(report.getResolutionNotes())
+                .createdAt(report.getCreatedAt() != null ?
+                        report.getCreatedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : null)
                 .build();
     }
 }
