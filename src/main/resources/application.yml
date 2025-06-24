@@ -1,7 +1,7 @@
 spring:
   datasource:
-    username: postgres
-    password: Na260206
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
 
   mail:
     username: suhansun13@gmail.com
