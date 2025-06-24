@@ -23,7 +23,6 @@ public class AdminSeekerAdController {
 
     private final AdminSeekerAdService adminSeekerAdService;
 
-    // Получить все объявления на модерации
     @GetMapping("/moderation")
     public ResponseEntity<Page<AdSeekerResponse>> getAllUnderModeration(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(adminSeekerAdService.getAllModerateAds(page, size));
