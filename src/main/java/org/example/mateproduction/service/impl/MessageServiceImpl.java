@@ -117,20 +117,4 @@ public class MessageServiceImpl implements MessageService {
         return MessageResponse.builder().id(message.getId()).chatId(message.getChat().getId()).senderId(message.getSender().getId()).receiverId(message.getChat().getReceiver().getId().equals(message.getSender().getId()) ? message.getChat().getSender().getId() : message.getChat().getReceiver().getId()).content(message.getContent()).createdAt(message.getCreatedAt()).isRead(message.getIsRead()).build();
     }
 
-
-    private UUID getCurrentUserId() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            throw new SecurityException("User is not authenticated");
-        }
-
-        var principal = authentication.getPrincipal();
-
-        if (principal instanceof JwtUserDetails userDetails) {
-            return userDetails.getUser().getId();
-        }
-
-        throw new SecurityException("Invalid user principal");
-    }
 }

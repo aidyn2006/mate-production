@@ -15,6 +15,7 @@ import org.example.mateproduction.exception.ValidationException;
 import org.example.mateproduction.repository.AdHouseRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.AdHouseService;
+import org.example.mateproduction.service.UserService;
 import org.example.mateproduction.specification.AdHouseSpecification;
 import org.example.mateproduction.util.Status;
 import org.example.mateproduction.util.Type;
@@ -43,6 +44,7 @@ public class AdHouseServiceImpl implements AdHouseService {
     private final UserRepository userRepository;
     private final CloudinaryService cloudinaryService;
     private final RedisService redisService;
+    private final UserService userService;
 
 
     @Transactional
@@ -51,7 +53,6 @@ public class AdHouseServiceImpl implements AdHouseService {
         Page<AdHouse> adsPage = adHouseRepository.findAllByStatus(Status.ACTIVE, pageable);
         return adsPage.map(AdHouseServiceImpl::mapToResponseDto);
     }
-
 
     public Page<AdHouseResponse> findByFilter(AdHouseFilter filter, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
@@ -64,7 +65,7 @@ public class AdHouseServiceImpl implements AdHouseService {
     @Override
     @Transactional
     public void updateMainImage(UUID adId, String mainImageUrl) throws NotFoundException, AccessDeniedException, ValidationException {
-        UUID currentUserId = getCurrentUserId();
+        UUID currentUserId = userService.getCurrentUserId();
 
         AdHouse ad = adHouseRepository.findById(adId).orElseThrow(() -> new NotFoundException("Ad not found"));
 
@@ -82,14 +83,9 @@ public class AdHouseServiceImpl implements AdHouseService {
 
     @Override
     public Page<AdHouseResponse> searchAds(AdHouseFilter filter, Pageable pageable) {
-        // Create the dynamic specification based on the filter DTO
         Specification<AdHouse> spec = AdHouseSpecification.findByCriteria(filter);
-
-        // The repository's findAll method now does everything: filtering, pagination, and sorting!
         Page<AdHouse> adHousePage = adHouseRepository.findAll(spec, pageable);
-
-        // Map the result page to our response DTO
-        return adHousePage.map(AdHouseServiceImpl::mapToResponseDto); // Assuming you have a static mapper
+        return adHousePage.map(AdHouseServiceImpl::mapToResponseDto);
     }
 
 
@@ -113,7 +109,7 @@ public class AdHouseServiceImpl implements AdHouseService {
     @Override
     @Transactional
     public AdHouseResponse createAd(AdHouseRequest dto) throws ValidationException, NotFoundException {
-        UUID currentUserId = getCurrentUserId();
+        UUID currentUserId = userService.getCurrentUserId();
         User user = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found"));
 
         validateAdRequest(dto);
@@ -138,7 +134,7 @@ public class AdHouseServiceImpl implements AdHouseService {
     @Override
     @Transactional
     public AdHouseResponse updateAd(UUID adId, AdHouseRequest dto) throws NotFoundException, AccessDeniedException, ValidationException {
-        UUID currentUserId = getCurrentUserId();
+        UUID currentUserId = userService.getCurrentUserId();
 
         AdHouse ad = adHouseRepository.findById(adId).orElseThrow(() -> new NotFoundException("Ad not found"));
 
@@ -174,7 +170,7 @@ public class AdHouseServiceImpl implements AdHouseService {
     @Override
     @Transactional
     public void deleteAd(UUID adId) throws AccessDeniedException, NotFoundException {
-        UUID currentUserId = getCurrentUserId();
+        UUID currentUserId = userService.getCurrentUserId();
 
         AdHouse ad = adHouseRepository.findById(adId).orElseThrow(() -> new NotFoundException("Ad not found"));
 
@@ -204,29 +200,44 @@ public class AdHouseServiceImpl implements AdHouseService {
         if (images == null || images.isEmpty()) {
             return new ArrayList<>(); // Return an empty mutable list
         }
-        // CORRECTED: Collect to a new ArrayList, which is mutable
         return images.stream().map(cloudinaryService::upload).collect(Collectors.toCollection(ArrayList::new));
     }
 
 
     private static AdHouseResponse mapToResponseDto(AdHouse ad) {
-        return AdHouseResponse.builder().id(ad.getId()).title(ad.getTitle()).description(ad.getDescription()).price(ad.getPrice()).address(ad.getAddress()).city(ad.getCity()).user(UserResponse.builder().id(ad.getUser().getId()).name(ad.getUser().getName()).surname(ad.getUser().getSurname()).username(ad.getUser().getUsername()).email(ad.getUser().getEmail()).phone(ad.getUser().getPhone()).role(ad.getUser().getRole()).isVerified(ad.getUser().getIsVerified()).avatarUrl(ad.getUser().getAvatarUrl()).build()).type(ad.getType()).mainImageUrl(ad.getMainImageUrl()).status(ad.getStatus()).images(ad.getImages() != null ? ad.getImages() : Collections.emptyList()).numberOfRooms(ad.getNumberOfRooms()).area(ad.getArea()).floor(ad.getFloor()).furnished(ad.getFurnished()).contactPhoneNumber(ad.getContactPhoneNumber()).createdAt(ad.getCreatedAt()).updatedAt(ad.getUpdatedAt()).build();
+        UserResponse user = UserResponse.builder()
+                .id(ad.getUser().getId())
+                .name(ad.getUser().getName())
+                .surname(ad.getUser().getSurname())
+                .username(ad.getUser().getUsername())
+                .email(ad.getUser().getEmail())
+                .phone(ad.getUser().getPhone())
+                .role(ad.getUser().getRole())
+                .isVerified(ad.getUser().getIsVerified())
+                .avatarUrl(ad.getUser().getAvatarUrl())
+                .build();
+
+        return AdHouseResponse.builder()
+                .id(ad.getId())
+                .title(ad.getTitle())
+                .description(ad.getDescription())
+                .price(ad.getPrice())
+                .address(ad.getAddress())
+                .city(ad.getCity())
+                .user(user)
+                .type(ad.getType())
+                .mainImageUrl(ad.getMainImageUrl())
+                .status(ad.getStatus())
+                .images(ad.getImages() != null ? ad.getImages() : Collections.emptyList())
+                .numberOfRooms(ad.getNumberOfRooms())
+                .area(ad.getArea())
+                .floor(ad.getFloor())
+                .furnished(ad.getFurnished())
+                .contactPhoneNumber(ad.getContactPhoneNumber())
+                .createdAt(ad.getCreatedAt())
+                .updatedAt(ad.getUpdatedAt())
+                .build();
     }
 
-    private UUID getCurrentUserId() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            throw new SecurityException("User is not authenticated");
-        }
-
-        var principal = authentication.getPrincipal();
-
-        if (principal instanceof JwtUserDetails userDetails) {
-            return userDetails.getUser().getId();
-        }
-
-        throw new SecurityException("Invalid user principal");
-    }
 
 }

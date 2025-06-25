@@ -92,29 +92,45 @@ public class ReviewServiceImpl implements ReviewService {
         User reviewerEntity = review.getReviewer();
         User userEntity = review.getUser();
 
-        UserResponse reviewer = UserResponse.builder().id(reviewerEntity.getId()).name(reviewerEntity.getName()).surname(reviewerEntity.getSurname()).username(reviewerEntity.getUsername()).email(reviewerEntity.getEmail()).phone(reviewerEntity.getPhone()).role(reviewerEntity.getRole()).isVerified(reviewerEntity.getIsVerified()).avatarUrl(reviewerEntity.getAvatarUrl()).build();
+        UserResponse reviewer = UserResponse.builder()
+                .id(reviewerEntity.getId())
+                .name(reviewerEntity.getName())
+                .surname(reviewerEntity.getSurname())
+                .username(reviewerEntity.getUsername())
+                .email(reviewerEntity.getEmail())
+                .phone(reviewerEntity.getPhone())
+                .role(reviewerEntity.getRole())
+                .isVerified(reviewerEntity.getIsVerified())
+                .avatarUrl(reviewerEntity.getAvatarUrl())
+                .build();
 
-        UserResponse user = UserResponse.builder().id(userEntity.getId()).name(userEntity.getName()).surname(userEntity.getSurname()).username(userEntity.getUsername()).email(userEntity.getEmail()).phone(userEntity.getPhone()).role(userEntity.getRole()).isVerified(userEntity.getIsVerified()).avatarUrl(userEntity.getAvatarUrl()).build();
+        UserResponse user = UserResponse.builder()
+                .id(userEntity.getId())
+                .name(userEntity.getName())
+                .surname(userEntity.getSurname())
+                .username(userEntity.getUsername())
+                .email(userEntity.getEmail())
+                .phone(userEntity.getPhone())
+                .role(userEntity.getRole())
+                .isVerified(userEntity.getIsVerified())
+                .avatarUrl(userEntity.getAvatarUrl())
+                .build();
 
-        AdHouseResponse ad = AdHouseResponse.builder().id(review.getAdvertisement().getId()).title(review.getAdvertisement().getTitle()).description(review.getAdvertisement().getDescription()).build();
+        AdHouseResponse ad = AdHouseResponse.builder()
+                .id(review.getAdvertisement().getId())
+                .title(review.getAdvertisement().getTitle())
+                .description(review.getAdvertisement().getDescription())
+                .build();
 
-        return ReviewResponse.builder().id(review.getId()).reviewer(reviewer).ad(ad).rating(review.getRating()).comment(review.getComment()).createdAt(review.getCreatedAt()).build();
+        return ReviewResponse.builder()
+                .id(review.getId())
+                .reviewer(reviewer)
+                .ad(ad)
+                .rating(review.getRating())
+                .comment(review.getComment())
+                .createdAt(review.getCreatedAt())
+                .build();
     }
 
-    private UUID getCurrentUserId() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            throw new SecurityException("User is not authenticated");
-        }
-
-        var principal = authentication.getPrincipal();
-
-        if (principal instanceof JwtUserDetails userDetails) {
-            return userDetails.getUser().getId();
-        }
-
-        throw new SecurityException("Invalid user principal");
-    }
 
 }

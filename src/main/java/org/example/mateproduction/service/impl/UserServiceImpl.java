@@ -1,6 +1,7 @@
 package org.example.mateproduction.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.ChangePasswordRequest;
 import org.example.mateproduction.dto.request.UserRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
@@ -165,6 +166,22 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
         return mapToResponse(user);
+    }
+
+    public UUID getCurrentUserId() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+            throw new SecurityException("User is not authenticated");
+        }
+
+        var principal = authentication.getPrincipal();
+
+        if (principal instanceof JwtUserDetails userDetails) {
+            return userDetails.getUser().getId();
+        }
+
+        throw new SecurityException("Invalid user principal");
     }
 
     public UserResponse updateUser(UUID userId, UserRequest request) {

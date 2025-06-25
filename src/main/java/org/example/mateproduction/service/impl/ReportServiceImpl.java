@@ -75,20 +75,18 @@ public class ReportServiceImpl implements ReportService {
             throw new ReportAlreadyExistsException("You have already reported this content.");
         });
 
-        // 4. Build and save the report
         Report report = Report.builder()
                 .reporter(reporter)
                 .reportedEntityId(request.getReportedEntityId())
                 .reportedEntityType(request.getReportedEntityType())
                 .reason(request.getReason())
                 .description(request.getDescription())
-                // Status defaults to PENDING via @Builder.Default in the entity
                 .build();
 
         Report savedReport = reportRepository.save(report);
         log.info("Successfully created report with ID: {}", savedReport.getId());
 
-        return toDto(savedReport);
+        return mapToResponse(savedReport);
     }
 
 
@@ -113,7 +111,7 @@ public class ReportServiceImpl implements ReportService {
         }
     }
 
-    private ReportResponse toDto(Report report) {
+    private ReportResponse mapToResponse(Report report) {
         return ReportResponse.builder()
                 .id(report.getId())
                 .reporterId(report.getReporter().getId())
