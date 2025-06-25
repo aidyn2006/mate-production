@@ -1,11 +1,13 @@
 package org.example.mateproduction.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.example.mateproduction.config.Jwt.JwtService;
 import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.ChangePasswordRequest;
 import org.example.mateproduction.dto.request.UserRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.dto.response.AdSeekerResponse;
+import org.example.mateproduction.dto.response.PublicUserResponse;
 import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.entity.AdHouse;
 import org.example.mateproduction.entity.AdSeeker;
@@ -17,6 +19,7 @@ import org.example.mateproduction.repository.AdSeekerRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.UserService;
 import org.example.mateproduction.util.Status;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,12 +41,20 @@ public class UserServiceImpl implements UserService {
     private final AdSeekerRepository adSeekerRepository;
     private final CloudinaryService cloudinaryService;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     @Override
     public UserResponse getById(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return mapToResponse(user);
+    }
+
+    @Override
+    public PublicUserResponse getPublicById(UUID userId) throws NotFoundException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId)); // Use NotFoundException
+        return mapToPublicResponse(user);
     }
 
     @Override
@@ -162,10 +173,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse getCurrentUser() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        // This is fine, but can be slightly more direct
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-        return mapToResponse(user);
+        return mapToResponse(user); // Important: mapToResponse should NOT include a token by default
     }
 
     public UUID getCurrentUserId() {
@@ -188,36 +201,59 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        user.setName(request.getName());
-        user.setSurname(request.getSurname());
-        user.setPhone(request.getPhone());
-        user.setEmail(request.getEmail());
-        user.setUsername(request.getUsername());
-        user.setAvatarUrl(request.getAvatar()!=null ? cloudinaryService.upload(request.getAvatar()) : null);
-        userRepository.save(user);
+        // --- DEFINITIVE FIX: DEFENSIVE UPDATE LOGIC ---
 
-        return mapToResponse(user);
+        // Only update a field if a new, non-blank value was provided.
+        if (request.getName() != null && !request.getName().isBlank()) {
+            user.setName(request.getName());
+        }
+
+        if (request.getSurname() != null && !request.getSurname().isBlank()) {
+            user.setSurname(request.getSurname());
+        }
+
+        if (request.getUsername() != null && !request.getUsername().isBlank()) {
+            user.setUsername(request.getUsername());
+        }
+
+        // The phone field can be optional, so we allow setting it even if blank (to clear it).
+        // If you want to prevent clearing, add `!request.getPhone().isBlank()`.
+        if (request.getPhone() != null) {
+            user.setPhone(request.getPhone());
+        }
+
+        // VERY IMPORTANT: We are INTENTIONALLY NOT allowing email changes here.
+        // Changing the primary identifier for login and JWT is complex and risky.
+
+        // This check is crucial. It ensures we only try to upload a new avatar
+        // and update the URL if a NEW file is actually included in the request.
+        // This prevents the avatar from being deleted.
+        if (request.getAvatar() != null && !request.getAvatar().isEmpty()) {
+            user.setAvatarUrl(cloudinaryService.upload(request.getAvatar()));
+        }
+
+        User savedUser = userRepository.save(user);
+
+        // This part is correct: always generate a new token with the potentially updated details.
+        String newToken = jwtService.generateToken(new JwtUserDetails(savedUser));
+        UserResponse response = mapToResponse(savedUser);
+        response.setToken(newToken);
+
+        return response;
     }
 
     @Override
     @Transactional
-    public void changePassword(ChangePasswordRequest request) throws NotFoundException{
-        // 1. Get the current user's email from the security context
-        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByEmail(currentUserEmail)
-                .orElseThrow(() -> new NotFoundException("Current user not found in the database."));
+    public void changePassword(UUID userId, ChangePasswordRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        // 2. Check if the old password is correct
+        // 1. Verify the old password
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
-            throw new PasswordsNotMatchException("Incorrect old password.");
+            throw new BadCredentialsException("Incorrect old password");
         }
 
-        // 3. Check if the new password and confirmation match
-        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
-            throw new PasswordsNotMatchException("New passwords do not match.");
-        }
-
-        // 4. Encode and set the new password
+        // 2. Encode and set the new password
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
@@ -234,6 +270,20 @@ public class UserServiceImpl implements UserService {
                 .role(user.getRole())
                 .isVerified(user.getIsVerified())
                 .avatarUrl(user.getAvatarUrl())
+                .createdAt(user.getCreatedAt())
+                .isDeleted(user.getIsDeleted())
+                .build();
+    }
+
+    // Add a new mapping method
+    private PublicUserResponse mapToPublicResponse(User user) {
+        return PublicUserResponse.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .surname(user.getSurname())
+                .username(user.getUsername())
+                .avatarUrl(user.getAvatarUrl())
+                .createdAt(user.getCreatedAt())
                 .build();
     }
 

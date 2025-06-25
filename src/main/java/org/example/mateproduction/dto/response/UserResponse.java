@@ -5,7 +5,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.mateproduction.util.Role;
+import org.example.mateproduction.util.UserStatus;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.UUID;
 
 @Data
@@ -24,4 +27,7 @@ public class UserResponse {
     private String avatarUrl;
     private String token;
     private Boolean isDeleted;
+    private Date createdAt;
+    private UserStatus status;    // New field
+    private String banReason;     // New field
 }

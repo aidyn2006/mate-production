@@ -1,99 +1,96 @@
 package org.example.mateproduction.service.impl;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.example.mateproduction.dto.request.AdSeekerFilter;
 import org.example.mateproduction.dto.request.AdSeekerRequest;
 import org.example.mateproduction.dto.response.AdSeekerResponse;
+import org.example.mateproduction.dto.response.AdminListingDetailResponse;
 import org.example.mateproduction.dto.response.AdminReasonResponse;
 import org.example.mateproduction.dto.response.UserResponse;
+import org.example.mateproduction.entity.AdHouse;
 import org.example.mateproduction.entity.AdSeeker;
+import org.example.mateproduction.entity.User;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.ValidationException;
 import org.example.mateproduction.repository.AdSeekerRepository;
-import org.example.mateproduction.service.AdminSeekerAdService;
+import org.example.mateproduction.service.AdminListingService;
 import org.example.mateproduction.util.Status;
-import org.springframework.data.domain.*;
+import org.example.mateproduction.util.Type;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.nio.file.AccessDeniedException;
-import java.util.Collections;
 import java.util.UUID;
 
-@Service
+@Service("adminSeekerService")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
-public class AdminSeekerAdServiceImpl implements AdminSeekerAdService {
+@Transactional
+public class AdminSeekerAdServiceImpl implements AdminListingService<AdSeeker> {
 
     private final AdSeekerRepository adSeekerRepository;
 
     @Override
-    @Transactional
-    public Page<AdSeekerResponse> getAllModerateAds(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        return adSeekerRepository.findAllByStatus(Status.MODERATION, pageable)
-                .map(this::mapToResponseDto);
+    public JpaRepository<AdSeeker, UUID> getRepository() {
+        return adSeekerRepository;
     }
 
     @Override
-    @Transactional
+    public Page<AdSeekerResponse> findAll(UUID userId, Status status, Pageable pageable) {
+        Specification<AdSeeker> spec = Specification.where(null);
+        if (userId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("user").get("id"), userId));
+        }
+        if (status != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("status"), status));
+        }
+        return adSeekerRepository.findAll(spec, pageable).map(this::mapToResponseDto);
+    }
+
+    @Override
+    public AdminListingDetailResponse findById(UUID adId) {
+        AdSeeker ad = adSeekerRepository.findById(adId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid ad id: " + adId));
+        return mapToDetailResponseDto(ad);
+    }
+
+    @Override
     public void approveAd(UUID adId) {
-        AdSeeker ad = adSeekerRepository.findById(adId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid ad id: " + adId));
-
-        if (!ad.getStatus().equals(Status.MODERATION)) {
-            throw new IllegalStateException("Ad is not under moderation");
-        }
-
-        ad.setStatus(Status.ACTIVE);
-        adSeekerRepository.save(ad);
+        moderate(adId, Status.ACTIVE, null);
     }
 
     @Override
-    @Transactional
     public AdminReasonResponse rejectAd(UUID adId, String reason) {
-        AdSeeker ad = adSeekerRepository.findById(adId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid ad id: " + adId));
-
-        if (!ad.getStatus().equals(Status.MODERATION)) {
-            throw new IllegalStateException("Ad is not under moderation");
-        }
-
-        ad.setStatus(Status.REJECTED);
-        ad.setModerationComment(reason);
-        adSeekerRepository.save(ad);
-
-        return AdminReasonResponse.builder()
-                .id(ad.getId())
-                .reason(reason)
-                .build();
+        moderate(adId, Status.REJECTED, reason);
+        return new AdminReasonResponse(adId, reason);
     }
 
     @Override
-    @Transactional
-    public void changeAdStatus(UUID adId, Status newStatus, String reason) {
+    public void deleteAd(UUID adId) {
+        adSeekerRepository.deleteById(adId);
+    }
+
+    @Override
+    public void featureAd(UUID adId) {
         AdSeeker ad = adSeekerRepository.findById(adId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid ad id: " + adId));
-
-        if (ad.getStatus() == newStatus) {
-            return;
-        }
-
-        ad.setStatus(newStatus);
-
-        if (newStatus == Status.REJECTED || newStatus == Status.MODERATION) {
-            ad.setModerationComment(reason);
-        } else {
-            ad.setModerationComment(null);
-        }
-
+        ad.setFeatured(true);
         adSeekerRepository.save(ad);
     }
 
     @Override
+    public void unfeatureAd(UUID adId) {
+        AdSeeker ad = adSeekerRepository.findById(adId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid ad id: " + adId));
+        ad.setFeatured(false);
+        adSeekerRepository.save(ad);
+    }
+
+
+
     @Transactional
     public AdSeekerResponse updateAd(UUID adId, AdSeekerRequest dto) throws NotFoundException, AccessDeniedException, ValidationException {
         AdSeeker ad = adSeekerRepository.findById(adId)
@@ -173,6 +170,48 @@ public class AdminSeekerAdServiceImpl implements AdminSeekerAdService {
                 .contactPhoneNumber(ad.getContactPhoneNumber())
                 .createdAt(ad.getCreatedAt())
                 .updatedAt(ad.getUpdatedAt())
+                .typeOfAd(ad.getTypeOfAd())
+                .moderationComment(ad.getModerationComment())
+                .build();
+    }
+
+    private AdminListingDetailResponse mapToDetailResponseDto(AdSeeker ad) {
+        return AdminListingDetailResponse.builder()
+                .user(buildUserResponse(ad.getUser())) // Use a helper for UserResponse
+                .status(ad.getStatus())
+                .moderationComment(ad.getModerationComment())
+                .featured(ad.isFeatured())
+                .views(ad.getViews())
+                .contactPhoneNumber(ad.getContactPhoneNumber())
+                .typeOfAd(Type.SEEKER)
+                .createdAt(ad.getCreatedAt())
+                .updatedAt(ad.getUpdatedAt())
+                .gender(ad.getGender())
+                .seekerDescription(ad.getSeekerDescription())
+                .desiredLocation(ad.getDesiredLocation())
+                .maxBudget(ad.getMaxBudget())
+                .moveInDate(ad.getMoveInDate())
+                .hasFurnishedPreference(ad.getHasFurnishedPreference())
+                .roommatePreferences(ad.getRoommatePreferences())
+                .preferredRoommateGender(ad.getPreferredRoommateGender())
+                .age(ad.getAge())
+                .build();
+
+    }
+
+
+    private UserResponse buildUserResponse(User user) {
+        // This helper can be moved to a separate mapper class
+        return UserResponse.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .surname(user.getSurname())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .role(user.getRole())
+                .isVerified(user.getIsVerified())
+                .avatarUrl(user.getAvatarUrl())
                 .build();
     }
 }

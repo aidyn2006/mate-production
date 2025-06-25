@@ -1,9 +1,11 @@
 package org.example.mateproduction.repository;
 
+import org.example.mateproduction.entity.AdHouse;
 import org.example.mateproduction.entity.Report;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,4 +25,7 @@ public interface ReportRepository extends JpaRepository<Report, UUID> {
      */
     Optional<Report> findByReporterIdAndReportedEntityIdAndReportedEntityType(
             UUID reporterId, UUID reportedEntityId, ReportableType reportedEntityType);
+
+    List<Report> findAllByReporterId(UUID reporterId);
+
 }

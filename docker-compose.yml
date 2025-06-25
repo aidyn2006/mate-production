@@ -2,17 +2,19 @@ version: "3.9"
 
 services:
   app:
-    image: a1dynq/mate-production:test
+    build: .
+    volumes:
+      - .:/app
+      - ~/.m2:/root/.m2
     ports:
       - "8081:8888"
-    depends_on:
-      - db
-      - redis
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-
+    depends_on:
+      - db
+      - redis
 
   db:
     image: postgres:15

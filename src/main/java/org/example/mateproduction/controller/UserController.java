@@ -1,11 +1,19 @@
 package org.example.mateproduction.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.mateproduction.config.Jwt.JwtUserDetails;
+import org.example.mateproduction.dto.request.ChangePasswordRequest;
+import org.example.mateproduction.dto.request.UserRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.dto.response.AdSeekerResponse;
+import org.example.mateproduction.dto.response.PublicUserResponse;
 import org.example.mateproduction.dto.response.UserResponse;
+import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.service.UserService;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,8 +32,8 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable UUID id) {
-        return ResponseEntity.ok(userService.getById(id));
+    public ResponseEntity<PublicUserResponse> getUserById(@PathVariable UUID id) throws NotFoundException {
+        return ResponseEntity.ok(userService.getPublicById(id));
     }
 
     @DeleteMapping("/hard/{id}")
@@ -35,10 +43,28 @@ public class UserController {
     }
 
     @PostMapping("/delete/{id}")
-    public ResponseEntity<Void> deleteByid(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteById(@PathVariable UUID id) {
         userService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping(path = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserResponse> updateMyProfile(@ModelAttribute UserRequest request) {
+        // A more direct way to get the current user's ID
+        var principal = (JwtUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UUID currentUserId = principal.getId();
+        UserResponse updatedUser = userService.updateUser(currentUserId, request);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    @PostMapping("/me/change-password")
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        var principal = (JwtUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UUID currentUserId = principal.getId();
+        userService.changePassword(currentUserId, request);
+        return ResponseEntity.ok().build();
+    }
+
 
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {

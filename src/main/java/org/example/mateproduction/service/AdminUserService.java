@@ -1,5 +1,6 @@
 package org.example.mateproduction.service;
 
+import org.example.mateproduction.dto.request.BanRequest;
 import org.example.mateproduction.dto.request.UpdateReportStatusRequest;
 import org.example.mateproduction.dto.request.UserRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
@@ -14,15 +15,21 @@ import java.util.List;
 import java.util.UUID;
 
 public interface AdminUserService {
-    List<UserResponse> getAllUsers(boolean includeDeleted);
+    Page<UserResponse> getAllUsers(String email, String status, Pageable pageable);
 
     UserResponse getUserById(UUID userId) throws NotFoundException;
 
-    UserResponse updateUser(UUID userId, UserRequest request);
+    UserResponse updateUser(UUID userId, UserRequest request) throws NotFoundException;
 
-    void deleteUserSoft(UUID userId);
+    void deleteUserSoft(UUID userId) throws NotFoundException;
 
-    void deleteUserHard(UUID userId);
+    void deleteUserHard(UUID userId) throws NotFoundException;
+
+    void banUser(UUID userId, BanRequest banRequest) throws NotFoundException;
+
+    void unbanUser(UUID userId) throws NotFoundException;
+
+    void verifyUser(UUID userId) throws NotFoundException;
 
     List<AdHouseResponse> getUserHouseAds(UUID userId);
 
@@ -33,4 +40,6 @@ public interface AdminUserService {
     ReportResponse getReportById(UUID reportId);
 
     ReportResponse updateReportStatus(UUID reportId, UpdateReportStatusRequest request);
+
+    List<ReportResponse> getUserReports(UUID userId);
 }

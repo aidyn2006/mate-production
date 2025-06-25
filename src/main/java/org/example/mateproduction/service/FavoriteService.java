@@ -12,4 +12,5 @@ public interface FavoriteService {
     void removeFavorite(FavoriteRequest request) throws NotFoundException; // Takes unified request
     List<FavoriteResponse> getFavoritesByUser(UUID userId);
     boolean isFavorite(FavoriteRequest request) throws NotFoundException; // Takes unified request
+    List<UUID> getFavoritedHouseAdIds(UUID userId);
 }

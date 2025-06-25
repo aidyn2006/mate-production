@@ -75,7 +75,23 @@ public class AdSeekerServiceImpl implements AdSeekerService {
             throw new ValidationException("You have reached the maximum number of active ads");
         }
 
-        AdSeeker ad = AdSeeker.builder().age(dto.getAge()).gender(dto.getGender()).seekerDescription(dto.getSeekerDescription()).user(user).city(dto.getCity()).desiredLocation(dto.getDesiredLocation()).maxBudget(dto.getMaxBudget()).moveInDate(dto.getMoveInDate()).hasFurnishedPreference(dto.getHasFurnishedPreference()).roommatePreferences(dto.getRoommatePreferences()).preferredRoommateGender(dto.getPreferredRoommateGender()).contactPhoneNumber(dto.getContactPhoneNumber()).status(Status.ACTIVE).typeOfAd(Type.SEEKER).views(0).build();
+        AdSeeker ad = AdSeeker.builder()
+                .age(dto.getAge())
+                .gender(dto.getGender())
+                .seekerDescription(dto.getSeekerDescription())
+                .user(user)
+                .city(dto.getCity())
+                .desiredLocation(dto.getDesiredLocation())
+                .maxBudget(dto.getMaxBudget())
+                .moveInDate(dto.getMoveInDate())
+                .hasFurnishedPreference(dto.getHasFurnishedPreference())
+                .roommatePreferences(dto.getRoommatePreferences())
+                .preferredRoommateGender(dto.getPreferredRoommateGender())
+                .contactPhoneNumber(dto.getContactPhoneNumber())
+                .status(Status.MODERATION)
+                .typeOfAd(Type.SEEKER)
+                .views(0)
+                .build();
 
         ad = adSeekerRepository.save(ad);
         return mapToResponseDto(ad);
@@ -105,7 +121,7 @@ public class AdSeekerServiceImpl implements AdSeekerService {
         ad.setRoommatePreferences(dto.getRoommatePreferences());
         ad.setPreferredRoommateGender(dto.getPreferredRoommateGender());
         ad.setContactPhoneNumber(dto.getContactPhoneNumber());
-
+        ad.setStatus(Status.MODERATION);
         ad = adSeekerRepository.save(ad);
         return mapToResponseDto(ad);
     }
