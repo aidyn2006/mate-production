@@ -118,6 +118,11 @@ public class FavoriteServiceImpl implements FavoriteService {
         }
     }
 
+    @Override
+    public List<UUID> getFavoritedHouseAdIds(UUID userId) {
+        return List.of();
+    }
+
     private UserResponse mapUserToResponseDto(User user) {
         return UserResponse.builder().id(user.getId()).name(user.getName()).surname(user.getSurname()).username(user.getUsername()).email(user.getEmail()).phone(user.getPhone()).role(user.getRole()).isVerified(user.getIsVerified()).avatarUrl(user.getAvatarUrl()).token(null) // Token should not be exposed here
                 .isDeleted(user.getIsDeleted()).build();
