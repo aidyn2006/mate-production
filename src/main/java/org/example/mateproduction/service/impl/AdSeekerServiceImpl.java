@@ -2,7 +2,6 @@ package org.example.mateproduction.service.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.AdSeekerFilter;
 import org.example.mateproduction.dto.request.AdSeekerRequest;
 import org.example.mateproduction.dto.response.AdSeekerResponse;
@@ -11,10 +10,11 @@ import org.example.mateproduction.entity.AdSeeker;
 import org.example.mateproduction.entity.User;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.ValidationException;
-import org.example.mateproduction.specification.AdSeekerSpecification;
 import org.example.mateproduction.repository.AdSeekerRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.AdSeekerService;
+import org.example.mateproduction.service.UserService;
+import org.example.mateproduction.specification.AdSeekerSpecification;
 import org.example.mateproduction.util.Status;
 import org.example.mateproduction.util.Type;
 import org.springframework.data.domain.Page;
@@ -22,7 +22,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -35,6 +34,7 @@ public class AdSeekerServiceImpl implements AdSeekerService {
 
     private final AdSeekerRepository adSeekerRepository;
     private final UserRepository userRepository;
+    private final UserService userService;
 
     @Override
     @Transactional
@@ -65,7 +65,7 @@ public class AdSeekerServiceImpl implements AdSeekerService {
     @Override
     @Transactional
     public AdSeekerResponse createAd(AdSeekerRequest dto) throws ValidationException, NotFoundException {
-        UUID currentUserId = getCurrentUserId();
+        UUID currentUserId = userService.getCurrentUserId();
         User user = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found"));
 
         validateAdSeekerRequest(dto);
@@ -84,7 +84,7 @@ public class AdSeekerServiceImpl implements AdSeekerService {
     @Override
     @Transactional
     public AdSeekerResponse updateAd(UUID adId, AdSeekerRequest dto) throws NotFoundException, AccessDeniedException, ValidationException {
-        UUID currentUserId = getCurrentUserId();
+        UUID currentUserId = userService.getCurrentUserId();
 
         AdSeeker ad = adSeekerRepository.findById(adId).orElseThrow(() -> new NotFoundException("Ad not found"));
 
@@ -113,7 +113,7 @@ public class AdSeekerServiceImpl implements AdSeekerService {
     @Override
     @Transactional
     public void deleteAd(UUID adId) throws NotFoundException, AccessDeniedException {
-        UUID currentUserId = getCurrentUserId();
+        UUID currentUserId = userService.getCurrentUserId();
 
         AdSeeker ad = adSeekerRepository.findById(adId).orElseThrow(() -> new NotFoundException("Ad not found"));
 
@@ -161,23 +161,37 @@ public class AdSeekerServiceImpl implements AdSeekerService {
     }
 
     private static AdSeekerResponse mapToResponseDto(AdSeeker ad) {
-        return AdSeekerResponse.builder().id(ad.getId()).age(ad.getAge()).gender(ad.getGender()).user(UserResponse.builder().id(ad.getUser().getId()).name(ad.getUser().getName()).surname(ad.getUser().getSurname()).username(ad.getUser().getUsername()).email(ad.getUser().getEmail()).phone(ad.getUser().getPhone()).role(ad.getUser().getRole()).isVerified(ad.getUser().getIsVerified()).avatarUrl(ad.getUser().getAvatarUrl()).build()).seekerDescription(ad.getSeekerDescription()).city(ad.getCity()).desiredLocation(ad.getDesiredLocation()).maxBudget(ad.getMaxBudget()).moveInDate(ad.getMoveInDate()).hasFurnishedPreference(ad.getHasFurnishedPreference()).roommatePreferences(ad.getRoommatePreferences()).preferredRoommateGender(ad.getPreferredRoommateGender()).status(ad.getStatus()).views(ad.getViews()).contactPhoneNumber(ad.getContactPhoneNumber()).createdAt(ad.getCreatedAt()).updatedAt(ad.getUpdatedAt()).build();
+        UserResponse user = UserResponse.builder()
+                .id(ad.getUser().getId())
+                .name(ad.getUser().getName())
+                .surname(ad.getUser().getSurname())
+                .username(ad.getUser().getUsername())
+                .email(ad.getUser().getEmail())
+                .phone(ad.getUser().getPhone())
+                .role(ad.getUser().getRole())
+                .isVerified(ad.getUser().getIsVerified())
+                .avatarUrl(ad.getUser().getAvatarUrl())
+                .build();
+
+        return AdSeekerResponse.builder()
+                .id(ad.getId())
+                .age(ad.getAge())
+                .gender(ad.getGender())
+                .user(user)
+                .seekerDescription(ad.getSeekerDescription())
+                .city(ad.getCity())
+                .desiredLocation(ad.getDesiredLocation())
+                .maxBudget(ad.getMaxBudget())
+                .moveInDate(ad.getMoveInDate())
+                .hasFurnishedPreference(ad.getHasFurnishedPreference())
+                .roommatePreferences(ad.getRoommatePreferences())
+                .preferredRoommateGender(ad.getPreferredRoommateGender())
+                .status(ad.getStatus())
+                .views(ad.getViews())
+                .contactPhoneNumber(ad.getContactPhoneNumber())
+                .createdAt(ad.getCreatedAt())
+                .updatedAt(ad.getUpdatedAt())
+                .build();
     }
 
-
-    private UUID getCurrentUserId() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            throw new SecurityException("User is not authenticated");
-        }
-
-        var principal = authentication.getPrincipal();
-
-        if (principal instanceof JwtUserDetails userDetails) {
-            return userDetails.getUser().getId();
-        }
-
-        throw new SecurityException("Invalid user principal");
-    }
 }

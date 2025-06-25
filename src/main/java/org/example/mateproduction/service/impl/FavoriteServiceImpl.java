@@ -2,7 +2,6 @@ package org.example.mateproduction.service.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.FavoriteRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.dto.response.AdSeekerResponse;
@@ -14,8 +13,8 @@ import org.example.mateproduction.entity.contract.FavoriteSeekerId;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.repository.*;
 import org.example.mateproduction.service.FavoriteService;
+import org.example.mateproduction.service.UserService;
 import org.example.mateproduction.util.Type;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -32,11 +31,12 @@ public class FavoriteServiceImpl implements FavoriteService {
     private final UserRepository userRepository;
     private final AdHouseRepository adHouseRepository; // Renamed for clarity
     private final AdSeekerRepository adSeekerRepository; // New repo
+    private final UserService userService;
 
     @Override
     @Transactional
     public FavoriteResponse addFavorite(FavoriteRequest request) throws NotFoundException {
-        UUID userId = getCurrentUserId();
+        UUID userId = userService.getCurrentUserId();
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
 
         if (request.getType() == Type.HOUSE) {
@@ -68,7 +68,7 @@ public class FavoriteServiceImpl implements FavoriteService {
     @Override
     @Transactional
     public void removeFavorite(FavoriteRequest request) throws NotFoundException {
-        UUID userId = getCurrentUserId();
+        UUID userId = userService.getCurrentUserId();
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
 
         if (request.getType() == Type.HOUSE) {
@@ -92,11 +92,9 @@ public class FavoriteServiceImpl implements FavoriteService {
     public List<FavoriteResponse> getFavoritesByUser(UUID userId) {
         List<FavoriteResponse> allFavorites = new ArrayList<>();
 
-        // Get favorite house ads
         List<FavoriteHouse> favoriteHouses = favoriteHouseRepository.findAllByUserId(userId);
         favoriteHouses.stream().map(this::mapHouseToResponseDto).forEach(allFavorites::add);
 
-        // Get favorite seeker ads
         List<FavoriteSeeker> favoriteSeekers = favoriteSeekerRepository.findAllByUserId(userId);
         favoriteSeekers.stream().map(this::mapSeekerToResponseDto).forEach(allFavorites::add);
 
@@ -106,7 +104,7 @@ public class FavoriteServiceImpl implements FavoriteService {
 
     @Override
     public boolean isFavorite(FavoriteRequest request) throws NotFoundException {
-        UUID userId = getCurrentUserId();
+        UUID userId = userService.getCurrentUserId();
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
 
         if (request.getType() == Type.HOUSE) {
@@ -117,24 +115,6 @@ public class FavoriteServiceImpl implements FavoriteService {
             throw new IllegalArgumentException("Invalid ad type specified: " + request.getType());
         }
     }
-
-    private UUID getCurrentUserId() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            throw new SecurityException("User is not authenticated");
-        }
-
-        var principal = authentication.getPrincipal();
-
-        if (principal instanceof JwtUserDetails userDetails) {
-            return userDetails.getUser().getId();
-        }
-
-        throw new SecurityException("Invalid user principal");
-    }
-
-    // --- Mapping Methods ---
 
     private UserResponse mapUserToResponseDto(User user) {
         return UserResponse.builder().id(user.getId()).name(user.getName()).surname(user.getSurname()).username(user.getUsername()).email(user.getEmail()).phone(user.getPhone()).role(user.getRole()).isVerified(user.getIsVerified()).avatarUrl(user.getAvatarUrl()).token(null) // Token should not be exposed here

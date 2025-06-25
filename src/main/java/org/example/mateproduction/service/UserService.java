@@ -20,6 +20,7 @@ public interface UserService {
     List<AdHouseResponse> getAllAdHouses();
     List<AdSeekerResponse> getAllAdSeekers();
 
+    UUID getCurrentUserId();
     UserResponse updateUser(UUID userId, UserRequest request);
     void changePassword(ChangePasswordRequest request) throws NotFoundException;
 
