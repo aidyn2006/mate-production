@@ -11,4 +11,5 @@ import java.util.UUID;
 @Repository
 public interface FavoriteHouseRepository extends JpaRepository<FavoriteHouse, FavoriteHouseId> {
     List<FavoriteHouse> findAllByUserId(UUID userId);
+
 }

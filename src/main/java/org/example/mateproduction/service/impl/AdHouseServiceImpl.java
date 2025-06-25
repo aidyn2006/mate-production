@@ -26,6 +26,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
@@ -53,6 +54,7 @@ public class AdHouseServiceImpl implements AdHouseService {
         Page<AdHouse> adsPage = adHouseRepository.findAllByStatus(Status.ACTIVE, pageable);
         return adsPage.map(AdHouseServiceImpl::mapToResponseDto);
     }
+
 
     public Page<AdHouseResponse> findByFilter(AdHouseFilter filter, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());

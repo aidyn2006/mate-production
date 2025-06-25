@@ -7,6 +7,7 @@ import jakarta.persistence.Table;
 import lombok.*;
 import org.example.mateproduction.entity.base.BaseEntity;
 import org.example.mateproduction.util.Role;
+import org.example.mateproduction.util.UserStatus;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
@@ -31,4 +32,10 @@ public class User extends BaseEntity {
     private String avatarUrl;
 
     private Boolean isDeleted =false;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private UserStatus status = UserStatus.ACTIVE; // New field with default value
+    private String banReason; // New field
+
 }

@@ -3,7 +3,6 @@ package org.example.mateproduction.service.impl;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,7 +20,19 @@ public class CloudinaryService {
             Map<?, ?> uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
             return uploadResult.get("secure_url").toString();
         } catch (IOException e) {
-            throw new RuntimeException("Ошибка при загрузке файла", e);
+            // Changed error message to English for consistency
+            throw new RuntimeException("Error uploading file", e);
         }
     }
+
+    // You would add a corresponding delete method here for the update functionality
+    /*
+    public void delete(String publicId) {
+        try {
+            cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+        } catch (IOException e) {
+            throw new RuntimeException("Error deleting file", e);
+        }
+    }
+    */
 }

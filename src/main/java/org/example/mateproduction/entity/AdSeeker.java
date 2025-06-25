@@ -8,7 +8,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.mateproduction.entity.base.Ad;
 import org.example.mateproduction.entity.base.BaseEntity;
+import org.example.mateproduction.service.Moderatable;
 import org.example.mateproduction.util.*;
 
 import java.math.BigDecimal;
@@ -20,7 +22,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AdSeeker extends BaseEntity {
+public class AdSeeker extends Ad implements Moderatable {
 
     @NotNull(message = "Age is required")
     @Min(value = 18, message = "Age must be at least 18")

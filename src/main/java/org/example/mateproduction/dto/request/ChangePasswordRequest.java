@@ -1,12 +1,13 @@
 package org.example.mateproduction.dto.request;
 
-import lombok.Builder;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
 @Data
-@Builder
 public class ChangePasswordRequest {
+    @NotEmpty(message = "Old password cannot be empty")
     private String oldPassword;
+
+    @NotEmpty(message = "New password cannot be empty")
     private String newPassword;
-    private String confirmPassword;
 }

@@ -4,6 +4,7 @@ import org.example.mateproduction.dto.request.ChangePasswordRequest;
 import org.example.mateproduction.dto.request.UserRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.dto.response.AdSeekerResponse;
+import org.example.mateproduction.dto.response.PublicUserResponse;
 import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.exception.NotFoundException;
 
@@ -22,6 +23,7 @@ public interface UserService {
 
     UUID getCurrentUserId();
     UserResponse updateUser(UUID userId, UserRequest request);
-    void changePassword(ChangePasswordRequest request) throws NotFoundException;
+    void changePassword(UUID userId, ChangePasswordRequest request);
+    PublicUserResponse getPublicById(UUID userId) throws NotFoundException;
 
 }

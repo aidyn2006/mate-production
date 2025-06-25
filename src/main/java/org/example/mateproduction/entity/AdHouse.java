@@ -6,7 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.mateproduction.entity.base.Ad;
 import org.example.mateproduction.entity.base.BaseEntity;
+import org.example.mateproduction.service.Moderatable;
 import org.example.mateproduction.util.AdType;
 import org.example.mateproduction.util.CityNames;
 import org.example.mateproduction.util.Status;
@@ -20,7 +22,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AdHouse extends BaseEntity {
+public class AdHouse extends Ad implements Moderatable {
 
     @NotBlank(message = "Title is required and cannot be empty.")
     @Size(min = 10, max = 100, message = "Title must be between 10 and 100 characters.")
