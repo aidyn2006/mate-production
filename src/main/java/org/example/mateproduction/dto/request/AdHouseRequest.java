@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.mateproduction.util.AdType;
 import org.example.mateproduction.util.CityNames;
-import org.example.mateproduction.util.Status;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
@@ -23,15 +22,15 @@ public class AdHouseRequest {
     private String address;
     private CityNames city;
     private AdType type;
-    private Status status;
     private String contactPhoneNumber;
-
 
     private Integer numberOfRooms;
     private Double area;
     private Integer floor;
     private Boolean furnished;
 
-    private List<MultipartFile> images;
+    // Corrected to follow Java naming conventions (camelCase)
+    private String mainImageUrl;
 
+    private List<MultipartFile> images;
 }

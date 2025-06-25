@@ -102,7 +102,7 @@ public class AdminUserController {
         return ResponseEntity.ok(reports);
     }
 
-//    @GetMapping("/{reportId}")
+//    @GetMapping("/w{reportId}")
 //    public ResponseEntity<ReportResponse> getReportById(@PathVariable UUID reportId) {
 //        ReportResponse report = adminUserService.getReportById(reportId);
 //        return ResponseEntity.ok(report);

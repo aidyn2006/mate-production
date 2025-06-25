@@ -1,159 +1,95 @@
 package org.example.mateproduction.service.impl;
 
-import org.example.mateproduction.dto.request.AdHouseFilter;
+import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.dto.request.AdHouseRequest;
-import org.example.mateproduction.dto.response.AdminReasonResponse;
-import org.example.mateproduction.exception.NotFoundException;
-import org.example.mateproduction.exception.ValidationException;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
 import org.example.mateproduction.dto.response.AdHouseResponse;
+import org.example.mateproduction.dto.response.AdminListingDetailResponse;
+import org.example.mateproduction.dto.response.AdminReasonResponse;
 import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.entity.AdHouse;
+import org.example.mateproduction.entity.User;
+import org.example.mateproduction.exception.ValidationException;
 import org.example.mateproduction.repository.AdHouseRepository;
-import org.example.mateproduction.service.AdminHouseAdService;
+import org.example.mateproduction.service.AdminListingService;
 import org.example.mateproduction.util.Status;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.example.mateproduction.util.Type;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
-import java.nio.file.AccessDeniedException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Service
-@PreAuthorize("hasRole('ADMIN')")
-public class AdminHouseAdServiceImpl implements AdminHouseAdService {
+@Service("adminHouseService")
+@RequiredArgsConstructor
+@Transactional
+public class AdminHouseAdServiceImpl implements AdminListingService<AdHouse> {
 
     private final AdHouseRepository adHouseRepository;
-    private final CloudinaryService cloudinaryService;
+    private CloudinaryService cloudinaryService;
 
-
-
-    @Autowired
-    public AdminHouseAdServiceImpl(AdHouseRepository adHouseRepository, CloudinaryService cloudinaryService) {
-        this.adHouseRepository = adHouseRepository;
-        this.cloudinaryService = cloudinaryService;
+    @Override
+    public JpaRepository<AdHouse, UUID> getRepository() {
+        return adHouseRepository;
     }
 
-
-    @Transactional
-    public Page<AdHouseResponse> getAllModerateAds(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<AdHouse> adsPage = adHouseRepository.findAllByStatus(Status.MODERATION, pageable);
-        return adsPage.map(this::mapToResponseDto);
-    }
-
-    public Page<AdHouseResponse> findByFilter(AdHouseFilter filter, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-
-        Page<AdHouse> ads = adHouseRepository.findByFilter(
-                filter.getMinPrice(),
-                filter.getMaxPrice(),
-                filter.getMinRooms(),
-                filter.getMaxRooms(),
-                filter.getMinArea(),
-                filter.getMaxArea(),
-                filter.getCity(),
-                filter.getType(),
-                filter.getFurnished(),
-                filter.getStatus(),
-                pageable
-        );
-
-        return ads.map(this::mapToResponseDto);
-    }
-
-
-    @Transactional
-    public void approveAd(UUID adId) {
-        AdHouse adHouse = adHouseRepository.findById(adId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid ad id: " + adId));
-
-        if (!adHouse.getStatus().equals(Status.MODERATION)) {
-            throw new IllegalStateException("Ad is not under moderation");
+    @Override
+    public Page<AdHouseResponse> findAll(UUID userId, Status status, Pageable pageable) {
+        Specification<AdHouse> spec = Specification.where(null);
+        if (userId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("user").get("id"), userId));
         }
-
-        adHouse.setStatus(Status.ACTIVE);
-        adHouseRepository.save(adHouse);
-    }
-
-    @Transactional
-    public AdminReasonResponse rejectAd(UUID adId, String reason) {
-        AdHouse adHouse=adHouseRepository.findById(adId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid ad id: " + adId));
-
-        if (!adHouse.getStatus().equals(Status.MODERATION)) {
-            throw new IllegalStateException("Ad is not under moderation");
+        if (status != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("status"), status));
         }
-
-        adHouse.setStatus(Status.REJECTED);
-        adHouse.setModerationComment(reason);
-        adHouseRepository.save(adHouse);
-        return AdminReasonResponse.builder()
-                .id(adHouse.getId())
-                .reason(reason)
-                .build();
+        return adHouseRepository.findAll(spec, pageable).map(this::mapToResponseDto);
     }
 
-    @Transactional
-    public AdHouseResponse updateAd(UUID adId, AdHouseRequest dto) throws NotFoundException, AccessDeniedException, ValidationException {
+    @Override
+    public AdminListingDetailResponse findById(UUID adId) {
         AdHouse ad = adHouseRepository.findById(adId)
-                .orElseThrow(() -> new NotFoundException("Ad not found"));
-
-        validateAdRequest(dto);
-
-        ad.setTitle(dto.getTitle());
-        ad.setDescription(dto.getDescription());
-        ad.setPrice(dto.getPrice());
-        ad.setAddress(dto.getAddress());
-        ad.setCity(dto.getCity());
-        ad.setType(dto.getType());
-        ad.setNumberOfRooms(dto.getNumberOfRooms());
-        ad.setArea(dto.getArea());
-        ad.setFloor(dto.getFloor());
-        ad.setFurnished(dto.getFurnished());
-        ad.setContactPhoneNumber(dto.getContactPhoneNumber());
-        ad.setStatus(Status.MODERATION);
-
-        if (dto.getImages() != null && !dto.getImages().isEmpty()) {
-            List<String> uploadedImages = uploadImages(dto.getImages());
-            ad.setImages(uploadedImages);
-            ad.setMainImageUrl(uploadedImages.get(0));
-        }
-
-        ad = adHouseRepository.save(ad);
-        return mapToResponseDto(ad);
-    }
-    @Transactional
-    public void changeAdStatus(UUID adId, Status newStatus, String reason) {
-        AdHouse adHouse = adHouseRepository.findById(adId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid ad id: " + adId));
+        return mapToDetailResponseDto(ad);
+    }
 
-        // если статус не меняется — можно не сохранять
-        if (adHouse.getStatus() == newStatus) {
-            return;
-        }
+    @Override
+    public void approveAd(UUID adId) {
+        moderate(adId, Status.ACTIVE, null);
+    }
 
-        adHouse.setStatus(newStatus);
+    @Override
+    public AdminReasonResponse rejectAd(UUID adId, String reason) {
+        moderate(adId, Status.REJECTED, reason);
+        return new AdminReasonResponse(adId, reason);
+    }
 
-        // если статус REJECTED или MODERATION — сохраняем комментарий
-        if (newStatus == Status.REJECTED || newStatus == Status.MODERATION) {
-            adHouse.setModerationComment(reason);
-        } else {
-            // сбрасываем комментарий если другой статус
-            adHouse.setModerationComment(null);
-        }
+    @Override
+    public void deleteAd(UUID adId) {
+        adHouseRepository.deleteById(adId);
+    }
 
-        adHouseRepository.save(adHouse);
+    @Override
+    public void featureAd(UUID adId) {
+        AdHouse ad = adHouseRepository.findById(adId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid ad id: " + adId));
+        ad.setFeatured(true);
+        adHouseRepository.save(ad);
+    }
+
+    @Override
+    public void unfeatureAd(UUID adId) {
+        AdHouse ad = adHouseRepository.findById(adId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid ad id: " + adId));
+        ad.setFeatured(false);
+        adHouseRepository.save(ad);
     }
 
 
@@ -175,7 +111,8 @@ public class AdminHouseAdServiceImpl implements AdminHouseAdService {
 
     private List<String> uploadImages(List<MultipartFile> images) {
         if (images == null || images.isEmpty()) {
-            return new ArrayList<>(); // Return an empty mutable list
+            ArrayList<String> strings = new ArrayList<>();
+            return strings; // Return an empty mutable list
         }
         return images.stream()
                 .map(cloudinaryService::upload)
@@ -213,6 +150,50 @@ public class AdminHouseAdServiceImpl implements AdminHouseAdService {
                 .createdAt(ad.getCreatedAt())
                 .moderationComment(ad.getModerationComment())
                 .updatedAt(ad.getUpdatedAt())
+                .typeOfAd(ad.getTypeOfAd())
+
+                .build();
+    }
+
+    private AdminListingDetailResponse mapToDetailResponseDto(AdHouse ad) {
+        return AdminListingDetailResponse.builder()
+                .id(ad.getId())
+                .title(ad.getTitle())
+                .description(ad.getDescription())
+                .price(ad.getPrice())
+                .address(ad.getAddress())
+                .city(ad.getCity())
+                .user(buildUserResponse(ad.getUser())) // Use a helper for UserResponse
+                .type(ad.getType())
+                .mainImageUrl(ad.getMainImageUrl())
+                .status(ad.getStatus())
+                .images(ad.getImages())
+                .numberOfRooms(ad.getNumberOfRooms())
+                .area(ad.getArea())
+                .floor(ad.getFloor())
+                .furnished(ad.isFeatured())
+                .contactPhoneNumber(ad.getContactPhoneNumber())
+                .views(ad.getViews())
+                .typeOfAd(Type.HOUSE) // Make sure to set this
+                .createdAt(ad.getCreatedAt())
+                .updatedAt(ad.getUpdatedAt())
+                .moderationComment(ad.getModerationComment())
+                .featured(ad.isFeatured())
+                .build();
+    }
+
+    private UserResponse buildUserResponse(User user) {
+        // This helper can be moved to a separate mapper class
+        return UserResponse.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .surname(user.getSurname())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .role(user.getRole())
+                .isVerified(user.getIsVerified())
+                .avatarUrl(user.getAvatarUrl())
                 .build();
     }
 }
