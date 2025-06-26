@@ -1,5 +1,6 @@
-package org.example.mateproduction.service;
+package org.example.mateproduction.factory;
 
+import org.example.mateproduction.service.AdminListingService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 

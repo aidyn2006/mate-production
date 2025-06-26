@@ -3,7 +3,7 @@ package org.example.mateproduction.controller;
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.dto.response.AdminListingDetailResponse;
 import org.example.mateproduction.dto.response.AdminReasonResponse;
-import org.example.mateproduction.service.AdminServiceFactory;
+import org.example.mateproduction.factory.AdminServiceFactory;
 import org.example.mateproduction.util.Status;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
