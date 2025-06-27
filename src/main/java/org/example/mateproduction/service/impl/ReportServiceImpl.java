@@ -101,6 +101,9 @@ public class ReportServiceImpl implements ReportService {
                 exists = adSeekerRepository.existsById(entityId);
                 break;
             // Add cases for future reportable types here
+            case USER:
+                exists = userRepository.existsById(entityId);
+                break;
             default:
                 log.error("Validation failed for unknown reportable type: {}", type);
                 throw new IllegalArgumentException("Unsupported reportable entity type: " + type);
