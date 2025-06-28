@@ -3,6 +3,7 @@ package org.example.mateproduction.repository;
 import org.example.mateproduction.entity.AdHouse;
 import org.example.mateproduction.entity.Report;
 import org.example.mateproduction.util.ReportStatus;
+import org.example.mateproduction.util.Status;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,4 +32,5 @@ public interface ReportRepository extends JpaRepository<Report, UUID> {
 
     List<Report> findAllByReporterId(UUID reporterId);
     Page<Report> findByStatus(ReportStatus status, Pageable pageable);
+    long countByStatus(ReportStatus status);
 }

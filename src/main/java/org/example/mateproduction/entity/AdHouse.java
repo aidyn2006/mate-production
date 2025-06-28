@@ -31,7 +31,7 @@ public class AdHouse extends Ad implements Moderatable {
 
     @NotBlank(message = "Description is required and cannot be empty.")
     @Size(min = 50, max = 5000, message = "Description must be between 50 and 5000 characters.")
-    @Column(columnDefinition = "TEXT") // TEXT type for long descriptions
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @NotNull(message = "Price is required.")
@@ -68,6 +68,7 @@ public class AdHouse extends Ad implements Moderatable {
 
     @NotNull(message = "Number of rooms is required.")
     @Min(value = 1, message = "Number of rooms must be at least 1.")
+    @Max(value = 100, message = "Number of rooms cannot be more than 100.") // <-- MODIFIED
     private Integer numberOfRooms;
 
     @NotNull(message = "Area is required.")
@@ -76,6 +77,7 @@ public class AdHouse extends Ad implements Moderatable {
 
     @NotNull(message = "Floor is required.")
     @Min(value = 0, message = "Floor cannot be a negative number.")
+    @Max(value = 200, message = "Floor cannot be higher than 200.") // <-- MODIFIED
     private Integer floor;
 
     @NotNull(message = "You must specify if the property is furnished.")
@@ -98,6 +100,4 @@ public class AdHouse extends Ad implements Moderatable {
 
     @Column(name = "moderation_comment", nullable = true)
     private String moderationComment;
-
-
 }

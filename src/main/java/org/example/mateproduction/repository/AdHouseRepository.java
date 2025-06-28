@@ -14,6 +14,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -54,6 +55,11 @@ public interface AdHouseRepository extends JpaRepository<AdHouse, UUID>, JpaSpec
             @Param("status") Status status,
             Pageable pageable
     );
+
+    long countByStatus(Status status);
+
+    @Query("SELECT FUNCTION('DATE', a.createdAt), COUNT(a) FROM AdHouse a WHERE a.createdAt >= :startDate AND a.createdAt < :endDate GROUP BY FUNCTION('DATE', a.createdAt)")
+    List<Object[]> findListingCreationCounts(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
 
 }

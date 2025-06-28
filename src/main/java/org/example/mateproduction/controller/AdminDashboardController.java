@@ -1,23 +1,38 @@
 package org.example.mateproduction.controller;
 
+import lombok.RequiredArgsConstructor;
+import org.example.mateproduction.dto.response.ChartDataResponse;
+import org.example.mateproduction.dto.response.DashboardStatsResponse;
+import org.example.mateproduction.service.AdminDashboardService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/v1/admin/dashboard")
+@RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminDashboardController {
-    /*
-    Base Path: /api/v1/admin/dashboard
 
-Purpose: Provides a high-level overview of the platform's health and activity through statistics and chart data.
+    private final AdminDashboardService adminDashboardService;
 
-Methods:
+    @GetMapping("/stats")
+    public ResponseEntity<DashboardStatsResponse> getDashboardStats() {
+        return ResponseEntity.ok(adminDashboardService.getDashboardStats());
+    }
 
-GET /stats
-    Action: Fetches key metrics for the main admin dashboard display.
-    Response Model: DashboardStatsResponse
-GET /charts/user-registrations
-    Action: Provides time-series data for user sign-ups.
-    Request Params: ?period=weekly (or daily, monthly)
-    Response Model: ChartDataResponse
-GET /charts/listing-creations
-    Action: Provides time-series data for new ad creations.
-    Request Params: ?period=weekly
-    Response Model: ChartDataResponse
-     */
+    @GetMapping("/charts/user-registrations")
+    public ResponseEntity<ChartDataResponse> getUserRegistrationsChart(
+            @RequestParam(defaultValue = "weekly") String period) {
+        return ResponseEntity.ok(adminDashboardService.getUserRegistrationsChart(period));
+    }
+
+    @GetMapping("/charts/listing-creations")
+    public ResponseEntity<ChartDataResponse> getListingCreationsChart(
+            @RequestParam(defaultValue = "weekly") String period) {
+        return ResponseEntity.ok(adminDashboardService.getListingCreationsChart(period));
+    }
 }

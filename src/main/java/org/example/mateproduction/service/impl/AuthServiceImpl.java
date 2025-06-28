@@ -190,7 +190,7 @@ public class AuthServiceImpl implements AuthService {
 
         return token;
     }
-
+    
     private String buildEmail(String title, String message, String link, String buttonText) {
         return "<div style='font-family: Arial, sans-serif; text-align: center; color: #333;'>"
                 + "<h2>" + title + "</h2>"
