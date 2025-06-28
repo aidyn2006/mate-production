@@ -23,5 +23,5 @@ public class ReportDetailResponse {
     private UUID resolvedByAdminId;
     private String resolutionNotes;
     private LocalDateTime createdAt;
-    private Object reportedContent; // This will hold the AdHouseResponse, AdSeekerResponse, or UserResponse
+    private Object reportedContent;
 }

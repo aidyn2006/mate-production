@@ -12,6 +12,7 @@ import org.example.mateproduction.entity.AdHouse;
 import org.example.mateproduction.entity.User;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.ValidationException;
+import org.example.mateproduction.helpers.Auditable;
 import org.example.mateproduction.repository.AdHouseRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.AdHouseService;
@@ -110,6 +111,7 @@ public class AdHouseServiceImpl implements AdHouseService {
 
     @Override
     @Transactional
+    @Auditable(action = "CREATE_AD")
     public AdHouseResponse createAd(AdHouseRequest dto) throws ValidationException, NotFoundException {
         UUID currentUserId = userService.getCurrentUserId();
         User user = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found"));

@@ -32,11 +32,11 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
 
     @Override
     public DashboardStatsResponse getDashboardStats() {
-        long totalUsers = userRepository.count();
+        Long totalUsers = userRepository.count();
         // Assuming your User entity has `createdAt` as a `Date` or `Timestamp`
-        long newUsersToday = userRepository.countByCreatedAtAfter(Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()));
-        long totalActiveListings = adHouseRepository.countByStatus(Status.ACTIVE) + adSeekerRepository.countByStatus(Status.ACTIVE);
-        long pendingReports = reportRepository.countByStatus(ReportStatus.PENDING);
+        Long newUsersToday = userRepository.countByCreatedAtAfter(Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()));
+        Long totalActiveListings = adHouseRepository.countByStatus(Status.ACTIVE) + adSeekerRepository.countByStatus(Status.ACTIVE);
+        Long pendingReports = reportRepository.countByStatus(ReportStatus.PENDING);
 
         return DashboardStatsResponse.builder()
                 .totalUsers(totalUsers)

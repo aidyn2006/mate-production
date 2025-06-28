@@ -10,6 +10,7 @@ import org.example.mateproduction.entity.AdSeeker;
 import org.example.mateproduction.entity.User;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.ValidationException;
+import org.example.mateproduction.helpers.Auditable;
 import org.example.mateproduction.repository.AdSeekerRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.AdSeekerService;
@@ -64,6 +65,7 @@ public class AdSeekerServiceImpl implements AdSeekerService {
 
     @Override
     @Transactional
+    @Auditable(action = "CREATE_SEEKER_AD")
     public AdSeekerResponse createAd(AdSeekerRequest dto) throws ValidationException, NotFoundException {
         UUID currentUserId = userService.getCurrentUserId();
         User user = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found"));

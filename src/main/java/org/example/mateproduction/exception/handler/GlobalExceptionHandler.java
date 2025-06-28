@@ -1,7 +1,10 @@
-package org.example.mateproduction.exception;
+package org.example.mateproduction.exception.handler;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.example.mateproduction.dto.response.ErrorResponse;
+import org.example.mateproduction.exception.ReportAlreadyExistsException;
+import org.example.mateproduction.exception.ResourceNotFoundException;
+import org.example.mateproduction.exception.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -28,7 +31,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
-    // Handler for "The ad you are reporting does not exist"
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFound(
             ResourceNotFoundException ex, HttpServletRequest request) {

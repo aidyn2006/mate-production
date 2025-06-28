@@ -7,11 +7,9 @@ import org.aspectj.lang.annotation.Aspect;
 import org.example.mateproduction.entity.AuditLog;
 import org.example.mateproduction.helpers.Auditable;
 import org.example.mateproduction.repository.AuditLogRepository;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -24,25 +22,20 @@ public class AuditAspect {
 
     @Around("@annotation(auditable)")
     public Object logAudit(ProceedingJoinPoint joinPoint, Auditable auditable) throws Throwable {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String email = (auth != null && auth.isAuthenticated()) ? auth.getName() : "anonymous";
-
-        String methodName = joinPoint.getSignature().getName();
-
-        String args = Arrays.stream(joinPoint.getArgs())
-                .map(arg -> arg != null ? arg.toString() : "null")
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        var email = (auth != null && auth.isAuthenticated()) ? auth.getName() : "anonymous";
+        var action = auditable.action().isEmpty() ? joinPoint.getSignature().getName() : auditable.action();
+        var args = Arrays.stream(joinPoint.getArgs())
+                .map(arg -> arg == null ? "null" : arg.toString())
                 .collect(Collectors.joining(", "));
 
-        String action = !auditable.action().isEmpty() ? auditable.action() : methodName;
+        var result = joinPoint.proceed();
 
-        Object result = joinPoint.proceed();
-
-        AuditLog log = new AuditLog();
-        log.setEmail(email);
-        log.setAction(action);
-        log.setDetails("Args: [" + args + "]");
-
-        auditLogRepository.save(log);
+        auditLogRepository.save(AuditLog.builder()
+                .email(email)
+                .action(action)
+                .details("Args: [" + args + "]")
+                .build());
 
         return result;
     }

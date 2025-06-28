@@ -11,6 +11,7 @@ import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.entity.Token;
 import org.example.mateproduction.entity.User;
 import org.example.mateproduction.exception.*;
+import org.example.mateproduction.helpers.Auditable;
 import org.example.mateproduction.repository.TokenRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.AuthService;
@@ -115,6 +116,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
+    @Auditable(action = "VERIFY_ACCOUNT")
     public void verifyAccount(String token) {
         Token verificationToken = findAndValidateToken(token, TokenType.EMAIL_VERIFICATION);
         User user = verificationToken.getUser();
@@ -146,6 +148,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
+    @Auditable(action = "RESET_PASSWORD")
     public void resetPassword(ResetPasswordRequest request) {
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
             throw new PasswordsNotMatchException("Passwords do not match.");

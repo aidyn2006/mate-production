@@ -1,5 +1,6 @@
 package org.example.mateproduction.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
@@ -18,7 +19,9 @@ import java.util.UUID;
 public class AuditLog extends BaseEntity {
 
     private String email;
+    @Column(columnDefinition = "TEXT")
     private String action;
+    @Column(columnDefinition = "TEXT")
     private String details;
 
 

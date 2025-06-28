@@ -1,4 +1,3 @@
-// In your dto.response package
 package org.example.mateproduction.dto.response;
 
 import lombok.Builder;

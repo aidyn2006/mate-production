@@ -14,6 +14,7 @@ import org.example.mateproduction.entity.AdSeeker;
 import org.example.mateproduction.entity.User;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.PasswordsNotMatchException;
+import org.example.mateproduction.helpers.Auditable;
 import org.example.mateproduction.repository.AdHouseRepository;
 import org.example.mateproduction.repository.AdSeekerRepository;
 import org.example.mateproduction.repository.UserRepository;
@@ -58,6 +59,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Auditable(action = "HARD_DELETE_USER")
     public void deleteHardById(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -73,6 +75,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    @Auditable(action = "GET_ALL_HOUSE_BY")
     public List<AdHouseResponse> getAllAdHouses() {
         UUID currentUserId = getCurrentUser().getId();
         Optional<User> userOpt = userRepository.findById(currentUserId);
