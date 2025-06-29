@@ -31,4 +31,8 @@ public interface AdSeekerRepository extends JpaRepository<AdSeeker, UUID>, JpaSp
     @Query("SELECT FUNCTION('DATE', a.createdAt), COUNT(a) FROM AdSeeker a WHERE a.createdAt >= :startDate AND a.createdAt < :endDate GROUP BY FUNCTION('DATE', a.createdAt)")
     List<Object[]> findListingCreationCounts(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
+    @Query("SELECT COALESCE(SUM(a.views), 0) FROM AdSeeker a WHERE a.user.id = :userId")
+    long sumViewsByUserId(@Param("userId") UUID userId);
+
+    Integer countByUserIdAndStatus(UUID userId, Status status);
 }

@@ -61,6 +61,10 @@ public interface AdHouseRepository extends JpaRepository<AdHouse, UUID>, JpaSpec
     @Query("SELECT FUNCTION('DATE', a.createdAt), COUNT(a) FROM AdHouse a WHERE a.createdAt >= :startDate AND a.createdAt < :endDate GROUP BY FUNCTION('DATE', a.createdAt)")
     List<Object[]> findListingCreationCounts(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
 
+    @Query("SELECT COALESCE(SUM(a.views), 0) FROM AdHouse a WHERE a.user.id = :userId")
+    long sumViewsByUserId(@Param("userId") UUID userId);
+
+    Integer countByUserIdAndStatus(UUID userId, Status status);
 
 }
 

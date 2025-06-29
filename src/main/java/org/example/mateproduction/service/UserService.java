@@ -2,10 +2,7 @@ package org.example.mateproduction.service;
 
 import org.example.mateproduction.dto.request.ChangePasswordRequest;
 import org.example.mateproduction.dto.request.UserRequest;
-import org.example.mateproduction.dto.response.AdHouseResponse;
-import org.example.mateproduction.dto.response.AdSeekerResponse;
-import org.example.mateproduction.dto.response.PublicUserResponse;
-import org.example.mateproduction.dto.response.UserResponse;
+import org.example.mateproduction.dto.response.*;
 import org.example.mateproduction.exception.NotFoundException;
 
 import java.util.List;
@@ -26,4 +23,5 @@ public interface UserService {
     void changePassword(UUID userId, ChangePasswordRequest request);
     PublicUserResponse getPublicById(UUID userId) throws NotFoundException;
 
+    DashboardSummaryResponse getDashboardSummary();
 }

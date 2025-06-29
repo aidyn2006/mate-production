@@ -5,10 +5,7 @@ import org.example.mateproduction.config.Jwt.JwtService;
 import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.ChangePasswordRequest;
 import org.example.mateproduction.dto.request.UserRequest;
-import org.example.mateproduction.dto.response.AdHouseResponse;
-import org.example.mateproduction.dto.response.AdSeekerResponse;
-import org.example.mateproduction.dto.response.PublicUserResponse;
-import org.example.mateproduction.dto.response.UserResponse;
+import org.example.mateproduction.dto.response.*;
 import org.example.mateproduction.entity.AdHouse;
 import org.example.mateproduction.entity.AdSeeker;
 import org.example.mateproduction.entity.User;
@@ -38,11 +35,12 @@ public class UserServiceImpl implements UserService {
 
 
     private final UserRepository userRepository;
-    private final AdHouseRepository adRepository;
+
     private final AdSeekerRepository adSeekerRepository;
     private final CloudinaryService cloudinaryService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final AdHouseRepository adHouseRepository;
 
     @Override
     public UserResponse getById(UUID userId) {
@@ -77,14 +75,15 @@ public class UserServiceImpl implements UserService {
 
     @Auditable(action = "GET_ALL_HOUSE_BY")
     public List<AdHouseResponse> getAllAdHouses() {
-        UUID currentUserId = getCurrentUser().getId();
-        Optional<User> userOpt = userRepository.findById(currentUserId);
+        UUID currentUserId = getCurrentUserId();
+        // DEPRECATED: чатгпт сказал что не нужно. Я не вижу причин в нём сомневаться
+//                Optional<User> userOpt = userRepository.findById(currentUserId);
+//
+//        if (userOpt.isEmpty()) {
+//            throw new UsernameNotFoundException("У вас нету активных объявлений");
+//        }
 
-        if (userOpt.isEmpty()) {
-            throw new UsernameNotFoundException("У вас нету активных объявлений");
-        }
-
-        List<AdHouse> adHouses = adRepository.findAllByUserId(currentUserId);
+        List<AdHouse> adHouses = adHouseRepository.findAllByUserId(currentUserId);
 
 
         return adHouses.stream()
@@ -261,6 +260,34 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    @Override
+    public DashboardSummaryResponse getDashboardSummary() {
+        UUID currentUserId = getCurrentUserId();
+
+        // Get counts for AdHouse
+        long activeHouseAds = adHouseRepository.countByUserIdAndStatus(currentUserId, Status.ACTIVE);
+        long pendingHouseAds = adHouseRepository.countByUserIdAndStatus(currentUserId, Status.MODERATION);
+        long rejectedHouseAds = adHouseRepository.countByUserIdAndStatus(currentUserId, Status.REJECTED);
+        long totalHouseAdViews = adHouseRepository.sumViewsByUserId(currentUserId);
+
+        // Get counts for AdSeeker
+        long activeSeekerAds = adSeekerRepository.countByUserIdAndStatus(currentUserId, Status.ACTIVE);
+        long pendingSeekerAds = adSeekerRepository.countByUserIdAndStatus(currentUserId, Status.MODERATION);
+        long rejectedSeekerAds = adSeekerRepository.countByUserIdAndStatus(currentUserId, Status.REJECTED);
+        long totalSeekerAdViews = adSeekerRepository.sumViewsByUserId(currentUserId);
+
+
+        return DashboardSummaryResponse.builder()
+                .activeHouseAds(activeHouseAds)
+                .pendingHouseAds(pendingHouseAds)
+                .rejectedHouseAds(rejectedHouseAds)
+                .totalHouseAdViews(totalHouseAdViews)
+                .activeSeekerAds(activeSeekerAds)
+                .pendingSeekerAds(pendingSeekerAds)
+                .rejectedSeekerAds(rejectedSeekerAds)
+                .totalSeekerAdViews(totalSeekerAdViews)
+                .build();
+    }
 
     private UserResponse mapToResponse(User user) {
         return UserResponse.builder()

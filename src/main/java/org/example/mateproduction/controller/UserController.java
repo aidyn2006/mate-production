@@ -5,10 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.ChangePasswordRequest;
 import org.example.mateproduction.dto.request.UserRequest;
-import org.example.mateproduction.dto.response.AdHouseResponse;
-import org.example.mateproduction.dto.response.AdSeekerResponse;
-import org.example.mateproduction.dto.response.PublicUserResponse;
-import org.example.mateproduction.dto.response.UserResponse;
+import org.example.mateproduction.dto.response.*;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.service.UserService;
 import org.springframework.http.MediaType;
@@ -79,5 +76,10 @@ public class UserController {
     @GetMapping("/me/ads/seekers")
     public ResponseEntity<List<AdSeekerResponse>> getMyAdSeeker() {
         return ResponseEntity.ok(userService.getAllAdSeekers());
+    }
+
+    @GetMapping("/me/ads/summary")
+    public ResponseEntity<DashboardSummaryResponse> getMyAdsSummary() {
+        return ResponseEntity.ok(userService.getDashboardSummary());
     }
 }
