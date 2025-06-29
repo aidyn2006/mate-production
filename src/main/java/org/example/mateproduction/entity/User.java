@@ -6,6 +6,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.*;
 import org.example.mateproduction.entity.base.BaseEntity;
+import org.example.mateproduction.util.AuthProvider;
 import org.example.mateproduction.util.Role;
 import org.example.mateproduction.util.UserStatus;
 
@@ -37,5 +38,8 @@ public class User extends BaseEntity {
     @Builder.Default
     private UserStatus status = UserStatus.ACTIVE; // New field with default value
     private String banReason; // New field
+
+    @Enumerated(EnumType.STRING)
+    private AuthProvider authProvider;
 
 }

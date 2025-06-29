@@ -27,7 +27,6 @@ public class AdminUserController {
 
     private final AdminUserService adminUserService;
 
-    // Получить всех пользователей (включая удалённых или нет)
     @GetMapping
     public ResponseEntity<Page<UserResponse>> getAllUsers(
             @RequestParam(required = false) String email,
@@ -36,13 +35,11 @@ public class AdminUserController {
         return ResponseEntity.ok(adminUserService.getAllUsers(email, status, pageable));
     }
 
-    // Получить одного пользователя по ID
     @GetMapping("/{userId}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable UUID userId) throws NotFoundException {
         return ResponseEntity.ok(adminUserService.getUserById(userId));
     }
 
-    // Обновить пользователя
     @PutMapping("/{userId}")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable UUID userId,

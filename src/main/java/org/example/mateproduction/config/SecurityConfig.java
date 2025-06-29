@@ -3,6 +3,8 @@ package org.example.mateproduction.config;
 
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.config.Jwt.JwtFilter;
+import org.example.mateproduction.service.impl.CustomOauth2UserService;
+import org.example.mateproduction.service.impl.OAuth2LoginSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,6 +32,9 @@ public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
     private final UserDetailsService userDetailsService;
+    private final CustomOauth2UserService customOauth2UserService;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -40,32 +45,10 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration cfg) throws Exception {
         return cfg.getAuthenticationManager();
     }
-
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        return http
-//                .csrf(csrf -> csrf.disable())
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/api/**").permitAll()
-//                        .anyRequest().authenticated()
-//                )
-//                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .authenticationProvider(authenticationProvider())
-//                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-//                .build();
-//    }
 @Bean
 public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     return http
             .csrf(csrf -> csrf.disable())
-//            .cors(cors -> cors.configurationSource(request -> {
-//                var config = new org.springframework.web.cors.CorsConfiguration();
-//                config.setAllowedOrigins(List.of("*")); //"http://localhost:63342", "http://localhost:5173" или "*" временно
-//                config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-//                config.setAllowedHeaders(List.of("*"));
-//                config.setAllowCredentials(true);
-//                return config;
-//            }))
             .cors(cors -> cors.configurationSource(request -> {
                 var config = new CorsConfiguration();
                 config.setAllowedOriginPatterns(List.of("*")); // ✅ заменили на allowedOriginPatterns
@@ -78,15 +61,12 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/api/**").permitAll()
                     .anyRequest().permitAll() // временно разреши все
+            ).oauth2Login(oauth2 -> oauth2
+                    .userInfoEndpoint(userInfo -> userInfo
+                            .userService(customOauth2UserService)
+                    )
+                    .successHandler(oAuth2LoginSuccessHandler)
             )
-//            .authorizeHttpRequests(auth -> auth
-//                    // Allow public access to all auth-related endpoints
-//                    .requestMatchers("/api/v1/auth/**").permitAll()
-//                    // You can add other public endpoints here (e.g., swagger docs)
-//                    .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
-//                    // All other requests must be authenticated
-//                    .anyRequest().authenticated()
-//            )
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
