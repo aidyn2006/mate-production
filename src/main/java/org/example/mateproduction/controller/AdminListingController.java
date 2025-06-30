@@ -35,10 +35,7 @@ public class AdminListingController {
         if (listingType != null && !listingType.isEmpty()) {
              return ResponseEntity.ok(serviceFactory.getService(listingType).findAll(ownerUserId, status, pageable));
         }
-        
-        // Here you could return a combined list from both services if needed,
-        // or enforce that listingType is a required parameter.
-        // For simplicity, this example requires listingType.
+
         return ResponseEntity.badRequest().body("listingType parameter is required.");
     }
 

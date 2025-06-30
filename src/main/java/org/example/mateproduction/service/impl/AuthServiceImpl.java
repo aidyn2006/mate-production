@@ -1,5 +1,6 @@
 package org.example.mateproduction.service.impl;
 
+import com.warrenstrange.googleauth.GoogleAuthenticator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.config.Jwt.JwtService;
@@ -94,7 +95,26 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new NotFoundException("User not found with this email"));
 
+        if (user.getRole() == Role.ADMIN && user.getIsTwoFaEnabled()) {
+            int submittedCode = request.getTwoFaCode();
+            if (submittedCode == 0 || !verifyCode(user.getTwoFaSecret(), submittedCode)) {
+                throw new RuntimeException("Invalid or missing 2FA code");
+            }
+        }
+
+
         return buildUserResponse(user);
+    }
+    public void enableTwoFa(User user, String secret) {
+        user.setIsTwoFaEnabled(true);
+        user.setTwoFaSecret(secret);
+        userRepository.save(user);
+    }
+
+    public void disableTwoFa(User user) {
+        user.setIsTwoFaEnabled(false);
+        user.setTwoFaSecret(null);
+        userRepository.save(user);
     }
 
     private UserResponse buildUserResponse(User user) {
@@ -204,4 +224,10 @@ public class AuthServiceImpl implements AuthService {
                 + "<p style='margin-top: 30px; font-size: 0.8em;'>If you did not request this, please ignore this email.</p>"
                 + "</div>";
     }
+
+    public boolean verifyCode(String secret, int code) {
+        GoogleAuthenticator gAuth = new GoogleAuthenticator();
+        return gAuth.authorize(secret, code);
+    }
+
 }

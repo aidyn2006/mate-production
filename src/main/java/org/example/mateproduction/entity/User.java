@@ -1,9 +1,6 @@
 package org.example.mateproduction.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 import org.example.mateproduction.entity.base.BaseEntity;
 import org.example.mateproduction.util.AuthProvider;
@@ -41,5 +38,12 @@ public class User extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private AuthProvider authProvider;
+
+    @Column(name = "is_two_fa_enabled")
+    private Boolean isTwoFaEnabled;
+
+    @Column(name = "two_fa_secret")
+    private String twoFaSecret;
+
 
 }

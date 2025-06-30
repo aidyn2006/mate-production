@@ -111,7 +111,7 @@ public class AdHouseServiceImpl implements AdHouseService {
 
     @Override
     @Transactional
-    @Auditable(action = "CREATE_AD")
+//    @Auditable(action = "CREATE_AD")
     public AdHouseResponse createAd(AdHouseRequest dto) throws ValidationException, NotFoundException {
         UUID currentUserId = userService.getCurrentUserId();
         User user = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found"));
@@ -121,6 +121,9 @@ public class AdHouseServiceImpl implements AdHouseService {
         int activeAdsCount = adHouseRepository.countByUserAndStatus(user, Status.ACTIVE);
         if (activeAdsCount >= 10) {
             throw new ValidationException("User reached active ads limit");
+        }
+        if(!user.getIsVerified()){
+            throw new ValidationException("User id not verified");
         }
 
         AdHouse ad = AdHouse.builder().title(dto.getTitle()).description(dto.getDescription()).price(dto.getPrice()).address(dto.getAddress()).city(dto.getCity()).user(user).type(dto.getType()).status(Status.MODERATION).numberOfRooms(dto.getNumberOfRooms()).area(dto.getArea()).floor(dto.getFloor()).typeOfAd(Type.HOUSE).furnished(dto.getFurnished()).contactPhoneNumber(dto.getContactPhoneNumber()).views(0).build();
