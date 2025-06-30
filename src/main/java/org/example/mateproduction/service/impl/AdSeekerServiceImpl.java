@@ -65,7 +65,7 @@ public class AdSeekerServiceImpl implements AdSeekerService {
 
     @Override
     @Transactional
-//    @Auditable(action = "CREATE_SEEKER_AD")
+    @Auditable(action = "CREATE_SEEKER_AD")
     public AdSeekerResponse createAd(AdSeekerRequest dto) throws ValidationException, NotFoundException {
         UUID currentUserId = userService.getCurrentUserId();
         User user = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found"));
