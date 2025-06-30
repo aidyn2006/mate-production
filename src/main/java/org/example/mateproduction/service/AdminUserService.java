@@ -1,5 +1,6 @@
 package org.example.mateproduction.service;
 
+import org.example.mateproduction.dto.request.AdminUserUpdateRequest;
 import org.example.mateproduction.dto.request.BanRequest;
 import org.example.mateproduction.dto.request.UpdateReportStatusRequest;
 import org.example.mateproduction.dto.request.UserRequest;
@@ -20,6 +21,8 @@ public interface AdminUserService {
     UserResponse getUserById(UUID userId) throws NotFoundException;
 
     UserResponse updateUser(UUID userId, UserRequest request) throws NotFoundException;
+
+    UserResponse updateUser(UUID userId, AdminUserUpdateRequest request) throws NotFoundException;
 
     void deleteUserSoft(UUID userId) throws NotFoundException;
 
