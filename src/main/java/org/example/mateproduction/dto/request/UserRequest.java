@@ -21,5 +21,6 @@ public class UserRequest {
     private String email;
     private String phone;
     private MultipartFile avatar;
+    private Role role;
 
 }

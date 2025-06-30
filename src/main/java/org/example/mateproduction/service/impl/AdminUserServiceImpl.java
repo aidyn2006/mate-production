@@ -3,6 +3,7 @@ package org.example.mateproduction.service.impl;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.mateproduction.dto.request.AdminUserUpdateRequest;
 import org.example.mateproduction.dto.request.UpdateReportStatusRequest;
 import org.example.mateproduction.dto.request.BanRequest;
 import org.example.mateproduction.dto.request.UserRequest;
@@ -103,6 +104,36 @@ public class AdminUserServiceImpl implements AdminUserService {
 
         userRepository.save(user);
         return mapToResponse(user);
+    }
+
+    @Override
+    public UserResponse updateUser(UUID userId, AdminUserUpdateRequest request) throws NotFoundException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+
+        // Update fields if they are provided in the request
+        if (request.getName() != null) {
+            user.setName(request.getName());
+        }
+        if (request.getSurname() != null) {
+            user.setSurname(request.getSurname());
+        }
+        if (request.getPhone() != null) {
+            user.setPhone(request.getPhone());
+        }
+        if (request.getEmail() != null) {
+            user.setEmail(request.getEmail());
+        }
+        if (request.getUsername() != null) {
+            user.setUsername(request.getUsername());
+        }
+        // This is the crucial part for promoting a user
+        if (request.getRole() != null) {
+            user.setRole(request.getRole());
+        }
+
+        userRepository.save(user);
+        return mapToResponse(user); // Assuming you have a mapper
     }
 
     @Override

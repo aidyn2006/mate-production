@@ -2,6 +2,7 @@ package org.example.mateproduction.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.mateproduction.dto.request.AdminUserUpdateRequest;
 import org.example.mateproduction.dto.request.BanRequest;
 import org.example.mateproduction.dto.request.UpdateReportStatusRequest;
 import org.example.mateproduction.dto.request.UserRequest;
@@ -47,6 +48,15 @@ public class AdminUserController {
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable UUID userId,
             @ModelAttribute UserRequest request
+    ) throws NotFoundException {
+        return ResponseEntity.ok(adminUserService.updateUser(userId, request));
+    }
+
+    // In your AdminController.java
+    @PutMapping("/users/{userId}")
+    public ResponseEntity<UserResponse> updateUser(
+            @PathVariable UUID userId,
+            @RequestBody AdminUserUpdateRequest request // Use @RequestBody and the new DTO
     ) throws NotFoundException {
         return ResponseEntity.ok(adminUserService.updateUser(userId, request));
     }
