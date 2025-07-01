@@ -3,10 +3,8 @@ package org.example.mateproduction.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.mateproduction.dto.request.ForgotPasswordRequest;
-import org.example.mateproduction.dto.request.LoginRequest;
-import org.example.mateproduction.dto.request.RegisterRequest;
-import org.example.mateproduction.dto.request.ResetPasswordRequest;
+import org.example.mateproduction.dto.request.*;
+import org.example.mateproduction.dto.response.LoginResponse;
 import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.exception.AlreadyExistException;
 import org.example.mateproduction.exception.NotFoundException;
@@ -28,8 +26,13 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponse> login(@RequestBody LoginRequest request) throws NotFoundException {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) throws NotFoundException {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/verify-2fa")
+    public ResponseEntity<UserResponse> verify2FA(@RequestBody Verify2FARequest request) throws NotFoundException {
+        return ResponseEntity.ok(authService.verify2FA(request));
     }
 
     @GetMapping("/verify")
