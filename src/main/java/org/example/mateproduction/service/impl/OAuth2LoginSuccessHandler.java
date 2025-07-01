@@ -9,6 +9,7 @@ import org.example.mateproduction.entity.User;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.util.Role;
 import org.example.mateproduction.util.UserStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -19,7 +20,8 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
-
+    @Value("${app.frontend.base-url}")
+    private String frontendBaseUrl;
     private final JwtService jwtService;
     private final UserRepository userRepository;
 
@@ -53,6 +55,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         String token = jwtService.generateToken(new JwtUserDetails(user));
 
-        response.sendRedirect("http://localhost:3000/oauth-success?token=" + token);
+        response.sendRedirect(frontendBaseUrl + "/oauth-success?token=" + token);
     }
 }

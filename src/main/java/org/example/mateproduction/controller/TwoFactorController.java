@@ -1,16 +1,18 @@
 package org.example.mateproduction.controller;
 
+import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.response.TwoFactorResponse;
 import org.example.mateproduction.service.TwoFactorService;
 import org.example.mateproduction.service.impl.TwoFactorServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/2fa")
+@RequestMapping("/api/v1/2fa")
 public class TwoFactorController {
     private final TwoFactorService twoFactorService;
 
@@ -20,8 +22,9 @@ public class TwoFactorController {
     }
 
     @PostMapping("/generate")
-    public ResponseEntity<TwoFactorResponse> generateQr(@RequestParam String email) {
-        return ResponseEntity.ok(twoFactorService.generateQr(email));
+    public ResponseEntity<TwoFactorResponse> generateQr(@AuthenticationPrincipal JwtUserDetails userDetails) {
+        // userDetails.getUsername() will give you the email of the logged-in user
+        return ResponseEntity.ok(twoFactorService.generateQr(userDetails.getUsername()));
     }
 
 

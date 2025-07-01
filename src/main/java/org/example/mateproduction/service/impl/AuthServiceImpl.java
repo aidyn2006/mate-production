@@ -8,6 +8,8 @@ import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.LoginRequest;
 import org.example.mateproduction.dto.request.RegisterRequest;
 import org.example.mateproduction.dto.request.ResetPasswordRequest;
+import org.example.mateproduction.dto.request.Verify2FARequest;
+import org.example.mateproduction.dto.response.LoginResponse;
 import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.entity.Token;
 import org.example.mateproduction.entity.User;
@@ -87,24 +89,47 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public UserResponse login(LoginRequest request) throws NotFoundException {
+    public LoginResponse login(LoginRequest request) throws NotFoundException {
+        // 1. Authenticate username and password
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
 
+        // 2. Fetch the user
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new NotFoundException("User not found with this email"));
 
-        if (user.getRole() == Role.ADMIN && user.getIsTwoFaEnabled()) {
-            int submittedCode = request.getTwoFaCode();
-            if (submittedCode == 0 || !verifyCode(user.getTwoFaSecret(), submittedCode)) {
-                throw new RuntimeException("Invalid or missing 2FA code");
-            }
+        // 3. Check if 2FA is enabled
+        if (user.getIsTwoFaEnabled() != null && user.getIsTwoFaEnabled()) {
+            // If yes, return a response indicating that 2FA is required.
+            // Do NOT return the token/user details yet.
+            return LoginResponse.builder()
+                    .twoFactorEnabled(true)
+                    .build();
         }
 
+        // 4. If 2FA is not enabled, build the full response with the token
+        UserResponse userResponse = buildUserResponse(user);
+        return LoginResponse.builder()
+                .twoFactorEnabled(false)
+                .user(userResponse)
+                .build();
+    }
 
+    @Override
+    public UserResponse verify2FA(Verify2FARequest request) throws NotFoundException {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new NotFoundException("User not found with this email"));
+
+        // Verify the provided code
+        if (request.getCode() == null || !verifyCode(user.getTwoFaSecret(), request.getCode())) {
+            throw new RuntimeException("Invalid or missing 2FA code");
+        }
+
+        // If the code is valid, now we can return the final response with the JWT token
         return buildUserResponse(user);
     }
+
     public void enableTwoFa(User user, String secret) {
         user.setIsTwoFaEnabled(true);
         user.setTwoFaSecret(secret);

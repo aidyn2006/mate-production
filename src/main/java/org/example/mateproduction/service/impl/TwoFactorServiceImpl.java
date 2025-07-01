@@ -37,9 +37,10 @@ public class TwoFactorServiceImpl implements TwoFactorService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!user.getRole().name().equals("ADMIN")) {
-            throw new SecurityException("Only ADMINs can enable 2FA");
-        }
+        // REMOVED: The check that only allowed admins to enable 2FA.
+        // if (!user.getRole().name().equals("ADMIN")) {
+        //     throw new SecurityException("Only ADMINs can enable 2FA");
+        // }
 
         user.setTwoFaSecret(secret);
         user.setIsTwoFaEnabled(true);
