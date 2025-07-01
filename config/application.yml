@@ -1,7 +1,9 @@
 spring:
   datasource:
+    url: jdbc:postgresql://ballast.proxy.rlwy.net:33120/railway
+
     username: postgres
-    password: Na260206
+    password: uKuDTUmZAhAPdQBYLzXWEIaDoItrCeTc
 
   mail:
     username: suhansun13@gmail.com
