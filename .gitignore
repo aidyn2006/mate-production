@@ -1,5 +1,5 @@
 .properties
-
+application.yml
 .env
 HELP.md
 target/

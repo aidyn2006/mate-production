@@ -26,15 +26,6 @@ public class AdHouseController implements AdHouseControllerApi {
 
     private final AdHouseService adHouseService;
 
-//    @GetMapping
-//    public ResponseEntity<Page<AdHouseResponse>> getAllAds(
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "10") int size
-//    ) {
-//        Page<AdHouseResponse> result = adHouseService.getAllAds(page, size);
-//        return ResponseEntity.ok(result);
-//    }
-
     @GetMapping("/{id}")
     public ResponseEntity<AdHouseResponse> getAdById(@PathVariable UUID id, HttpServletRequest request) throws NotFoundException {
         AdHouseResponse ad = adHouseService.getAdById(id, request);
@@ -55,16 +46,6 @@ public class AdHouseController implements AdHouseControllerApi {
         return ResponseEntity.ok(results);
     }
 
-//    @PostMapping("/filter")
-//    public ResponseEntity<Page<AdHouseResponse>> filterAd(
-//            @RequestBody AdHouseFilter filter,
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "10") int size
-//    ) {
-//        return ResponseEntity.ok(adHouseService.findByFilter(filter, page, size));
-//    }
-
-
     @PutMapping("/{id}")
     public ResponseEntity<AdHouseResponse> updateAd(@PathVariable UUID id, @ModelAttribute AdHouseRequest request) throws NotFoundException, AccessDeniedException, ValidationException {
         AdHouseResponse updatedAd = adHouseService.updateAd(id, request);
@@ -77,17 +58,12 @@ public class AdHouseController implements AdHouseControllerApi {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("{id}/status")
-    public ResponseEntity<AdHouseResponse> updateAdStatus() {
-        return null;
-    }
-
-
     @PutMapping("/{id}/main-image")
     public ResponseEntity<Void> updateMainImage(@PathVariable UUID id, @RequestParam String mainImageUrl) throws NotFoundException, AccessDeniedException, ValidationException {
         adHouseService.updateMainImage(id, mainImageUrl);
         return ResponseEntity.ok().build();
     }
+
 
 
 }
