@@ -18,6 +18,7 @@ import java.util.UUID;
 @Data
 public class AuditLog extends BaseEntity {
 
+    @Column(columnDefinition = "TEXT")
     private String email;
     @Column(columnDefinition = "TEXT")
     private String action;

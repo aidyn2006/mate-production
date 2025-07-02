@@ -1,7 +1,9 @@
 spring:
   datasource:
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/mate-production
+
+    username: postgres
+    password: Na260206
   security:
     oauth2:
       client:
@@ -9,11 +11,12 @@ spring:
           google:
             client-id: 1081033611706-0evi744gc5lli3rh6r3n4sir25ft3u4d.apps.googleusercontent.com
             client-secret: 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
-            redirect-uri: "http://localhost:8888/login/oauth2/code/google"
+            redirect-uri: "http://localhost:8080/login/oauth2/code/google"
             scope:
               - openid
               - profile
               - email
+
   mail:
     username: suhansun13@gmail.com
     password: tmei mwud dcix kmpc
@@ -25,9 +28,6 @@ spring:
           auth: true
           starttls:
             enable: true
-
-
-
 
 cloudinary:
   cloud_name: dcawzx4kp
