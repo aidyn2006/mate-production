@@ -8,11 +8,13 @@ import org.example.mateproduction.dto.request.UserRequest;
 import org.example.mateproduction.dto.response.*;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.service.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,8 +31,26 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PublicUserResponse> getUserById(@PathVariable UUID id) throws NotFoundException {
-        return ResponseEntity.ok(userService.getPublicById(id));
+    public ResponseEntity<?> getUserById(@PathVariable UUID id) throws NotFoundException {
+        // Step 1: Get the current authenticated user's details
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // Step 2: Check if the principal is a valid, authenticated user
+        if (authentication != null && authentication.getPrincipal() instanceof JwtUserDetails currentUser) {
+            // Step 3: Compare the requested ID with the current user's ID
+            if (currentUser.getId().equals(id)) {
+                // If they match, issue a redirect to the more specific "/me" endpoint.
+                return ResponseEntity
+                        .status(HttpStatus.FOUND) // HTTP 302
+                        .location(URI.create("/api/v1/users/me"))
+                        .build();
+            }
+        }
+
+        // Step 4: If it's not the current user or the user is not logged in,
+        // proceed to fetch the public profile as normal.
+        PublicUserResponse publicUser = userService.getPublicById(id);
+        return ResponseEntity.ok(publicUser);
     }
 
     @DeleteMapping("/hard/{id}")
