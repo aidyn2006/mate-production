@@ -16,6 +16,11 @@ spring:
               - openid
               - profile
               - email
+  data:
+    redis:
+      host: redis.railway.internal
+      port: 6379
+      password: XUCfQCfHUatqzxtsdoCZgmNGoRYlXGyh
 
   mail:
     username: suhansun13@gmail.com
