@@ -14,16 +14,17 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "chats")
 public class Chat extends BaseEntity {
 
     @ManyToOne
-    @JoinColumn(name = "user1_id", nullable = false)
-    private User receiver;
+    @JoinColumn(name = "participant1_id", nullable = false)
+    private User participant1;
 
     @ManyToOne
-    @JoinColumn(name = "user2_id", nullable = false)
-    private User sender;
+    @JoinColumn(name = "participant2_id", nullable = false)
+    private User participant2;
 
-    @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Message> messages;
 }

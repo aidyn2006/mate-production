@@ -2,7 +2,6 @@ package org.example.mateproduction.service.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.MessageRequest;
 import org.example.mateproduction.dto.response.ChatPreviewResponse;
 import org.example.mateproduction.dto.response.MessageResponse;
@@ -14,12 +13,11 @@ import org.example.mateproduction.repository.ChatRepository;
 import org.example.mateproduction.repository.MessageRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.MessageService;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.security.Principal;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,92 +27,150 @@ public class MessageServiceImpl implements MessageService {
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
     private final ChatRepository chatRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     @Transactional
-    public MessageResponse sendMessage(MessageRequest request, String email) throws NotFoundException {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User not found"));
-//        UUID senderId =getCurrentUserId();
-        UUID receiverId = request.getReceiverId();
+    public MessageResponse saveAndSendMessage(MessageRequest request, Principal principal) throws NotFoundException {
+        User sender = findUserByPrincipal(principal);
+        User receiver = userRepository.findById(request.getReceiverId())
+                .orElseThrow(() -> new NotFoundException("Receiver not found with ID: " + request.getReceiverId()));
 
-        User sender = userRepository.findById(user.getId()).orElseThrow(() -> new NotFoundException("Sender not found"));
+        // Step 1: Find the chat or create and save a new one.
+        // This ensures the Chat entity is persisted before we create a message for it.
+        Chat chat = chatRepository.findChatByParticipants(sender, receiver)
+                .orElseGet(() -> {
+                    Chat newChat = Chat.builder()
+                            .participant1(sender)
+                            .participant2(receiver)
+                            .build();
+                    // Explicitly save the new chat to the database.
+                    return chatRepository.save(newChat);
+                });
 
-        User receiver = userRepository.findById(receiverId).orElseThrow(() -> new NotFoundException("Receiver not found"));
+        // Step 2: Create the message and link it to the now-guaranteed-to-exist chat.
+        Message message = Message.builder()
+                .chat(chat)
+                .sender(sender)
+                .content(request.getContent())
+                .build();
 
-        Chat chat = chatRepository.findBySenderAndReceiver(sender, receiver).or(() -> chatRepository.findBySenderAndReceiver(receiver, sender)).orElseGet(() -> {
-            Chat newChat = Chat.builder().sender(sender).receiver(receiver).build();
-            return chatRepository.save(newChat);
-        });
+        // Step 3: Explicitly save the message. This returns the fully persisted object.
+        Message savedMessage = messageRepository.save(message);
 
-        Message message = Message.builder().chat(chat).sender(sender).content(request.getContent()).createdAt(new Date()).isRead(false).build();
+        // Step 4: Prepare the response and broadcast.
+        MessageResponse response = mapToResponse(savedMessage, receiver.getId());
 
-        Message saved = messageRepository.save(message);
-        return mapToResponse(saved);
+        messagingTemplate.convertAndSendToUser(sender.getEmail(), "/queue/messages", response);
+        messagingTemplate.convertAndSendToUser(receiver.getEmail(), "/queue/messages", response);
+
+        return response;
+    }
+
+
+    @Override
+    public List<MessageResponse> getChatHistory(UUID companionId, Principal principal) throws NotFoundException {
+        User currentUser = findUserByPrincipal(principal);
+        User companion = userRepository.findById(companionId)
+                .orElseThrow(() -> new NotFoundException("Companion user not found with ID: " + companionId));
+
+        // Find the chat without throwing an exception if it's not found
+        Optional<Chat> chatOptional = chatRepository.findChatByParticipants(currentUser, companion);
+
+        // If no chat exists between the users yet, it's a new conversation.
+        // Return an empty list instead of throwing a 404 error.
+        if (chatOptional.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // If the chat exists, proceed to get its messages.
+        Chat chat = chatOptional.get();
+        return messageRepository.findByChatOrderByCreatedAtAsc(chat).stream()
+                .map(message -> mapToResponse(message, companionId))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<MessageResponse> getChatHistory(UUID senderId, UUID receiverId) throws NotFoundException {
-        User sender = userRepository.findById(senderId).orElseThrow(() -> new NotFoundException("Sender not found"));
-        User receiver = userRepository.findById(receiverId).orElseThrow(() -> new NotFoundException("Receiver not found"));
-
-        List<Message> messages = messageRepository.findChatMessages(sender.getId(), receiver.getId());
-
-        return messages.stream().sorted((m1, m2) -> m1.getCreatedAt().compareTo(m2.getCreatedAt())).map(this::mapToResponse).collect(Collectors.toList());
-    }
-
-    @Override
-    public List<ChatPreviewResponse> getUserChats(UUID currentUserId) throws NotFoundException {
-        User currentUser = userRepository.findById(currentUserId).orElseThrow(() -> new NotFoundException("User not found"));
-
-        List<Chat> chats = chatRepository.findAllBySenderOrReceiver(currentUser, currentUser);
+    public List<ChatPreviewResponse> getUserChats(Principal principal) throws NotFoundException {
+        User currentUser = findUserByPrincipal(principal);
+        List<Chat> chats = chatRepository.findAllByUser(currentUser);
 
         return chats.stream().map(chat -> {
-            User companion = chat.getSender().getId().equals(currentUserId) ? chat.getReceiver() : chat.getSender();
+                    User companion = chat.getParticipant1().getId().equals(currentUser.getId()) ? chat.getParticipant2() : chat.getParticipant1();
 
-            Message lastMessage = chat.getMessages().stream().max((m1, m2) -> m1.getCreatedAt().compareTo(m2.getCreatedAt())).orElse(null);
+                    Message lastMessage = chat.getMessages().stream()
+                            // 1. Filter out any message that might have a null timestamp.
+                            .filter(m -> m.getCreatedAt() != null)
+                            // 2. Now, safely find the max. This will correctly result in orElse(null)
+                            //    if the messages list is empty or contains only null-timestamp messages.
+                            .max(Comparator.comparing(Message::getCreatedAt))
+                            .orElse(null);
+                    // --- MODIFICATION END ---
 
-            boolean hasUnread = chat.getMessages().stream().anyMatch(msg -> !msg.getSender().getId().equals(currentUserId) && !Boolean.TRUE.equals(msg.getIsRead()));
 
-            return ChatPreviewResponse.builder().chatId(chat.getId()).companionId(companion.getId()).companionName(companion.getName() + " " + companion.getSurname()).companionAvatarUrl(companion.getAvatarUrl()).lastMessage(lastMessage != null ? lastMessage.getContent() : "").lastMessageTime(lastMessage != null ? lastMessage.getCreatedAt() : null).hasUnreadMessages(hasUnread).build();
-        }).sorted((c1, c2) -> {
-            Date time1 = c1.getLastMessageTime() != null ? c1.getLastMessageTime() : new Date(0);
-            Date time2 = c2.getLastMessageTime() != null ? c2.getLastMessageTime() : new Date(0);
-            return time2.compareTo(time1); // сортировка по убыванию
-        }).collect(Collectors.toList());
+                    long unreadCount = chat.getMessages().stream()
+                            .filter(msg -> !msg.getSender().getId().equals(currentUser.getId()) && !Boolean.TRUE.equals(msg.getIsRead()))
+                            .count();
+
+                    return ChatPreviewResponse.builder()
+                            .chatId(chat.getId())
+                            .companionId(companion.getId())
+                            .companionName(companion.getName() + " " + companion.getSurname())
+                            .companionAvatarUrl(companion.getAvatarUrl())
+                            .lastMessage(lastMessage != null ? lastMessage.getContent() : "No messages yet.")
+                            .lastMessageTime(lastMessage != null ? lastMessage.getCreatedAt() : null)
+                            .hasUnreadMessages(unreadCount > 0)
+                            .build();
+                }) // Sort the final list of chat previews to show the most recent conversations first.
+                .sorted(Comparator.comparing(ChatPreviewResponse::getLastMessageTime,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
-    public void markMessagesAsRead(UUID senderId, UUID receiverId) {
-        List<Message> unreadMessages = messageRepository.findChatMessages(senderId, receiverId).stream().filter(msg -> {
-            UUID actualReceiverId = msg.getChat().getReceiver().getId().equals(msg.getSender().getId()) ? msg.getChat().getSender().getId() : msg.getChat().getReceiver().getId();
-            return actualReceiverId.equals(receiverId) && !Boolean.TRUE.equals(msg.getIsRead());
-        }).collect(Collectors.toList());
+    public List<MessageResponse> markMessagesAsRead(UUID companionId, Principal principal) throws NotFoundException {
+        User currentUser = findUserByPrincipal(principal);
+        User companion = userRepository.findById(companionId)
+                .orElseThrow(() -> new NotFoundException("Companion user not found with ID: " + companionId));
 
-        for (Message message : unreadMessages) {
-            message.setIsRead(true);
+        Optional<Chat> chatOptional = chatRepository.findChatByParticipants(currentUser, companion);
+
+        if (chatOptional.isPresent()) {
+            Chat chat = chatOptional.get();
+            // Find all messages sent by the companion that are not yet read
+            List<Message> unreadMessages = chat.getMessages().stream()
+                    .filter(msg -> msg.getSender().getId().equals(companionId) && !Boolean.TRUE.equals(msg.getIsRead()))
+                    .toList();
+
+            if (!unreadMessages.isEmpty()) {
+                for (Message message : unreadMessages) {
+                    message.setIsRead(true);
+                }
+                messageRepository.saveAll(unreadMessages); // Save all changes
+                // Convert the updated messages to DTOs to send back to the frontend
+                return unreadMessages.stream()
+                        .map(m -> mapToResponse(m, currentUser.getId()))
+                        .collect(Collectors.toList());
+            }
         }
-
-        messageRepository.saveAll(unreadMessages);
+        return Collections.emptyList(); // Return empty list if no messages were updated
     }
 
-
-    @Override
-    public void deleteMessage(UUID messageId) throws NotFoundException {
-        if (!messageRepository.existsById(messageId)) {
-            throw new NotFoundException("Message not found");
-        }
-        messageRepository.deleteById(messageId);
+    private User findUserByPrincipal(Principal principal) throws NotFoundException {
+        return userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new NotFoundException("Authenticated user not found."));
     }
 
-    @Override
-    public void clearChat(UUID senderId, UUID receiverId) {
-        List<Message> messagesToDelete = messageRepository.findChatMessages(senderId, receiverId);
-        messageRepository.deleteAll(messagesToDelete);
+    private MessageResponse mapToResponse(Message message, UUID receiverId) {
+        return MessageResponse.builder()
+                .id(message.getId())
+                .chatId(message.getChat().getId())
+                .senderId(message.getSender().getId())
+                .receiverId(receiverId)
+                .content(message.getContent())
+                .createdAt(message.getCreatedAt())
+                .isRead(message.getIsRead())
+                .build();
     }
-
-    private MessageResponse mapToResponse(Message message) {
-        return MessageResponse.builder().id(message.getId()).chatId(message.getChat().getId()).senderId(message.getSender().getId()).receiverId(message.getChat().getReceiver().getId().equals(message.getSender().getId()) ? message.getChat().getSender().getId() : message.getChat().getReceiver().getId()).content(message.getContent()).createdAt(message.getCreatedAt()).isRead(message.getIsRead()).build();
-    }
-
 }

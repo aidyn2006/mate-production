@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/mate-production
+    url: jdbc:postgresql://localhost:5432/mate
 
     username: postgres
-    password: Na260206
+    password: ali1230123
   security:
     oauth2:
       client:
