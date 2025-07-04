@@ -29,7 +29,6 @@ public class MessageServiceImpl implements MessageService {
     private final UserRepository userRepository;
     private final ChatRepository chatRepository;
     private final SimpMessagingTemplate messagingTemplate;
-    private final EntityManager entityManager;
 
 
     @Override
@@ -46,7 +45,6 @@ public class MessageServiceImpl implements MessageService {
                             .participant1(sender)
                             .participant2(receiver)
                             .build();
-                    entityManager.flush();
                     return chatRepository.save(newChat);
                 });
 
