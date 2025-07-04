@@ -48,6 +48,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
+                .formLogin(form -> form.disable()) // <---- ДОБАВЬ ЭТО!
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new CorsConfiguration();
                     config.setAllowedOriginPatterns(List.of("*")); // ✅ заменили на allowedOriginPatterns
