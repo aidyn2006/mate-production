@@ -44,9 +44,11 @@ public class MessageServiceImpl implements MessageService {
                             .participant1(sender)
                             .participant2(receiver)
                             .build();
-                    // Explicitly save the new chat to the database.
-                    return chatRepository.save(newChat);
+                    Chat savedChat = chatRepository.save(newChat);
+                    chatRepository.flush(); // 🔥 Добавь эту строку!
+                    return savedChat;
                 });
+
 
         // Step 2: Create the message and link it to the now-guaranteed-to-exist chat.
         Message message = Message.builder()
