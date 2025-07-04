@@ -4,6 +4,7 @@ spring:
 
     username: postgres
     password: uKuDTUmZAhAPdQBYLzXWEIaDoItrCeTc
+
   data:
     redis:
       url: redis://default:XUCfQCfHUatqzxtsdoCZgmNGoRYlXGyh@interchange.proxy.rlwy.net:31389
