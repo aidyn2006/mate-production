@@ -51,7 +51,12 @@ public class SecurityConfig {
                 .formLogin(form -> form.disable()) // <---- ДОБАВЬ ЭТО!
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new CorsConfiguration();
-                    config.setAllowedOriginPatterns(List.of("*")); // ✅ заменили на allowedOriginPatterns
+                    config.setAllowedOrigins(List.of(
+                            "http://localhost:5173",
+                            "https://animated-salamander-7746f5.netlify.app",
+                            "https://mate.up.railway.app"
+                    ));
+                    config.setAllowCredentials(true);
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setAllowCredentials(true); // ✅ теперь всё будет работать
