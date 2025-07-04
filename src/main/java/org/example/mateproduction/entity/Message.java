@@ -28,10 +28,10 @@ public class Message extends BaseEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @CreationTimestamp
-    @Column(updatable = false)
-    private Date createdAt;
+//    @Temporal(TemporalType.TIMESTAMP)
+//    @CreationTimestamp
+//    @Column(updatable = false)
+//    private Date createdAt;
 
     @Column(nullable = false) // <-- Add this
     private Boolean isRead = false;

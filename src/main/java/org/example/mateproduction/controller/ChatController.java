@@ -27,10 +27,9 @@ import java.util.UUID;
 public class ChatController {
 
     private final MessageService messageService;
-    private UserService userService;
-    private SimpMessageSendingOperations messagingTemplate;
+    private final UserService userService;
+    private final SimpMessageSendingOperations messagingTemplate;
 
-    // --- WebSocket Endpoints ---
 
     @MessageMapping("/chat.sendMessage")
     public void sendMessage(@Payload @Validated MessageRequest request, Principal principal) throws NotFoundException {
@@ -46,7 +45,6 @@ public class ChatController {
             throw new SecurityException("User not authenticated for marking messages as read.");
         }
 
-        // 1. Get the list of updated messages from the service
         messageService.markMessagesAsRead(request.getSenderId(), principal);
 
 //        // 2. If any messages were updated, broadcast them to both users

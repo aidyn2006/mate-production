@@ -32,23 +32,18 @@ public class MessageServiceImpl implements MessageService {
 
 
     @Override
+    @Transactional
     public MessageResponse saveAndSendMessage(MessageRequest request, Principal principal) throws NotFoundException {
         User sender = findUserByPrincipal(principal);
         User receiver = userRepository.findById(request.getReceiverId())
                 .orElseThrow(() -> new NotFoundException("Receiver not found with ID: " + request.getReceiverId()));
 
-        // Step 1: Find the chat OR create and save a new one immediately.
-        // This makes sure the Chat record exists in the database before proceeding.
-        Chat chat = chatRepository.findChatByParticipants(sender, receiver)
-                .orElseGet(() -> {
-                    Chat newChat = Chat.builder()
-                            .participant1(sender)
-                            .participant2(receiver)
-                            .build();
-                    return chatRepository.save(newChat);
-                });
+        Chat chat = chatRepository.findChatByParticipants(sender, receiver).orElse(null);
 
-        // Step 2: Now that the Chat is guaranteed to exist, create the Message.
+        if (chat == null) {
+            chat = createChatBetweenUsers(sender, receiver); // <- отдельный метод, легко тестировать и можно "await"-подобно вызывать
+        }
+
         Message message = Message.builder()
                 .chat(chat)
                 .sender(sender)
@@ -56,10 +51,8 @@ public class MessageServiceImpl implements MessageService {
                 .isRead(false)
                 .build();
 
-        // Step 3: Explicitly save the message. This returns the fully persisted object.
         Message savedMessage = messageRepository.save(message);
 
-        // Step 4: Prepare the response and broadcast it.
         MessageResponse response = mapToResponse(savedMessage, receiver.getId());
 
         messagingTemplate.convertAndSendToUser(sender.getEmail(), "/queue/messages", response);
@@ -67,6 +60,15 @@ public class MessageServiceImpl implements MessageService {
 
         return response;
     }
+
+    private Chat createChatBetweenUsers(User sender, User receiver) {
+        Chat newChat = Chat.builder()
+                .participant1(sender)
+                .participant2(receiver)
+                .build();
+        return chatRepository.save(newChat);
+    }
+
 
 
     @Override
