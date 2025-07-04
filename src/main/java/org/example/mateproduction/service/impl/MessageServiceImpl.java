@@ -1,5 +1,6 @@
 package org.example.mateproduction.service.impl;
 
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.dto.request.MessageRequest;
@@ -28,9 +29,10 @@ public class MessageServiceImpl implements MessageService {
     private final UserRepository userRepository;
     private final ChatRepository chatRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final EntityManager entityManager;
+
 
     @Override
-    @Transactional
     public MessageResponse saveAndSendMessage(MessageRequest request, Principal principal) throws NotFoundException {
         User sender = findUserByPrincipal(principal);
         User receiver = userRepository.findById(request.getReceiverId())
@@ -44,6 +46,7 @@ public class MessageServiceImpl implements MessageService {
                             .participant1(sender)
                             .participant2(receiver)
                             .build();
+                    entityManager.flush();
                     return chatRepository.save(newChat);
                 });
 
