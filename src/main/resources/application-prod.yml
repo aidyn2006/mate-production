@@ -1,9 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://ballast.proxy.rlwy.net:33120/railway
-
+    url: jdbc:postgresql://tramway.proxy.rlwy.net:58103/railway
     username: postgres
-    password: uKuDTUmZAhAPdQBYLzXWEIaDoItrCeTc
+    password: PMHvBGARvGKznyupPTtUcpkcxqRrQfPa
   data:
     redis:
       url: redis://default:XUCfQCfHUatqzxtsdoCZgmNGoRYlXGyh@interchange.proxy.rlwy.net:31389
