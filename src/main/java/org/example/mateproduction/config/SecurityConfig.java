@@ -21,8 +21,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
-import org.springframework.http.HttpMethod;
-
 
 import java.util.List;
 
@@ -50,29 +48,18 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
-                .formLogin(form -> form.disable()) // <---- ДОБАВЬ ЭТО!
+                .formLogin(form->form.disable())
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of(
-                            "http://localhost:5173",
-                            "https://animated-salamander-7746f5.netlify.app",
-                            "https://mate.up.railway.app"
-                    ));
+                    config.setAllowedOriginPatterns(List.of("*")); // ✅ заменили на allowedOriginPatterns
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    config.setAllowedHeaders(List.of(
-                            "Authorization",
-                            "Cache-Control",
-                            "Content-Type",
-                            "X-Requested-With"
-                    ));
-                    config.setExposedHeaders(List.of("Authorization")); // опционально — если фронту нужен JWT из заголовка
-                    config.setAllowCredentials(true);
+                    config.setAllowedHeaders(List.of("*"));
+                    config.setAllowCredentials(true); // ✅ теперь всё будет работать
                     return config;
                 }))
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/**").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // <--- это критически важно!
                         .requestMatchers("/api/v1/ws/**").permitAll() // ✅ разрешаем WebSocket
                         .anyRequest().permitAll() // временно разреши все
                 ).oauth2Login(oauth2 -> oauth2
