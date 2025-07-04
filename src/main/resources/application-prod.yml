@@ -6,7 +6,7 @@ spring:
     password: uKuDTUmZAhAPdQBYLzXWEIaDoItrCeTc
   data:
     redis:
-      url: redis://127.0.0.1:6379
+      url: redis://default:XUCfQCfHUatqzxtsdoCZgmNGoRYlXGyh@redis.railway.internal:6379
   security:
     oauth2:
       client:
