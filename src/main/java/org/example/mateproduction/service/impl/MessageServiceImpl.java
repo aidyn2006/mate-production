@@ -36,21 +36,18 @@ public class MessageServiceImpl implements MessageService {
         User receiver = userRepository.findById(request.getReceiverId())
                 .orElseThrow(() -> new NotFoundException("Receiver not found with ID: " + request.getReceiverId()));
 
-        // Step 1: Find the chat or create and save a new one.
-        // This ensures the Chat entity is persisted before we create a message for it.
+        // Step 1: Find the chat OR create and save a new one immediately.
+        // This makes sure the Chat record exists in the database before proceeding.
         Chat chat = chatRepository.findChatByParticipants(sender, receiver)
                 .orElseGet(() -> {
                     Chat newChat = Chat.builder()
                             .participant1(sender)
                             .participant2(receiver)
                             .build();
-                    Chat savedChat = chatRepository.save(newChat);
-                    chatRepository.flush(); // 🔥 Добавь эту строку!
-                    return savedChat;
+                    return chatRepository.save(newChat);
                 });
 
-
-        // Step 2: Create the message and link it to the now-guaranteed-to-exist chat.
+        // Step 2: Now that the Chat is guaranteed to exist, create the Message.
         Message message = Message.builder()
                 .chat(chat)
                 .sender(sender)
@@ -61,7 +58,7 @@ public class MessageServiceImpl implements MessageService {
         // Step 3: Explicitly save the message. This returns the fully persisted object.
         Message savedMessage = messageRepository.save(message);
 
-        // Step 4: Prepare the response and broadcast.
+        // Step 4: Prepare the response and broadcast it.
         MessageResponse response = mapToResponse(savedMessage, receiver.getId());
 
         messagingTemplate.convertAndSendToUser(sender.getEmail(), "/queue/messages", response);
