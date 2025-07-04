@@ -21,6 +21,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
+import org.springframework.http.HttpMethod;
+
 
 import java.util.List;
 
@@ -70,6 +72,7 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // <--- это критически важно!
                         .requestMatchers("/api/v1/ws/**").permitAll() // ✅ разрешаем WebSocket
                         .anyRequest().permitAll() // временно разреши все
                 ).oauth2Login(oauth2 -> oauth2
