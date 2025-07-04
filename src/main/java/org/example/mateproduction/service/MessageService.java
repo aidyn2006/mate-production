@@ -19,5 +19,5 @@ public interface MessageService {
     MessageResponse saveAndSendMessage(MessageRequest request, Principal principal) throws NotFoundException;
     List<MessageResponse> getChatHistory(UUID companionId, Principal principal) throws NotFoundException;
     List<ChatPreviewResponse> getUserChats(Principal principal) throws NotFoundException;
-    List<MessageResponse> markMessagesAsRead(UUID companionId, Principal principal) throws NotFoundException;
+    void markMessagesAsRead(UUID companionId, Principal principal) throws NotFoundException;
 }

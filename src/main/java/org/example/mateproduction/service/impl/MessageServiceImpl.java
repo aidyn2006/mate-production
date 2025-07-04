@@ -53,6 +53,7 @@ public class MessageServiceImpl implements MessageService {
                 .chat(chat)
                 .sender(sender)
                 .content(request.getContent())
+                .isRead(false)
                 .build();
 
         // Step 3: Explicitly save the message. This returns the fully persisted object.
@@ -129,32 +130,36 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     @Transactional
-    public List<MessageResponse> markMessagesAsRead(UUID companionId, Principal principal) throws NotFoundException {
+    public void markMessagesAsRead(UUID companionId, Principal principal) throws NotFoundException {
         User currentUser = findUserByPrincipal(principal);
         User companion = userRepository.findById(companionId)
                 .orElseThrow(() -> new NotFoundException("Companion user not found with ID: " + companionId));
 
-        Optional<Chat> chatOptional = chatRepository.findChatByParticipants(currentUser, companion);
+        chatRepository.findChatByParticipants(currentUser, companion)
+                .ifPresent(chat -> {
+                    List<Message> unreadMessages = chat.getMessages().stream()
+                            .filter(msg -> msg.getSender().getId().equals(companionId) && !Boolean.TRUE.equals(msg.getIsRead()))
+                            .toList();
 
-        if (chatOptional.isPresent()) {
-            Chat chat = chatOptional.get();
-            // Find all messages sent by the companion that are not yet read
-            List<Message> unreadMessages = chat.getMessages().stream()
-                    .filter(msg -> msg.getSender().getId().equals(companionId) && !Boolean.TRUE.equals(msg.getIsRead()))
-                    .toList();
+                    if (unreadMessages.isEmpty()) {
+                        return; // Nothing to do
+                    }
 
-            if (!unreadMessages.isEmpty()) {
-                for (Message message : unreadMessages) {
-                    message.setIsRead(true);
-                }
-                messageRepository.saveAll(unreadMessages); // Save all changes
-                // Convert the updated messages to DTOs to send back to the frontend
-                return unreadMessages.stream()
-                        .map(m -> mapToResponse(m, currentUser.getId()))
-                        .collect(Collectors.toList());
-            }
-        }
-        return Collections.emptyList(); // Return empty list if no messages were updated
+                    for (Message message : unreadMessages) {
+                        message.setIsRead(true);
+                    }
+
+                    messageRepository.saveAll(unreadMessages);
+
+                    // Convert to DTOs for broadcasting
+                    List<MessageResponse> updatedMessageDTOs = unreadMessages.stream()
+                            .map(m -> mapToResponse(m, currentUser.getId()))
+                            .collect(Collectors.toList());
+
+                    // Broadcast the update to both users
+                    messagingTemplate.convertAndSendToUser(currentUser.getEmail(), "/queue/messages-read", updatedMessageDTOs);
+                    messagingTemplate.convertAndSendToUser(companion.getEmail(), "/queue/messages-read", updatedMessageDTOs);
+                });
     }
 
     private User findUserByPrincipal(Principal principal) throws NotFoundException {

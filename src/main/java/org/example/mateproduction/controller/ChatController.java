@@ -47,17 +47,17 @@ public class ChatController {
         }
 
         // 1. Get the list of updated messages from the service
-        List<MessageResponse> updatedMessages = messageService.markMessagesAsRead(request.getSenderId(), principal);
+        messageService.markMessagesAsRead(request.getSenderId(), principal);
 
-        // 2. If any messages were updated, broadcast them to both users
-        if (!updatedMessages.isEmpty()) {
-            UserResponse companion = userService.getById(request.getSenderId()); // Assuming you have such a method in a user service
-
-            // Send to the user who marked the messages as read
-            messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/messages-read", updatedMessages);
-            // Send to the user who sent the messages
-            messagingTemplate.convertAndSendToUser(companion.getEmail(), "/queue/messages-read", updatedMessages);
-        }
+//        // 2. If any messages were updated, broadcast them to both users
+//        if (!updatedMessages.isEmpty()) {
+//            UserResponse companion = userService.getById(request.getSenderId()); // Assuming you have such a method in a user service
+//
+//            // Send to the user who marked the messages as read
+//            messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/messages-read", updatedMessages);
+//            // Send to the user who sent the messages
+//            messagingTemplate.convertAndSendToUser(companion.getEmail(), "/queue/messages-read", updatedMessages);
+//        }
     }
 
     @GetMapping("/api/v1/messages/chats")
