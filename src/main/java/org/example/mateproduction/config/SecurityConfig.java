@@ -53,12 +53,17 @@ public class SecurityConfig {
                 .formLogin(form->form.disable())
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new CorsConfiguration();
-                    config.setAllowedOriginPatterns(List.of("*")); // ✅ заменили на allowedOriginPatterns
+                    config.setAllowedOrigins(List.of(
+                            "http://localhost:5173", // dev
+                            "https://mate.up.railway.app", // Railway
+                            "https://animated-salamander-7746f5.netlify.app" // Netlify
+                    ));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(List.of("*"));
-                    config.setAllowCredentials(true); // ✅ теперь всё будет работать
+                    config.setAllowCredentials(true); // Cookie / Token работает только с конкретными origin
                     return config;
                 }))
+
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
