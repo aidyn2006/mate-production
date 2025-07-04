@@ -59,6 +59,7 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/**").permitAll()
+                        .requestMatchers("/api/v1/ws/**").permitAll() // ✅ разрешаем WebSocket
                         .anyRequest().permitAll() // временно разреши все
                 ).oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo
