@@ -1,6 +1,7 @@
 package org.example.mateproduction.config;
 
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.config.Jwt.JwtFilter;
 import org.example.mateproduction.service.impl.CustomOauth2UserService;
@@ -21,6 +22,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
+import org.springframework.http.HttpMethod;
 
 import java.util.List;
 
@@ -57,9 +59,16 @@ public class SecurityConfig {
                     config.setAllowCredentials(true); // ✅ теперь всё будет работать
                     return config;
                 }))
+                .exceptionHandling(e -> e
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                        })
+                )
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         .requestMatchers("/api/v1/ws/**").permitAll() // ✅ разрешаем WebSocket
                         .anyRequest().permitAll() // временно разреши все
                 ).oauth2Login(oauth2 -> oauth2
