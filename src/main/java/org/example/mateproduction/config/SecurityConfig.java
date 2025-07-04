@@ -56,10 +56,15 @@ public class SecurityConfig {
                             "https://animated-salamander-7746f5.netlify.app",
                             "https://mate.up.railway.app"
                     ));
-                    config.setAllowCredentials(true);
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    config.setAllowedHeaders(List.of("*"));
-                    config.setAllowCredentials(true); // ✅ теперь всё будет работать
+                    config.setAllowedHeaders(List.of(
+                            "Authorization",
+                            "Cache-Control",
+                            "Content-Type",
+                            "X-Requested-With"
+                    ));
+                    config.setExposedHeaders(List.of("Authorization")); // опционально — если фронту нужен JWT из заголовка
+                    config.setAllowCredentials(true);
                     return config;
                 }))
 
