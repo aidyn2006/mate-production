@@ -66,8 +66,13 @@ public class MessageServiceImpl implements MessageService {
                 .participant1(sender)
                 .participant2(receiver)
                 .build();
-        return chatRepository.save(newChat);
+
+        Chat savedChat = chatRepository.save(newChat);
+        chatRepository.flush();
+
+        return savedChat;
     }
+
 
 
 
