@@ -3,7 +3,7 @@ spring:
     url: jdbc:postgresql://localhost:5432/mate
 
     username: postgres
-    password: ali1230123
+    password: Na260206
   security:
     oauth2:
       client:
