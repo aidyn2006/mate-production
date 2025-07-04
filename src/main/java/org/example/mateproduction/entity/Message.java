@@ -33,5 +33,6 @@ public class Message extends BaseEntity {
     @Column(updatable = false)
     private Date createdAt;
 
+    @Column(nullable = false) // <-- Add this
     private Boolean isRead;
 }

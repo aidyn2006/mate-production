@@ -5,6 +5,8 @@ import org.example.mateproduction.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -13,6 +15,8 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -28,6 +32,7 @@ import java.util.Map;
 
 @Configuration
 @EnableWebSocketMessageBroker
+@Order(Ordered.HIGHEST_PRECEDENCE + 99)
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Autowired
@@ -38,15 +43,17 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
+        // Broker for broadcasting messages to clients on specific destinations
         config.enableSimpleBroker("/topic", "/queue", "/user");
+        // Prefix for messages bound for @MessageMapping-annotated methods
         config.setApplicationDestinationPrefixes("/app");
+        // Prefix for user-specific destinations
         config.setUserDestinationPrefix("/user");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws")
-                .setHandshakeHandler(handshakeHandler())
+        registry.addEndpoint("/api/v1/ws") // Match the frontend's request URL
                 .setAllowedOriginPatterns("http://localhost:*", "http://127.0.0.1:*")
                 .withSockJS();
     }
@@ -107,36 +114,32 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registration.interceptors(new ChannelInterceptor() {
             @Override
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
-                StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+                StompHeaderAccessor accessor =
+                        MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
+                // Authenticate only on CONNECT command
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    // Получаем токен из заголовков STOMP CONNECT
-                    String token = accessor.getFirstNativeHeader("Authorization");
-                    if (token != null && token.startsWith("Bearer ")) {
-                        token = token.substring(7);
-                    }
-
-                    if (token != null) {
+                    String authHeader = accessor.getFirstNativeHeader("Authorization");
+                    if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                        String jwt = authHeader.substring(7);
                         try {
-                            String email = jwtService.extractUsername(token);
-                            UserDetails userDetails = userService.loadUserByUsername(email);
-                            if (jwtService.isTokenValid(token, userDetails)) {
-                                accessor.setUser(new StompPrincipal(email));
-                                System.out.println("DEBUG: STOMP CONNECT - User authenticated: " + email);
-                            } else {
-                                System.out.println("DEBUG: STOMP CONNECT - Invalid token");
-                                throw new IllegalArgumentException("Invalid authentication token");
+                            String userEmail = jwtService.extractUsername(jwt);
+                            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                                UserDetails userDetails = userService.loadUserByUsername(userEmail);
+                                if (jwtService.isTokenValid(jwt, userDetails)) {
+                                    // Set the user for the WebSocket session
+                                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                            userDetails, null, userDetails.getAuthorities());
+                                    accessor.setUser(authToken);
+                                    System.out.println("WebSocket Authenticated User: " + userEmail);
+                                }
                             }
                         } catch (Exception e) {
-                            System.out.println("DEBUG: STOMP CONNECT - Authentication failed: " + e.getMessage());
-                            throw new IllegalArgumentException("Invalid authentication token");
+                            System.err.println("WebSocket authentication failed: " + e.getMessage());
+                            // Optionally, you can throw an exception here to reject the connection
                         }
-                    } else {
-                        System.out.println("DEBUG: STOMP CONNECT - No token provided");
-                        throw new IllegalArgumentException("Authentication token required");
                     }
                 }
-
                 return message;
             }
         });
