@@ -2,6 +2,7 @@ package org.example.mateproduction.repository;
 
 import org.example.mateproduction.entity.Chat;
 import org.example.mateproduction.entity.Message;
+import org.example.mateproduction.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -18,4 +19,6 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
     @Modifying // Required for UPDATE or DELETE queries
     @Query("UPDATE Message m SET m.isRead = true WHERE m.chat.id = :chatId AND m.sender.id = :senderId AND m.isRead = false")
     void markAllAsReadInChat(@Param("chatId") UUID chatId, @Param("senderId") UUID senderId);
+
+    List<Message> findByChatAndSenderAndIsReadIsFalse(Chat chat, User companion);
 }

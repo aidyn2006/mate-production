@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/mate
+    url: jdbc:postgresql://tramway.proxy.rlwy.net:58103/railway
 
     username: postgres
-    password: Na260206
+    password: PMHvBGARvGKznyupPTtUcpkcxqRrQfPa
   data:
     redis:
       url: redis://127.0.0.1:6379

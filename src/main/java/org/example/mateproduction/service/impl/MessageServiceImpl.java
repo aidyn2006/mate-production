@@ -3,6 +3,7 @@ package org.example.mateproduction.service.impl;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.MessageRequest;
 import org.example.mateproduction.dto.response.ChatPreviewResponse;
 import org.example.mateproduction.dto.response.MessageResponse;
@@ -33,16 +34,13 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     @Transactional
-    public MessageResponse saveAndSendMessage(MessageRequest request, Principal principal) throws NotFoundException {
+    public void saveAndSendMessage(MessageRequest request, Principal principal) throws NotFoundException {
         User sender = findUserByPrincipal(principal);
         User receiver = userRepository.findById(request.getReceiverId())
                 .orElseThrow(() -> new NotFoundException("Receiver not found with ID: " + request.getReceiverId()));
 
-        Chat chat = chatRepository.findChatByParticipants(sender, receiver).orElse(null);
-
-        if (chat == null) {
-            chat = createChatBetweenUsers(sender, receiver); // <- отдельный метод, легко тестировать и можно "await"-подобно вызывать
-        }
+        // Find or create the chat with consistent participant order
+        Chat chat = findOrCreateChat(sender, receiver);
 
         Message message = Message.builder()
                 .chat(chat)
@@ -52,13 +50,26 @@ public class MessageServiceImpl implements MessageService {
                 .build();
 
         Message savedMessage = messageRepository.save(message);
-
         MessageResponse response = mapToResponse(savedMessage, receiver.getId());
 
-        messagingTemplate.convertAndSendToUser(sender.getEmail(), "/queue/messages", response);
-        messagingTemplate.convertAndSendToUser(receiver.getEmail(), "/queue/messages", response);
+        // UPGRADE: Send to a chat-specific topic instead of a generic user queue
+        String chatTopic = String.format("/topic/chats/%s", chat.getId());
+        messagingTemplate.convertAndSend(chatTopic, response);
+    }
 
-        return response;
+    private Chat findOrCreateChat(User user1, User user2) {
+        // UPGRADE: Enforce consistent participant order for efficient querying
+        User participant1 = user1.getId().toString().compareTo(user2.getId().toString()) < 0 ? user1 : user2;
+        User participant2 = user1.getId().toString().compareTo(user2.getId().toString()) < 0 ? user2 : user1;
+
+        return chatRepository.findByParticipant1AndParticipant2(participant1, participant2)
+                .orElseGet(() -> {
+                    Chat newChat = Chat.builder()
+                            .participant1(participant1)
+                            .participant2(participant2)
+                            .build();
+                    return chatRepository.save(newChat);
+                });
     }
 
     private Chat createChatBetweenUsers(User sender, User receiver) {
@@ -77,57 +88,18 @@ public class MessageServiceImpl implements MessageService {
         User companion = userRepository.findById(companionId)
                 .orElseThrow(() -> new NotFoundException("Companion user not found with ID: " + companionId));
 
-        // Find the chat without throwing an exception if it's not found
-        Optional<Chat> chatOptional = chatRepository.findChatByParticipants(currentUser, companion);
+        Chat chat = findOrCreateChat(currentUser, companion);
 
-        // If no chat exists between the users yet, it's a new conversation.
-        // Return an empty list instead of throwing a 404 error.
-        if (chatOptional.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        // If the chat exists, proceed to get its messages.
-        Chat chat = chatOptional.get();
         return messageRepository.findByChatOrderByCreatedAtAsc(chat).stream()
-                .map(message -> mapToResponse(message, companionId))
+                .map(message -> mapToResponse(message, companionId)) // receiverId is the other person
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<ChatPreviewResponse> getUserChats(Principal principal) throws NotFoundException {
         User currentUser = findUserByPrincipal(principal);
-        List<Chat> chats = chatRepository.findAllByUser(currentUser);
-
-        return chats.stream().map(chat -> {
-                    User companion = chat.getParticipant1().getId().equals(currentUser.getId()) ? chat.getParticipant2() : chat.getParticipant1();
-
-                    Message lastMessage = chat.getMessages().stream()
-                            // 1. Filter out any message that might have a null timestamp.
-                            .filter(m -> m.getCreatedAt() != null)
-                            // 2. Now, safely find the max. This will correctly result in orElse(null)
-                            //    if the messages list is empty or contains only null-timestamp messages.
-                            .max(Comparator.comparing(Message::getCreatedAt))
-                            .orElse(null);
-                    // --- MODIFICATION END ---
-
-
-                    long unreadCount = chat.getMessages().stream()
-                            .filter(msg -> !msg.getSender().getId().equals(currentUser.getId()) && !Boolean.TRUE.equals(msg.getIsRead()))
-                            .count();
-
-                    return ChatPreviewResponse.builder()
-                            .chatId(chat.getId())
-                            .companionId(companion.getId())
-                            .companionName(companion.getName() + " " + companion.getSurname())
-                            .companionAvatarUrl(companion.getAvatarUrl())
-                            .lastMessage(lastMessage != null ? lastMessage.getContent() : "No messages yet.")
-                            .lastMessageTime(lastMessage != null ? lastMessage.getCreatedAt() : null)
-                            .hasUnreadMessages(unreadCount > 0)
-                            .build();
-                }) // Sort the final list of chat previews to show the most recent conversations first.
-                .sorted(Comparator.comparing(ChatPreviewResponse::getLastMessageTime,
-                        Comparator.nullsLast(Comparator.reverseOrder())))
-                .collect(Collectors.toList());
+        // UPGRADE: Use the new, highly performant repository method
+        return chatRepository.findChatPreviewsByUser(currentUser.getId());
     }
 
     @Override
@@ -137,31 +109,24 @@ public class MessageServiceImpl implements MessageService {
         User companion = userRepository.findById(companionId)
                 .orElseThrow(() -> new NotFoundException("Companion user not found with ID: " + companionId));
 
-        chatRepository.findChatByParticipants(currentUser, companion)
-                .ifPresent(chat -> {
-                    List<Message> unreadMessages = chat.getMessages().stream()
-                            .filter(msg -> msg.getSender().getId().equals(companionId) && !Boolean.TRUE.equals(msg.getIsRead()))
-                            .toList();
+        Chat chat = findOrCreateChat(currentUser, companion);
 
-                    if (unreadMessages.isEmpty()) {
-                        return; // Nothing to do
-                    }
+        List<Message> unreadMessages = messageRepository.findByChatAndSenderAndIsReadIsFalse(chat, companion);
 
-                    for (Message message : unreadMessages) {
-                        message.setIsRead(true);
-                    }
+        if (unreadMessages.isEmpty()) {
+            return;
+        }
 
-                    messageRepository.saveAll(unreadMessages);
+        unreadMessages.forEach(message -> message.setIsRead(true));
+        messageRepository.saveAll(unreadMessages);
 
-                    // Convert to DTOs for broadcasting
-                    List<MessageResponse> updatedMessageDTOs = unreadMessages.stream()
-                            .map(m -> mapToResponse(m, currentUser.getId()))
-                            .collect(Collectors.toList());
+        List<MessageResponse> updatedMessageDTOs = unreadMessages.stream()
+                .map(m -> mapToResponse(m, currentUser.getId()))
+                .collect(Collectors.toList());
 
-                    // Broadcast the update to both users
-                    messagingTemplate.convertAndSendToUser(currentUser.getEmail(), "/queue/messages-read", updatedMessageDTOs);
-                    messagingTemplate.convertAndSendToUser(companion.getEmail(), "/queue/messages-read", updatedMessageDTOs);
-                });
+        // Also broadcast this update to the chat-specific topic for consistency
+        String chatTopic = String.format("/topic/chats/%s/read", chat.getId());
+        messagingTemplate.convertAndSend(chatTopic, updatedMessageDTOs);
     }
 
     private User findUserByPrincipal(Principal principal) throws NotFoundException {
