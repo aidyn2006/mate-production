@@ -13,7 +13,7 @@ spring:
           google:
             client-id: 1081033611706-0evi744gc5lli3rh6r3n4sir25ft3u4d.apps.googleusercontent.com
             client-secret: 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
-            redirect-uri: "http://localhost:8080/login/oauth2/code/google"
+            redirect-uri: "https://mate.up.railway.app/login/oauth2/code/google"
             scope:
               - openid
               - profile
