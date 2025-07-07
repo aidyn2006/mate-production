@@ -1,5 +1,6 @@
 package org.example.mateproduction.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.example.mateproduction.dto.request.AdHouseFilter;
 import org.example.mateproduction.dto.request.AdSeekerFilter;
 import org.example.mateproduction.dto.request.AdSeekerRequest;
@@ -18,8 +19,7 @@ public interface AdSeekerService {
 
     Page<AdSeekerResponse> getAllAds(int page, int size);
 
-    AdSeekerResponse getAdById(UUID adId) throws NotFoundException;
-
+    AdSeekerResponse getAdById(UUID adId, HttpServletRequest request) throws NotFoundException;
     AdSeekerResponse createAd(AdSeekerRequest dto) throws ValidationException, NotFoundException;
 
     AdSeekerResponse updateAd(UUID adId, AdSeekerRequest dto) throws NotFoundException, AccessDeniedException, ValidationException;

@@ -1,11 +1,14 @@
 package org.example.mateproduction.service.impl;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.dto.request.AdSeekerFilter;
 import org.example.mateproduction.dto.request.AdSeekerRequest;
+import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.dto.response.AdSeekerResponse;
 import org.example.mateproduction.dto.response.UserResponse;
+import org.example.mateproduction.entity.AdHouse;
 import org.example.mateproduction.entity.AdSeeker;
 import org.example.mateproduction.entity.User;
 import org.example.mateproduction.exception.NotFoundException;
@@ -36,6 +39,8 @@ public class AdSeekerServiceImpl implements AdSeekerService {
     private final AdSeekerRepository adSeekerRepository;
     private final UserRepository userRepository;
     private final UserService userService;
+    private final RedisService redisService;
+
 
     @Override
     @Transactional
@@ -56,10 +61,20 @@ public class AdSeekerServiceImpl implements AdSeekerService {
         return adSeekerPage.map(AdSeekerServiceImpl::mapToResponseDto); // Assuming you have a static mapper
     }
 
-    @Override
     @Transactional
-    public AdSeekerResponse getAdById(UUID adId) throws NotFoundException {
-        AdSeeker ad = adSeekerRepository.findByIdAndStatus(adId, Status.ACTIVE).orElseThrow(() -> new NotFoundException("Ad not found"));
+    public AdSeekerResponse getAdById(UUID adId, HttpServletRequest request) throws NotFoundException {
+        AdSeeker ad = adSeekerRepository.findByIdAndStatus(adId, Status.ACTIVE)
+                .orElseThrow(() -> new NotFoundException("Ad is not available"));
+
+        String ip = request.getRemoteAddr();
+        String userAgent = request.getHeader("User-Agent");
+
+        if (!redisService.isViewCounted(adId, ip, userAgent)) {
+            redisService.incrementViews(adId);
+            ad.setViews(ad.getViews() + 1);
+            adSeekerRepository.save(ad);
+        }
+
         return mapToResponseDto(ad);
     }
 

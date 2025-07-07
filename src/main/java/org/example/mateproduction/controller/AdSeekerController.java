@@ -1,5 +1,6 @@
 package org.example.mateproduction.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.dto.request.AdSeekerFilter;
 import org.example.mateproduction.dto.request.AdSeekerRequest;
@@ -37,8 +38,8 @@ public class AdSeekerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AdSeekerResponse> getAdById(@PathVariable UUID id) throws NotFoundException {
-        return ResponseEntity.ok(adSeekerService.getAdById(id));
+    public ResponseEntity<AdSeekerResponse> getAdById(@PathVariable UUID id, HttpServletRequest request) throws NotFoundException {
+        return ResponseEntity.ok(adSeekerService.getAdById(id,request));
     }
 
     @PostMapping

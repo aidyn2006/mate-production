@@ -69,7 +69,9 @@ public class AuthServiceImpl implements AuthService {
                 .username(request.getUsername())
                 .phone(request.getPhone())
                 .isVerified(false)
-                .avatarUrl(request.getAvatar() != null ? cloudinaryService.upload(request.getAvatar()) : null)
+                .avatarUrl(request.getAvatar() != null && !request.getAvatar().isEmpty()
+                        ? cloudinaryService.upload(request.getAvatar())
+                        : null)
                 .build();
 
         userRepository.save(user);

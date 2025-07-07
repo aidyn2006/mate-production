@@ -260,6 +260,7 @@ public class AdHouseServiceImpl implements AdHouseService {
                 .numberOfRooms(ad.getNumberOfRooms())
                 .area(ad.getArea())
                 .floor(ad.getFloor())
+                .views(ad.getViews())
                 .furnished(ad.getFurnished())
                 .contactPhoneNumber(ad.getContactPhoneNumber())
                 .createdAt(ad.getCreatedAt())
