@@ -26,7 +26,7 @@ public class EmailServiceImpl implements EmailService {
             helper.setText(email, true); // true indicates HTML
             helper.setTo(to);
             helper.setSubject(subject);
-            helper.setFrom("no-reply@mateproduction.com"); // Set your from address
+            helper.setFrom("suhansun13@gmail.com"); // Set your from address
             mailSender.send(mimeMessage);
             log.info("Email sent successfully to {}", to);
         } catch (MessagingException e) {
