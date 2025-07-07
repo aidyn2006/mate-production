@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
-//@EnableAsync
+@EnableAsync
 public class MateProductionApplication {
 
     public static void main(String[] args) {

@@ -18,7 +18,7 @@ public class EmailServiceImpl implements EmailService {
     private final JavaMailSender mailSender;
 
     @Override
-//    @Async // To avoid blocking the main thread
+    @Async // To avoid blocking the main thread
     public void sendEmail(String to, String subject, String email) {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
