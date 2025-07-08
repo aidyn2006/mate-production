@@ -46,7 +46,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                             .avatarUrl(picture)
                             .isVerified(true)
                             .status(UserStatus.ACTIVE)
-                            .role(Role.USER)
+                            .role(Role.GUEST)
                             .build();
                     return userRepository.save(newUser);
                 });
