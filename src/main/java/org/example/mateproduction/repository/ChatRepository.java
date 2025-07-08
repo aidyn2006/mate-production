@@ -14,7 +14,12 @@ import java.util.UUID;
 public interface ChatRepository extends JpaRepository<Chat, UUID> {
 
     // Optimized for consistent participant order
-    Optional<Chat> findByParticipant1AndParticipant2(User participant1, User participant2);
+    @Query("""
+    SELECT c FROM Chat c
+    WHERE (c.participant1 = :user1 AND c.participant2 = :user2)
+       OR (c.participant1 = :user2 AND c.participant2 = :user1)
+""")
+    Optional<Chat> findByParticipants(@Param("user1") User user1, @Param("user2") User user2);
 
     // The new, highly efficient query for chat previews
     @Query("""

@@ -58,19 +58,16 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private Chat findOrCreateChat(User user1, User user2) {
-        // UPGRADE: Enforce consistent participant order for efficient querying
-        User participant1 = user1.getId().toString().compareTo(user2.getId().toString()) < 0 ? user1 : user2;
-        User participant2 = user1.getId().toString().compareTo(user2.getId().toString()) < 0 ? user2 : user1;
-
-        return chatRepository.findByParticipant1AndParticipant2(participant1, participant2)
+        return chatRepository.findByParticipants(user1, user2)
                 .orElseGet(() -> {
                     Chat newChat = Chat.builder()
-                            .participant1(participant1)
-                            .participant2(participant2)
+                            .participant1(user1)
+                            .participant2(user2)
                             .build();
                     return chatRepository.save(newChat);
                 });
     }
+
 
     private Chat createChatBetweenUsers(User sender, User receiver) {
         Chat newChat = Chat.builder()
