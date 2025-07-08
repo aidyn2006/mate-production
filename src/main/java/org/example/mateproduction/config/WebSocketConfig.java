@@ -57,7 +57,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .setAllowedOriginPatterns(
                         "http://localhost:*",
                         "http://127.0.0.1:*",
-                        "https://animated-salamander-7746f5.netlify.app" // ✅ нужен именно этот
+                        "https://animated-salamander-7746f5.netlify.app", // ✅ нужен именно этот
+                        "https://mate-production-frontend.vercel.app"
                 )
                 .withSockJS();
     }
