@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -64,6 +65,16 @@ public class AdHouseController implements AdHouseControllerApi {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/{id}/archive")
+    public ResponseEntity<Void> archiveAd(@PathVariable UUID id) throws NotFoundException, AccessDeniedException {
+        adHouseService.archiveAd(id);
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
 
+    @PutMapping("/{id}/unarchive")
+    public ResponseEntity<Void> unarchiveAd(@PathVariable UUID id) throws NotFoundException, AccessDeniedException {
+        adHouseService.unarchiveAd(id);
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
 
 }
