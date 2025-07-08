@@ -88,8 +88,8 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173", // local dev
-                "https://mate.up.railway.app" // backend domain
-//                "https://animated-salamander-7746f5.netlify.app" // frontend Netlify prod
+                "https://mate.up.railway.app", // backend domain
+                "https://animated-salamander-7746f5.netlify.app" // frontend Netlify prod
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
