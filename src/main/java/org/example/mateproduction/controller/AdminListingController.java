@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.dto.response.AdminListingDetailResponse;
 import org.example.mateproduction.dto.response.AdminReasonResponse;
 import org.example.mateproduction.factory.AdminServiceFactory;
+import org.example.mateproduction.service.AdminListingService;
 import org.example.mateproduction.util.Status;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -59,10 +60,23 @@ public class AdminListingController {
     }
 
     @DeleteMapping("/{type}/{adId}")
-    public ResponseEntity<Void> deleteListing(@PathVariable String type, @PathVariable UUID adId) {
-        serviceFactory.getService(type).deleteAd(adId);
+    public ResponseEntity<Void> deleteListing(
+            @PathVariable String type,
+            @PathVariable UUID adId,
+            @RequestParam(name = "mode", defaultValue = "soft") String deleteMode) { // <-- Add RequestParam
+
+        AdminListingService<?> service = serviceFactory.getService(type);
+
+        if ("hard".equalsIgnoreCase(deleteMode)) {
+            service.hardDeleteAd(adId);
+        } else {
+            // Default to soft delete for safety
+            service.softDeleteAd(adId);
+        }
+
         return ResponseEntity.noContent().build();
     }
+
 
     @PostMapping("/{type}/{adId}/feature")
     public ResponseEntity<Void> featureListing(@PathVariable String type, @PathVariable UUID adId) {

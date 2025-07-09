@@ -69,7 +69,15 @@ public class AdminSeekerAdServiceImpl implements AdminListingService<AdSeeker> {
     }
 
     @Override
-    public void deleteAd(UUID adId) {
+    public void softDeleteAd(UUID adId) {
+        AdSeeker ad = adSeekerRepository.findById(adId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid ad id: " + adId));
+        ad.setStatus(Status.DELETED);
+        adSeekerRepository.save(ad);
+    }
+
+    @Override
+    public void hardDeleteAd(UUID adId) {
         adSeekerRepository.deleteById(adId);
     }
 

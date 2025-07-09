@@ -21,8 +21,10 @@ public interface AdminListingService<T extends Ad & Moderatable> {
     void approveAd(UUID adId);
 
     AdminReasonResponse rejectAd(UUID adId, String reason);
-    
-    void deleteAd(UUID adId);
+
+    void softDeleteAd(UUID adId);
+
+    void hardDeleteAd(UUID adId);
 
     void featureAd(UUID adId);
 

@@ -38,8 +38,20 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         String surname = oauthUser.getAttribute("family_name");
         String picture = oauthUser.getAttribute("picture");
 
+        // Find the user, or create them if they don't exist
         User user = userRepository.findByEmail(email)
+                .map(existingUser -> {
+                    // --- THIS IS THE NEW LOGIC FOR EXISTING USERS ---
+                    // User exists, so let's just update their avatar if they don't have one
+                    // and mark them as a Google user.
+                    if (existingUser.getAvatarUrl() == null || existingUser.getAvatarUrl().isEmpty()) {
+                        existingUser.setAvatarUrl(picture);
+                    }
+                    existingUser.setAuthProvider(AuthProvider.GOOGLE); // Good practice to link the account
+                    return userRepository.save(existingUser); // Save the updated user
+                })
                 .orElseGet(() -> {
+                    // User does not exist, create a new one with Google's data
                     User newUser = User.builder()
                             .email(email)
                             .username(email)
@@ -49,11 +61,12 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                             .isVerified(true)
                             .status(UserStatus.ACTIVE)
                             .role(Role.USER)
+                            .authProvider(AuthProvider.GOOGLE)
                             .build();
                     return userRepository.save(newUser);
                 });
-        String token = jwtService.generateToken(new JwtUserDetails(user));
 
+        String token = jwtService.generateToken(new JwtUserDetails(user));
         response.sendRedirect(frontendBaseUrl + "/oauth-success?token=" + token);
     }
 
