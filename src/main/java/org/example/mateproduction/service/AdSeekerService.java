@@ -28,4 +28,8 @@ public interface AdSeekerService {
     Page<AdSeekerResponse> findByFilter(AdSeekerFilter filter, int page, int size);
 
     Page<AdSeekerResponse> searchAds(AdSeekerFilter filter, Pageable pageable);
+
+    void archiveAd(UUID adId) throws NotFoundException, AccessDeniedException;
+    void unarchiveAd(UUID adId) throws NotFoundException, AccessDeniedException;
+
 }

@@ -72,7 +72,15 @@ public class AdminHouseAdServiceImpl implements AdminListingService<AdHouse> {
     }
 
     @Override
-    public void deleteAd(UUID adId) {
+    public void softDeleteAd(UUID adId) {
+        AdHouse ad = adHouseRepository.findById(adId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid ad id: " + adId));
+        ad.setStatus(Status.DELETED);
+        adHouseRepository.save(ad);
+    }
+
+    @Override
+    public void hardDeleteAd(UUID adId) {
         adHouseRepository.deleteById(adId);
     }
 

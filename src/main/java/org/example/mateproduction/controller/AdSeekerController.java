@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -65,5 +66,17 @@ public class AdSeekerController {
     public ResponseEntity<Void> deleteAd(@PathVariable UUID id) throws NotFoundException, AccessDeniedException {
         adSeekerService.deleteAd(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/archive")
+    public ResponseEntity<Void> archiveAd(@PathVariable UUID id) throws NotFoundException, AccessDeniedException {
+        adSeekerService.archiveAd(id);
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+    @PutMapping("/{id}/unarchive")
+    public ResponseEntity<Void> unarchiveAd(@PathVariable UUID id) throws NotFoundException, AccessDeniedException {
+        adSeekerService.unarchiveAd(id);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 }

@@ -204,6 +204,44 @@ public class AdHouseServiceImpl implements AdHouseService {
         adHouseRepository.save(ad);
     }
 
+    // Add these methods to AdHouseServiceImpl
+
+    @Override
+    @Transactional
+    public void archiveAd(UUID adId) throws NotFoundException, AccessDeniedException {
+        UUID currentUserId = userService.getCurrentUserId();
+        AdHouse ad = adHouseRepository.findById(adId)
+                .orElseThrow(() -> new NotFoundException("Ad not found with ID: " + adId));
+
+        checkUserOwnership(currentUserId, ad);
+
+        if (ad.getStatus() != Status.ACTIVE) {
+            // You can throw a custom exception or use ValidationException
+            throw new IllegalStateException("Only active ads can be archived.");
+        }
+
+        ad.setStatus(Status.ARCHIVED);
+        adHouseRepository.save(ad);
+    }
+
+    @Override
+    @Transactional
+    public void unarchiveAd(UUID adId) throws NotFoundException, AccessDeniedException {
+        UUID currentUserId = userService.getCurrentUserId();
+        AdHouse ad = adHouseRepository.findById(adId)
+                .orElseThrow(() -> new NotFoundException("Ad not found with ID: " + adId));
+
+        checkUserOwnership(currentUserId, ad);
+
+        if (ad.getStatus() != Status.ARCHIVED) {
+            throw new IllegalStateException("Only archived ads can be unarchived.");
+        }
+
+        // Set status to MODERATION to be re-validated, or ACTIVE if no re-validation is needed
+        ad.setStatus(Status.MODERATION);
+        adHouseRepository.save(ad);
+    }
+
     // -------------------- ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ --------------------
 
     private void validateAdRequest(AdHouseRequest dto) throws ValidationException {

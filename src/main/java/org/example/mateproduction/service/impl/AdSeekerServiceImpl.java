@@ -167,6 +167,50 @@ public class AdSeekerServiceImpl implements AdSeekerService {
         return seekers.map(AdSeekerServiceImpl::mapToResponseDto);
     }
 
+    // Add these helper and new methods to AdSeekerServiceImpl
+
+    // Add this private helper method first for checking ownership
+    private void checkUserOwnership(UUID currentUserId, AdSeeker ad) throws AccessDeniedException {
+        if (!ad.getUser().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("User not authorized to modify this ad");
+        }
+    }
+
+
+    @Override
+    @Transactional
+    public void archiveAd(UUID adId) throws NotFoundException, AccessDeniedException {
+        UUID currentUserId = userService.getCurrentUserId();
+        AdSeeker ad = adSeekerRepository.findById(adId)
+                .orElseThrow(() -> new NotFoundException("Ad not found with ID: " + adId));
+
+        checkUserOwnership(currentUserId, ad);
+
+        if (ad.getStatus() != Status.ACTIVE) {
+            throw new IllegalStateException("Only active ads can be archived.");
+        }
+
+        ad.setStatus(Status.ARCHIVED);
+        adSeekerRepository.save(ad);
+    }
+
+    @Override
+    @Transactional
+    public void unarchiveAd(UUID adId) throws NotFoundException, AccessDeniedException {
+        UUID currentUserId = userService.getCurrentUserId();
+        AdSeeker ad = adSeekerRepository.findById(adId)
+                .orElseThrow(() -> new NotFoundException("Ad not found with ID: " + adId));
+
+        checkUserOwnership(currentUserId, ad);
+
+        if (ad.getStatus() != Status.ARCHIVED) {
+            throw new IllegalStateException("Only archived ads can be unarchived.");
+        }
+
+        ad.setStatus(Status.MODERATION); // Or Status.ACTIVE
+        adSeekerRepository.save(ad);
+    }
+
 
     // ------------------- ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ----------------------
 
