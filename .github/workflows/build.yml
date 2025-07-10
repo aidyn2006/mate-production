@@ -1,0 +1,27 @@
+name: Java mate-production CI/CD
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v3
+
+      - name: Установка JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Сборка и тест
+        run: mvn clean install
+
+      - name: Собрать Docker-образ
+        run: docker build -t myapp:latest .
