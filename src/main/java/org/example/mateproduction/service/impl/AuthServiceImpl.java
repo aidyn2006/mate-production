@@ -90,7 +90,7 @@ public class AuthServiceImpl implements AuthService {
 
         String emailBody = buildEmail("Verify Your Account", "Please click the link below to verify your account:", verificationLink, "Verify Account");
 //        emailService.sendEmail(user.getEmail(), "Account Verification", emailBody);
-        rabbitTemplate.convertAndSend("exchange", "notification_routing_key", emailBody);
+        rabbitTemplate.convertAndSend("notification_exchange", "notification_routing_key", emailBody);
         return buildUserResponse(user);
     }
 

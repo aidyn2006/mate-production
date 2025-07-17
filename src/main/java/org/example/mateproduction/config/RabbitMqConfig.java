@@ -14,13 +14,13 @@ import org.springframework.context.annotation.Configuration;
 @Data
 public class RabbitMqConfig {
 
-    private static final String TOPIC_NAME = "exchange";
+    private static final String EXCHANGE_NAME = "notification_exchange";
     private static final String ROUTING_KEY = "notification_routing_key";
 
 
     @Bean
     public TopicExchange topicExchange() {
-        return new TopicExchange(TOPIC_NAME);
+        return new TopicExchange(EXCHANGE_NAME);
     }
 
     @Bean
