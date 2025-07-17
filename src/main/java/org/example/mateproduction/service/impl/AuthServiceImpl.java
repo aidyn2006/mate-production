@@ -5,6 +5,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.config.Jwt.JwtService;
 import org.example.mateproduction.config.Jwt.JwtUserDetails;
+import org.example.mateproduction.config.RabbitMqConfig;
 import org.example.mateproduction.dto.request.LoginRequest;
 import org.example.mateproduction.dto.request.RegisterRequest;
 import org.example.mateproduction.dto.request.ResetPasswordRequest;
@@ -21,6 +22,7 @@ import org.example.mateproduction.service.AuthService;
 import org.example.mateproduction.service.EmailService;
 import org.example.mateproduction.util.Role;
 import org.example.mateproduction.util.TokenType;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -41,6 +43,8 @@ public class AuthServiceImpl implements AuthService {
     private final CloudinaryService cloudinaryService;
     private final TokenRepository tokenRepository;
     private final EmailService emailService;
+    private final RabbitTemplate rabbitTemplate;
+    private final RabbitMqConfig rabbitMqConfig;
     @Value("${app.frontend.base-url}")
     private String frontendBaseUrl;
 
@@ -85,8 +89,8 @@ public class AuthServiceImpl implements AuthService {
         // --- [END FIXED] ---
 
         String emailBody = buildEmail("Verify Your Account", "Please click the link below to verify your account:", verificationLink, "Verify Account");
-        emailService.sendEmail(user.getEmail(), "Account Verification", emailBody);
-
+//        emailService.sendEmail(user.getEmail(), "Account Verification", emailBody);
+        rabbitTemplate.convertAndSend("exchange", "notification_routing_key", emailBody);
         return buildUserResponse(user);
     }
 
