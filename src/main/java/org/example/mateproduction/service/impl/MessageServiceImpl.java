@@ -1,9 +1,7 @@
 package org.example.mateproduction.service.impl;
 
-import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.MessageRequest;
 import org.example.mateproduction.dto.response.ChatPreviewResponse;
 import org.example.mateproduction.dto.response.MessageResponse;
@@ -19,7 +17,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -76,7 +75,6 @@ public class MessageServiceImpl implements MessageService {
                 .build();
         return chatRepository.save(newChat);
     }
-
 
 
     @Override

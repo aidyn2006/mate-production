@@ -2,7 +2,6 @@ package org.example.mateproduction.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.mateproduction.config.Jwt.JwtUserDetails;
-import org.example.mateproduction.dto.request.FavoriteRequest; // <-- Import the FavoriteRequest DTO
 import org.example.mateproduction.dto.request.FavoriteRequest;
 import org.example.mateproduction.dto.response.FavoriteResponse;
 import org.example.mateproduction.exception.NotFoundException;
@@ -13,7 +12,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 

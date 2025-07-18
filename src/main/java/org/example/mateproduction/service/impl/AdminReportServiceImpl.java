@@ -4,10 +4,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.mateproduction.dto.request.UpdateReportStatusRequest;
 import org.example.mateproduction.dto.response.*;
-import org.example.mateproduction.entity.*;
-import org.example.mateproduction.exception.NotFoundException;
+import org.example.mateproduction.entity.AdHouse;
+import org.example.mateproduction.entity.AdSeeker;
+import org.example.mateproduction.entity.Report;
+import org.example.mateproduction.entity.User;
 import org.example.mateproduction.exception.ResourceNotFoundException;
-import org.example.mateproduction.repository.*;
+import org.example.mateproduction.repository.AdHouseRepository;
+import org.example.mateproduction.repository.AdSeekerRepository;
+import org.example.mateproduction.repository.ReportRepository;
+import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.AdminReportService;
 import org.example.mateproduction.service.UserService;
 import org.example.mateproduction.util.ReportStatus;
@@ -73,7 +78,6 @@ public class AdminReportServiceImpl implements AdminReportService {
     }
 
 
-
     private ReportDetailResponse toDetailDto(Report report) {
         Object reportedContent = getReportedContent(report.getReportedEntityType(), report.getReportedEntityId());
 
@@ -91,7 +95,7 @@ public class AdminReportServiceImpl implements AdminReportService {
                 .reportedContent(reportedContent)
                 .build();
     }
-    
+
     private Object getReportedContent(ReportableType type, UUID entityId) {
         switch (type) {
             case AD_HOUSE:
@@ -104,6 +108,7 @@ public class AdminReportServiceImpl implements AdminReportService {
                 return null;
         }
     }
+
     private ReportResponse toDto(Report report) {
         if (report == null) {
             return null;

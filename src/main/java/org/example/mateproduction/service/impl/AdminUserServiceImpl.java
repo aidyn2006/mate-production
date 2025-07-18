@@ -4,8 +4,8 @@ import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.mateproduction.dto.request.AdminUserUpdateRequest;
-import org.example.mateproduction.dto.request.UpdateReportStatusRequest;
 import org.example.mateproduction.dto.request.BanRequest;
+import org.example.mateproduction.dto.request.UpdateReportStatusRequest;
 import org.example.mateproduction.dto.request.UserRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.dto.response.AdSeekerResponse;
@@ -28,13 +28,10 @@ import org.example.mateproduction.util.UserStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.ZoneId;
 import java.util.List;
@@ -207,6 +204,7 @@ public class AdminUserServiceImpl implements AdminUserService {
                 .map(this::mapAdSeekerToResponse)
                 .collect(Collectors.toList());
     }
+
     @Override
     public Page<ReportResponse> getAllReports(Pageable pageable) {
         log.info("Fetching all reports for page request: {}", pageable);

@@ -40,9 +40,9 @@ public class AdHouseSpecification {
             if (filter.getMaxRooms() != null) {
                 predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("numberOfRooms"), filter.getMaxRooms()));
             }
-            
+
             // --- Area Range ---
-             if (filter.getMinArea() != null) {
+            if (filter.getMinArea() != null) {
                 predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("area"), filter.getMinArea()));
             }
             if (filter.getMaxArea() != null) {

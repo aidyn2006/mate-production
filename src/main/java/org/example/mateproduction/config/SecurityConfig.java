@@ -7,6 +7,7 @@ import org.example.mateproduction.service.impl.CustomOauth2UserService;
 import org.example.mateproduction.service.impl.OAuth2LoginSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -23,7 +24,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
-import org.springframework.http.HttpMethod;
 
 import java.util.List;
 
@@ -82,7 +82,6 @@ public class SecurityConfig {
         return provider;
     }
 
-    // ✅ Вынесено отдельно, чтобы Spring точно подхватил CORS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();

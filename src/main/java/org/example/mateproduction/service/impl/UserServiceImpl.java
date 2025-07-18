@@ -10,7 +10,6 @@ import org.example.mateproduction.entity.AdHouse;
 import org.example.mateproduction.entity.AdSeeker;
 import org.example.mateproduction.entity.User;
 import org.example.mateproduction.exception.NotFoundException;
-import org.example.mateproduction.exception.PasswordsNotMatchException;
 import org.example.mateproduction.helpers.Auditable;
 import org.example.mateproduction.repository.AdHouseRepository;
 import org.example.mateproduction.repository.AdSeekerRepository;
@@ -66,7 +65,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteById(UUID userId) {
-        User user=userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setIsDeleted(true);
@@ -316,8 +315,6 @@ public class UserServiceImpl implements UserService {
                 .createdAt(user.getCreatedAt())
                 .build();
     }
-
-
 
 
 }

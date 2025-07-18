@@ -12,9 +12,14 @@ import org.example.mateproduction.exception.NotFoundException;
 public interface AuthService {
 
     UserResponse register(RegisterRequest request) throws AlreadyExistException;
+
     LoginResponse login(LoginRequest request) throws NotFoundException;
+
     void verifyAccount(String token);
+
     void forgotPassword(String email) throws NotFoundException;
+
     void resetPassword(ResetPasswordRequest request);
+
     UserResponse verify2FA(Verify2FARequest request) throws NotFoundException;
 }

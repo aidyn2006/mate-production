@@ -1,7 +1,6 @@
 package org.example.mateproduction.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.ReviewRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.dto.response.ReviewResponse;
@@ -13,7 +12,6 @@ import org.example.mateproduction.repository.AdHouseRepository;
 import org.example.mateproduction.repository.ReviewRepository;
 import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.ReviewService;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

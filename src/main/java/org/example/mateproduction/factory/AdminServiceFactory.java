@@ -10,7 +10,6 @@ public class AdminServiceFactory {
     private final AdminListingService<?> houseService;
     private final AdminListingService<?> seekerService;
 
-    // Manually create the constructor to apply @Qualifier to the parameters
     public AdminServiceFactory(
             @Qualifier("adminHouseService") AdminListingService<?> houseService,
             @Qualifier("adminSeekerService") AdminListingService<?> seekerService) {

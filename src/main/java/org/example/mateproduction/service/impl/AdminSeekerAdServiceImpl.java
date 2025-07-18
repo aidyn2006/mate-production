@@ -6,7 +6,6 @@ import org.example.mateproduction.dto.response.AdSeekerResponse;
 import org.example.mateproduction.dto.response.AdminListingDetailResponse;
 import org.example.mateproduction.dto.response.AdminReasonResponse;
 import org.example.mateproduction.dto.response.UserResponse;
-import org.example.mateproduction.entity.AdHouse;
 import org.example.mateproduction.entity.AdSeeker;
 import org.example.mateproduction.entity.User;
 import org.example.mateproduction.exception.NotFoundException;
@@ -96,7 +95,6 @@ public class AdminSeekerAdServiceImpl implements AdminListingService<AdSeeker> {
         ad.setFeatured(false);
         adSeekerRepository.save(ad);
     }
-
 
 
     @Transactional

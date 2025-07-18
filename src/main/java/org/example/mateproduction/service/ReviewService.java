@@ -9,6 +9,7 @@ import java.util.UUID;
 public interface ReviewService {
 
     ReviewResponse createReview(ReviewRequest request);
+
     List<ReviewResponse> getAllReview(UUID reviewerId, UUID adId);
 
     ReviewResponse updateReview(UUID reviewerId, UUID adId, ReviewRequest request);

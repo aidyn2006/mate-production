@@ -11,6 +11,8 @@ import java.util.UUID;
 
 public interface AdminReportService {
     Page<ReportResponse> getAllReports(ReportStatus status, Pageable pageable);
+
     ReportDetailResponse getReportById(UUID reportId);
+
     ReportResponse resolveReport(UUID reportId, UpdateReportStatusRequest request);
 }

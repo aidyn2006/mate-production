@@ -30,11 +30,11 @@ public class AdminListingController {
             @RequestParam(required = false) UUID ownerUserId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        
+
         if (listingType != null && !listingType.isEmpty()) {
-             return ResponseEntity.ok(serviceFactory.getService(listingType).findAll(ownerUserId, status, pageable));
+            return ResponseEntity.ok(serviceFactory.getService(listingType).findAll(ownerUserId, status, pageable));
         }
 
         return ResponseEntity.badRequest().body("listingType parameter is required.");
@@ -47,13 +47,13 @@ public class AdminListingController {
         AdminListingDetailResponse listing = serviceFactory.getService(type).findById(adId);
         return ResponseEntity.ok(listing);
     }
-    
+
     @PutMapping("/{type}/{adId}/approve")
     public ResponseEntity<Void> approveAd(@PathVariable String type, @PathVariable UUID adId) {
         serviceFactory.getService(type).approveAd(adId);
         return ResponseEntity.ok().build();
     }
-    
+
     @PutMapping("/{type}/{adId}/reject")
     public ResponseEntity<AdminReasonResponse> rejectAd(@PathVariable String type, @PathVariable UUID adId, @RequestParam String reason) {
         return ResponseEntity.ok(serviceFactory.getService(type).rejectAd(adId, reason));

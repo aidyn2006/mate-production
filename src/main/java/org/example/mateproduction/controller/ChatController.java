@@ -1,19 +1,15 @@
 package org.example.mateproduction.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.mateproduction.config.Jwt.JwtUserDetails;
-import org.example.mateproduction.dto.request.MarkReadRequest; // Assuming this DTO just contains senderId
+import org.example.mateproduction.dto.request.MarkReadRequest;
 import org.example.mateproduction.dto.request.MessageRequest;
 import org.example.mateproduction.dto.response.ChatPreviewResponse;
 import org.example.mateproduction.dto.response.MessageResponse;
-import org.example.mateproduction.entity.User;
 import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.service.MessageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;

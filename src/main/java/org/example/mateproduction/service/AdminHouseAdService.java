@@ -14,9 +14,14 @@ import java.util.UUID;
 
 public interface AdminHouseAdService {
     Page<AdHouseResponse> getAllModerateAds(int page, int size);
+
     void approveAd(UUID adId);
+
     AdminReasonResponse rejectAd(UUID adId, String reason);
+
     AdHouseResponse updateAd(UUID adId, AdHouseRequest dto) throws NotFoundException, AccessDeniedException, ValidationException;
+
     void changeAdStatus(UUID adId, Status newStatus, String reason);
+
     Page<AdHouseResponse> findByFilter(AdHouseFilter filter, int page, int size);
 }

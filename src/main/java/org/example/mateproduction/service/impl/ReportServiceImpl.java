@@ -2,14 +2,10 @@ package org.example.mateproduction.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.example.mateproduction.dto.request.CreateReportRequest;
-import org.example.mateproduction.dto.request.UpdateReportStatusRequest;
 import org.example.mateproduction.dto.response.ReportResponse;
-import org.example.mateproduction.dto.response.UserResponse;
 import org.example.mateproduction.entity.Report;
 import org.example.mateproduction.entity.User;
-import org.example.mateproduction.exception.NotFoundException;
 import org.example.mateproduction.exception.ReportAlreadyExistsException;
 import org.example.mateproduction.exception.ResourceNotFoundException;
 import org.example.mateproduction.exception.UnauthorizedException;
@@ -20,10 +16,6 @@ import org.example.mateproduction.repository.UserRepository;
 import org.example.mateproduction.service.ReportService;
 import org.example.mateproduction.service.UserService;
 import org.example.mateproduction.util.ReportableType;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,7 +60,7 @@ public class ReportServiceImpl implements ReportService {
 
         // 3. Prevent duplicate reports
         reportRepository.findByReporterIdAndReportedEntityIdAndReportedEntityType(
-            reporterId, request.getReportedEntityId(), request.getReportedEntityType()
+                reporterId, request.getReportedEntityId(), request.getReportedEntityType()
         ).ifPresent(existingReport -> {
             log.warn("User {} already reported entity {} of type {}. Report ID: {}",
                     reporterId, request.getReportedEntityId(), request.getReportedEntityType(), existingReport.getId());
@@ -88,7 +80,6 @@ public class ReportServiceImpl implements ReportService {
 
         return mapToResponse(savedReport);
     }
-
 
 
     private void validateReportableEntityExists(UUID entityId, ReportableType type) {

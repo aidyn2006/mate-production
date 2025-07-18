@@ -2,7 +2,6 @@ package org.example.mateproduction.service.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.example.mateproduction.config.Jwt.JwtUserDetails;
 import org.example.mateproduction.dto.request.FavoriteRequest;
 import org.example.mateproduction.dto.response.AdHouseResponse;
 import org.example.mateproduction.dto.response.AdSeekerResponse;
@@ -16,7 +15,6 @@ import org.example.mateproduction.repository.*;
 import org.example.mateproduction.service.FavoriteService;
 import org.example.mateproduction.service.UserService;
 import org.example.mateproduction.util.Type;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
