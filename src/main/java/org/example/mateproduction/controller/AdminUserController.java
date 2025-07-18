@@ -74,30 +74,27 @@ public class AdminUserController {
 
     @PostMapping("/{userId}/ban")
     public ResponseEntity<Void> banUser(@PathVariable UUID userId, @RequestBody(required = false) BanRequest banRequest) throws NotFoundException {
-        // A BanRequest DTO could contain the reason for the ban
-        adminUserService.banUser(userId, banRequest); // You'll need to implement this in the service
+        adminUserService.banUser(userId, banRequest);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{userId}/unban")
     public ResponseEntity<Void> unbanUser(@PathVariable UUID userId) throws NotFoundException {
-        adminUserService.unbanUser(userId); // Opposite of ban
+        adminUserService.unbanUser(userId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{userId}/verify")
     public ResponseEntity<Void> verifyUser(@PathVariable UUID userId) throws NotFoundException {
-        adminUserService.verifyUser(userId); // You'll need to implement this
+        adminUserService.verifyUser(userId);
         return ResponseEntity.noContent().build();
     }
 
-    // Получить все объявления о сдаче дома пользователя
     @GetMapping("/{userId}/house-ads")
     public ResponseEntity<List<AdHouseResponse>> getUserHouseAds(@PathVariable UUID userId) {
         return ResponseEntity.ok(adminUserService.getUserHouseAds(userId));
     }
 
-    // Получить все объявления-соискатели пользователя
     @GetMapping("/{userId}/seeker-ads")
     public ResponseEntity<List<AdSeekerResponse>> getUserSeekerAds(@PathVariable UUID userId) {
         return ResponseEntity.ok(adminUserService.getUserSeekerAds(userId));
